@@ -1,0 +1,32 @@
+{
+  "name": "Ricoh Offerte Studio Pro",
+  "short_name": "Offerte Studio",
+  "description": "Professionele AV-offerte tool voor Ricoh Belgium",
+  "start_url": "/quoteassist/",
+  "scope": "/quoteassist/",
+  "display": "standalone",
+  "background_color": "#BE1622",
+  "theme_color": "#BE1622",
+  "orientation": "any",
+  "lang": "nl",
+  "icons": [
+    {
+      "src": "icon192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "appletouchicon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["business", "productivity"]
+}
