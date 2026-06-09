@@ -5593,7 +5593,7 @@ async function doInviteUser(){
   
   try{
     // Call Cloudflare Worker to invite
-    var res=await fetch(_workerUrl.replace("/v1/messages","/invite-user"), {
+   var res=await fetch("https://quoteassist.stijn-borloo.workers.dev/invite-user", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({email: email})
