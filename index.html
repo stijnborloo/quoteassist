@@ -59,64 +59,73 @@ body {
 }
 
 /* ── TOPBAR ───────────────────────────────────────────── */
-.tb-badge {
-  background: rgba(255,255,255,.2);
-  color: #fff;
-  padding: 3px 9px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.tb-ai-badge {
-  font-size: 10px;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-weight: 700;
-  background: rgba(255,255,255,.15);
-  color: rgba(255,255,255,.7);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.tb-btn {
-  flex-shrink: 0;
-  padding: 6px 10px;
-  font-size: 12px;
-  min-height: 32px;
-  border-radius: 16px;
-  white-space: nowrap;
-}
 .topbar {
-  background: var(--red);
+  background: linear-gradient(135deg, #c0392b 0%, #7b1a24 60%, #4a0f16 100%);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
-  height: 58px;
+  padding: 0 24px;
+  height: 64px;
   position: sticky;
   top: 0;
   z-index: 1030;
-  box-shadow: 0 2px 10px rgba(0,0,0,.2);
+  box-shadow: 0 4px 20px rgba(80,10,20,.35);
 }
-.brand { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-.logo-n { font-size: 22px; font-weight: 900; letter-spacing: -.04em; }
-.logo-t { font-size: 7px; color: rgba(255,255,255,.55); letter-spacing: .08em; margin-top: 1px; }
-.vsep { width: 1px; height: 24px; background: rgba(255,255,255,.25); flex-shrink: 0; }
-.app-t { font-size: 13px; font-weight: 600; opacity: .9; }
-.tb-r { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
-
-/* ── TABS ─────────────────────────────────────────────── */
+.brand { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+.logo-n { font-size: 24px; font-weight: 900; letter-spacing: -.02em; line-height: 1; }
+.logo-t { font-size: 8px; color: rgba(255,255,255,.6); letter-spacing: .08em; margin-top: 2px; }
+.vsep { width: 2px; height: 28px; background: rgba(255,255,255,.2); flex-shrink: 0; }
+.app-t { font-size: 14px; font-weight: 600; opacity: .95; }
+.tb-r { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.tb-badge {
+  background: rgba(255,255,255,.2);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.user-badge {
+  width: 34px; height: 34px;
+  background: rgba(255,255,255,.25);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #fff;
+  border: 2px solid rgba(255,255,255,.35);
+  cursor: default; flex-shrink: 0;
+}
+.tb-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(255,255,255,.15);
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,.3);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background .15s, border-color .15s, transform .15s;
+  white-space: nowrap;
+}
+.tb-btn:hover {
+  background: rgba(255,255,255,.28);
+  border-color: rgba(255,255,255,.55);
+  transform: translateY(-1px);
+}
 .main-tabs {
   display: flex;
   background: #fff;
   border-bottom: 1px solid var(--bd);
   position: sticky;
-  top: 58px;
+  top: 64px;
   z-index: 1020;
-  overflow-x: auto;
-  scrollbar-width: none;
   padding: 0 12px;
   gap: 2px;
   box-shadow: var(--shadow-sm);
@@ -140,7 +149,7 @@ body {
 .main-tab.on { color: var(--red); border-bottom-color: var(--red); }
 
 /* ── VEREENVOUDIGDE NAVIGATIE: STEPPER + GEAVANCEERD ── */
-.simple-nav{align-items:center;justify-content:space-between;padding:0 16px;gap:14px;min-height:60px;overflow:visible}
+.simple-nav{align-items:center;justify-content:space-between;padding:0 16px;gap:14px;min-height:60px;overflow:visible;position:relative;z-index:1100}
 .stepper{display:flex;align-items:center;gap:0;flex:1;min-width:0;overflow-x:auto;overflow-y:visible;scrollbar-width:none}
 .stepper::-webkit-scrollbar{display:none}
 .sstep{display:flex;align-items:center;gap:10px;background:none;border:none;cursor:pointer;padding:8px 6px;font-family:inherit;opacity:.5;transition:opacity .18s;flex-shrink:0}
@@ -153,10 +162,10 @@ body {
 .stxt b{font-size:13px;font-weight:700;color:var(--gr);white-space:nowrap}
 .stxt small{font-size:10.5px;color:var(--gm);white-space:nowrap}
 .sline{width:40px;height:2px;background:var(--bd);margin:0 10px;flex-shrink:0}
-.adv-wrap{position:relative;flex-shrink:0}
+.adv-wrap{position:relative;flex-shrink:0;z-index:1100}
 .adv-btn{background:#f4f5f7;border:1px solid var(--bd);color:var(--gr);font-family:inherit;font-size:12.5px;font-weight:600;padding:9px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;transition:background .15s}
 .adv-btn:hover{background:#e9ecef;border-color:var(--gm)}
-.adv-menu{display:none;position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid var(--bd);border-radius:var(--radius);box-shadow:var(--shadow-lg);min-width:230px;z-index:2000;overflow:hidden;padding:5px 0}
+.adv-menu{display:none;position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid var(--bd);border-radius:var(--radius);box-shadow:var(--shadow-lg);min-width:230px;z-index:3000;overflow:hidden;padding:5px 0}
 .adv-menu.open{display:block}
 .am-item{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:#fff;border:none;border-bottom:1px solid #f5f5f5;padding:10px 16px;font-size:13px;color:var(--gr);cursor:pointer;font-family:inherit;transition:background .1s}
 .am-item:last-child{border-bottom:none}
@@ -480,16 +489,40 @@ body {
   .hide-xs { display: none; }
   .show-xs { display: inline; }
 
-  /* Topbar */
-  .topbar { height: auto; min-height: 52px; padding: 8px 12px; flex-wrap: wrap; gap: 6px; }
-  .logo-t, .vsep, .app-t { display: none; }
-  .brand { flex-shrink: 0; }
-  .tb-r { flex: 1; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
-  .tb-badge { order: -1; }
-  .tb-btn { padding: 5px 10px; font-size: 11px; min-height: 32px; }
+  /* Topbar — alles op één rij, geen wrap */
+  .topbar {
+    height: 58px;
+    min-height: 58px;
+    padding: 0 14px;
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  .vsep, .app-t { display: none; }
+  .logo-t { display: block; }
+  .brand { flex-shrink: 0; gap: 0; }
+  .logo-n { font-size: 20px; }
+  .logo-t { font-size: 7px; }
+
+  /* Rechtergedeelte: geen wrap, alles compact */
+  .tb-r { flex-shrink: 0; gap: 5px; flex-wrap: nowrap; }
+
+  /* Badge "0 items": verberg op mobile, niet nodig */
+  .tb-badge { display: none; }
+
+  /* User avatar kleiner */
+  .user-badge { width: 28px; height: 28px; font-size: 10px; }
+
+  /* Acties knop: alleen emoji + pijl, geen tekst */
+  .tb-btn { padding: 6px 10px; font-size: 12px; }
+  #acties-lbl { display: none; }
+
+  /* Settings knop compact */
+  #settings-wrap > button { padding: 6px 10px; font-size: 14px; }
+
+  /* Dropdown positioning on mobile: zorg dat menu niet buiten scherm valt */
 
   /* Tabs */
-  .main-tabs { top: 52px; padding: 0 6px; }
+  .main-tabs { top: 58px; padding: 0 6px; }
   .main-tab { padding: 10px 12px; font-size: 11px; }
 
   /* Layout */
@@ -744,10 +777,10 @@ body {
 }
 
 /* ── SPLIT SCREEN ─────────────────────────────────────── */
-#below-topbar { min-height: calc(100vh - 58px); }
+#below-topbar { min-height: calc(100vh - 64px); }
 #split-pane {
   display: none; position: fixed;
-  right: 0; top: 58px; bottom: 0; width: 46%;
+  right: 0; top: 64px; bottom: 0; width: 46%;
   background: #6c757d;
   border-left: 2px solid rgba(255,255,255,.12);
   overflow-y: auto; overflow-x: hidden; z-index: 50;
@@ -768,9 +801,9 @@ body.split-mode #below-topbar { margin-right: 46%; }
 /* ── SETTINGS DROPDOWN ───────────────────────────────── */
 #settings-wrap { position: relative; }
 #settings-menu {
-  display: none; position: absolute; right: 0; top: calc(100% + 8px);
+  display: none; position: fixed;
   background: #fff; border: 1px solid var(--bd); border-radius: var(--radius);
-  box-shadow: var(--shadow-lg); min-width: 200px; z-index: 2000; overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0,0,0,.18); min-width: 220px; z-index: 9999; overflow: hidden;
 }
 .sm-label { font-size: 9px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--gm); padding: 9px 14px 3px; }
 .sm-item {
@@ -784,6 +817,26 @@ body.split-mode #below-topbar { margin-right: 46%; }
 .sm-item:hover { background: #f8f9fa; }
 .sm-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
 .sm-div { height: 1px; background: #eee; margin: 3px 0; }
+
+/* ── Acties + Settings: fixed dropdowns buiten topbar stacking context ── */
+.tb-dropdown-fixed {
+  position: fixed;
+  background: #fff; border: 1px solid #e0e0e0; border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.18); min-width: 240px; z-index: 9999;
+  overflow: hidden;
+}
+.tb-dropdown-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; font-size: 13px; color: #333;
+  cursor: pointer; background: #fff; border: none; border-bottom: 1px solid #f5f5f5;
+  font-family: inherit; transition: background .15s ease;
+  width: 100%; text-align: left;
+}
+.tb-dropdown-item:last-child { border-bottom: none; }
+.tb-dropdown-item:hover { background: #f8f8f8; }
+.tb-dropdown-item strong { display: block; font-weight: 600; color: #222; }
+.tb-dropdown-item small { display: block; font-size: 11px; color: #999; margin-top: 2px; }
+.tb-dropdown-divider { height: 1px; background: #eee; margin: 4px 0; }
 
 @media (max-width: 640px) {
   body.split-mode #below-topbar { margin-right: 0; }
@@ -829,7 +882,6 @@ body.split-mode #below-topbar { margin-right: 46%; }
 .lp-foot{margin-top:34px;font-size:11px;color:#ccc;text-align:center}
 /* Admin/rol toegangscontrole */
 body:not(.is-admin) .admin-only{display:none!important}
-.user-badge{font-size:10px;color:rgba(255,255,255,.7);background:rgba(255,255,255,.15);border-radius:20px;padding:2px 8px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default}
 .lp-shake{animation:lpShake .38s ease}
 @media(max-width:680px){.lp-left{display:none}.lp-right{background:linear-gradient(155deg,#0d0202,#9a1515)}.lp-h1{color:#fff}.lp-h2{color:rgba(255,255,255,.65)}.lp-lbl{color:rgba(255,255,255,.75)}.lp-inp{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.18);color:#fff}.lp-inp::placeholder{color:rgba(255,255,255,.35)}.lp-inp:focus{border-color:#fff;background:rgba(255,255,255,.2);box-shadow:0 0 0 4px rgba(255,255,255,.08)}.lp-mem{color:rgba(255,255,255,.65)}.lp-foot{color:rgba(255,255,255,.3)}.lp-btn{background:#fff;color:#BE1622;box-shadow:0 4px 20px rgba(0,0,0,.35)}.lp-btn:hover{background:#f0f0f0;box-shadow:0 6px 24px rgba(0,0,0,.4)}.lp-btn:disabled{background:rgba(255,255,255,.4);color:rgba(190,22,34,.6)}}
 
@@ -908,44 +960,68 @@ body:not(.is-admin) .admin-only{display:none!important}
   <div class="tb-r">
     <span id="badge" class="tb-badge">0 items</span>
     <span id="user-badge" class="user-badge" title="Aangemeld als"></span>
-    <span id="ai-badge" class="tb-ai-badge">AI</span>
-    <button class="btn b-ai b-tb tb-btn" id="btn-ai" onclick="genAll()" title="AI tekst genereren voor alle producten">
-      <span class="spin" id="ai-spin" style="display:none"></span>
-      <span id="ai-lbl">&#10022; AI</span>
+    <button id="acties-btn" class="btn b-tb tb-btn" onclick="toggleActiesMenu(event)" title="AI, PDF, Foto's, Live preview" style="gap:6px;max-width:120px;overflow:hidden">
+      ✨ <span id="acties-lbl" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Acties</span> <span style="font-size:10px;flex-shrink:0">▼</span>
     </button>
-    <button class="btn b-tb tb-btn" id="btn-ai-foto" onclick="genAllFotos()" title="AI foto&#39;s zoeken" style="background:linear-gradient(135deg,#7c3aed,#BE1622)">
-      <span class="spin" id="af-spin" style="display:none"></span>
-      <span id="af-lbl">&#128247;</span>
-    </button>
-    <div class="vsep" style="height:20px;flex-shrink:0"></div>
-    <button class="btn b-tb tb-btn" onclick="exportPDF()" title="PDF exporteren" style="background:#fff;color:var(--red);font-weight:700"><span id="pdf-lbl">&#128190; PDF</span></button>
-    <button class="btn b-tb tb-btn" id="btn-split" onclick="toggleSplit()" title="Split-screen aan/uit" style="font-size:13px;padding:5px 12px;display:flex;align-items:center;gap:6px">&#11036; <span class="split-lbl">Live preview</span></button>
-    <div id="settings-wrap">
-      <button class="btn b-tb tb-btn" onclick="toggleSettings(event)" title="Instellingen" style="font-size:15px;padding:5px 11px">&#9881;</button>
-      <div id="settings-menu">
-        <div class="sm-label">AI koppeling</div>
-        <button class="sm-item admin-only" onclick="showClaudeModal();closeSettings()"><span class="sm-icon">&#10022;</span>Claude API instellen</button>
-        <div class="sm-div"></div>
-        <div class="sm-label">Taal / Langue / Language</div>
-        <button class="sm-item" onclick="setLang('nl');document.getElementById('lang-select').value='nl';closeSettings()"><span class="sm-icon">&#127902;</span>Nederlands</button>
-        <button class="sm-item" onclick="setLang('fr');document.getElementById('lang-select').value='fr';closeSettings()"><span class="sm-icon">&#127467;&#127479;</span>Fran&#231;ais</button>
-        <button class="sm-item" onclick="setLang('en');document.getElementById('lang-select').value='en';closeSettings()"><span class="sm-icon">&#127468;&#127463;</span>English</button>
-        <div class="sm-div"></div>
-        <div class="sm-label">Offerte</div>
-        <button class="sm-item" onclick="nieuweOfferte();closeSettings()"><span class="sm-icon">&#10133;</span>Nieuwe offerte</button>
-        <button class="sm-item" onclick="saveState();closeSettings()"><span class="sm-icon">&#128190;</span>Opslaan</button>
-        <button class="sm-item" onclick="exportSession();closeSettings()"><span class="sm-icon">&#128230;</span>Sessie delen / exporteren</button>
-        <div class="sm-div"></div>
-        <button class="sm-item" onclick="clearState();closeSettings()" style="color:#dc3545"><span class="sm-icon">&#128465;</span>Alles wissen</button>
-        <div class="sm-div"></div>
-        <button class="sm-item" onclick="logout()" style="color:#555"><span class="sm-icon">&#128274;</span>Uitloggen</button>
-      </div>
+    <div id="settings-wrap" style="position:relative">
+      <button id="settings-btn" class="btn b-tb tb-btn" onclick="toggleSettings(event)" title="Instellingen" style="font-size:15px;padding:7px 12px">⚙️</button>
     </div>
     <select id="lang-select" onchange="setLang(this.value)" style="display:none">
       <option value="nl">NL</option><option value="fr">FR</option><option value="en">EN</option>
     </select>
   </div>
 </div>
+
+<!-- Dropdowns BUITEN topbar als fixed — vermijdt stacking context probleem -->
+<div id="acties-menu" class="tb-dropdown-fixed" style="display:none">
+  <div class="tb-dropdown-item" onclick="genAll();closeActiesMenu()">
+    <span style="font-size:16px">⭐</span>
+    <div><strong id="acties-ai-gen">AI-teksten genereren</strong><small id="acties-ai-sub">Beschrijvingen</small></div>
+  </div>
+  <div class="tb-dropdown-item" onclick="genAllFotos();closeActiesMenu()">
+    <span style="font-size:16px">📷</span>
+    <div><strong id="acties-foto">Foto's zoeken</strong><small id="acties-foto-sub">Per product</small></div>
+  </div>
+  <div class="tb-dropdown-item" onclick="exportPDF();closeActiesMenu()">
+    <span style="font-size:16px">📊</span>
+    <div><strong id="acties-pdf">PDF exporteren</strong><small id="acties-pdf-sub">Download offerte</small></div>
+  </div>
+  <div class="tb-dropdown-divider"></div>
+  <div class="tb-dropdown-item" onclick="toggleSplit();closeActiesMenu()">
+    <span style="font-size:16px">👁️</span>
+    <div><strong id="acties-preview">Live preview</strong><small id="acties-preview-sub">Twee schermen</small></div>
+  </div>
+</div>
+
+<div id="settings-menu" class="tb-dropdown-fixed" style="display:none">
+  <div class="sm-label admin-only">Beheer</div>
+  <button class="sm-item admin-only" onclick="openInviteModal();closeSettings()"><span class="sm-icon">👤</span>Gebruikers uitnodigen</button>
+  <button class="sm-item admin-only" onclick="showClaudeModal();closeSettings()"><span class="sm-icon">&#10022;</span>Claude API instellen</button>
+  <div class="sm-div"></div>
+  <div class="sm-label">Taal / Langue / Language</div>
+  <button class="sm-item" onclick="setLang('nl');document.getElementById('lang-select').value='nl';closeSettings()"><span class="sm-icon"><svg width="18" height="12" viewBox="0 0 18 12" style="border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.1)"><rect width="18" height="4" fill="#AE1C28"/><rect y="4" width="18" height="4" fill="#fff"/><rect y="8" width="18" height="4" fill="#21468B"/></svg></span>Nederlands</button>
+  <button class="sm-item" onclick="setLang('fr');document.getElementById('lang-select').value='fr';closeSettings()"><span class="sm-icon"><svg width="18" height="12" viewBox="0 0 18 12" style="border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.1)"><rect width="6" height="12" fill="#002395"/><rect x="6" width="6" height="12" fill="#fff"/><rect x="12" width="6" height="12" fill="#ED2939"/></svg></span>Fran&#231;ais</button>
+  <button class="sm-item" onclick="setLang('en');document.getElementById('lang-select').value='en';closeSettings()"><span class="sm-icon"><svg width="18" height="12" viewBox="0 0 18 12" style="border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.1)"><rect width="18" height="12" fill="#012169"/><path d="M0,0 L18,12 M18,0 L0,12" stroke="#fff" stroke-width="2.5"/><path d="M0,0 L18,12 M18,0 L0,12" stroke="#C8102E" stroke-width="1.5"/><path d="M9,0 V12 M0,6 H18" stroke="#fff" stroke-width="4"/><path d="M9,0 V12 M0,6 H18" stroke="#C8102E" stroke-width="2.5"/></svg></span>English</button>
+  <div class="sm-div"></div>
+  <div class="sm-label">Offerte</div>
+  <button class="sm-item" onclick="nieuweOfferte();closeSettings()"><span class="sm-icon">&#10133;</span>Nieuwe offerte</button>
+  <button class="sm-item" onclick="saveState();closeSettings()"><span class="sm-icon">&#128190;</span>Opslaan</button>
+  <button class="sm-item" onclick="exportSession();closeSettings()"><span class="sm-icon">&#128230;</span>Sessie delen / exporteren</button>
+  <div class="sm-div"></div>
+  <button class="sm-item" onclick="clearState();closeSettings()" style="color:#dc3545"><span class="sm-icon">&#128465;</span>Alles wissen</button>
+  <div class="sm-div"></div>
+  <button class="sm-item" onclick="logout()" style="color:#555"><span class="sm-icon">&#128274;</span>Uitloggen</button>
+</div>
+<!-- Verborgen elementen die door JS worden gebruikt (spinners/labels voor AI functies) -->
+<span id="ai-badge"    style="display:none"></span>
+<span id="ai-spin"     style="display:none"></span>
+<span id="ai-lbl"      style="display:none"></span>
+<span id="af-spin"     style="display:none"></span>
+<span id="af-lbl"      style="display:none"></span>
+<button id="btn-ai"     style="display:none" onclick="genAll()"></button>
+<button id="btn-ai-foto" style="display:none" onclick="genAllFotos()"></button>
+<button id="btn-split"  style="display:none" onclick="toggleSplit()"></button>
+<span   id="pdf-lbl"   style="display:none"></span>
 <div id="below-topbar">
 <div class="main-tabs simple-nav">
   <div class="stepper">
@@ -1015,7 +1091,7 @@ body:not(.is-admin) .admin-only{display:none!important}
     <label class="upbox up-orange" style="margin-bottom:10px;padding:16px 14px;display:block;position:relative">
       <input type="file" accept="image/*" onchange="loadCover(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:2">
       <div style="display:flex;align-items:center;gap:10px;pointer-events:none">
-        <div style="background:var(--red);color:#fff;padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600;flex-shrink:0">&#128247; Kies foto</div>
+        <div style="background:var(--red);color:#fff;padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600;flex-shrink:0">&#128247; <span>Kies foto</span></div>
         <span id="cover-file-name" style="font-size:12px;color:var(--gm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Geen bestand gekozen</span>
       </div>
     </label>
@@ -1061,7 +1137,7 @@ body:not(.is-admin) .admin-only{display:none!important}
   <div class="card">
     <div class="card-title">Importeren via screenshot</div>
     <p style="font-size:12px;color:#555;margin-bottom:11px;line-height:1.6">
-      Plak een screenshot met <strong>Ctrl+V</strong> (of Cmd+V) direct in het vak hieronder — of upload een bestand. Claude herkent automatisch de zalen, producten, aantallen en prijzen.
+      <span data-i18n="import_desc">Plak een screenshot met <strong>Ctrl+V</strong> (of Cmd+V) direct in het vak hieronder — of upload een bestand. Claude herkent automatisch de zalen, producten, aantallen en prijzen.</span>
     </p>
 
     <!-- Forceer 1 zaal (geldt voor screenshot, PDF én Excel-import) -->
@@ -1148,9 +1224,9 @@ body:not(.is-admin) .admin-only{display:none!important}
       <div style="font-size:22px;margin-bottom:4px">&#128247;</div>
       <div style="font-weight:bold;color:var(--orange);font-size:13px">Foto's uploaden</div>
     </label>
-    <button class="btn b-full" onclick="syncAndLinkFotos()" style="margin-top:8px;background:#f0f0f0;color:#555;border:1px solid #e0e0e0;font-size:12px">&#128279; Foto's koppelen aan producten</button>
+    <button class="btn b-full" onclick="syncAndLinkFotos()" style="margin-top:8px;background:#f0f0f0;color:#555;border:1px solid #e0e0e0;font-size:12px">&#128279; <span>Foto's koppelen aan producten</span></button>
     <div id="sync-st" style="display:none;margin-top:8px;font-size:11px;line-height:1.6;padding:8px 10px;border-radius:6px"></div>
-    <p style="font-size:11px;color:var(--gm);margin-top:9px;line-height:1.5">Tip: noem elk fotobestand naar het itemnummer (bv. <em>FW-65BZ40L.jpg</em>) voor automatische koppeling. Of klik op het potlood bij een product om handmatig een foto te koppelen.</p>
+    <p style="font-size:11px;color:var(--gm);margin-top:9px;line-height:1.5" data-i18n="photo_tip">Tip: noem elk fotobestand naar het itemnummer (bv. <em>FW-65BZ40L.jpg</em>) voor automatische koppeling. Of klik op het potlood bij een product om handmatig een foto te koppelen.</p>
   </div>
 </div>
 
@@ -1412,7 +1488,25 @@ body:not(.is-admin) .admin-only{display:none!important}
 
 <div id="wis-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center"><div style="background:#fff;border-radius:12px;padding:24px;max-width:340px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.4);text-align:center"><div style="font-size:36px;margin-bottom:10px">&#128465;</div><div style="font-size:16px;font-weight:bold;color:#dc3545;margin-bottom:8px">Alles wissen?</div><p style="font-size:13px;color:#6c757d;margin-bottom:20px;line-height:1.5">Alle data wordt permanent gewist.<br>Dit kan niet ongedaan worden gemaakt.</p><div style="display:flex;gap:10px;justify-content:center"><button class="btn" style="background:#dc3545;color:#fff;min-width:110px" onclick="bevestigWissen()">Ja, wis alles</button><button class="btn" style="background:#e9ecef;color:#495057;min-width:90px" onclick="document.getElementById('wis-modal').style.display='none'">Annuleren</button></div></div></div>
 <div id="new-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center"><div style="background:#fff;border-radius:8px;padding:24px;max-width:380px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.4);text-align:center"><div style="font-size:36px;margin-bottom:10px">&#128196;</div><div style="font-size:16px;font-weight:bold;color:var(--red);margin-bottom:8px">Nieuwe offerte starten?</div><p style="font-size:12px;color:#555;margin-bottom:18px;line-height:1.6">Alle huidige data wordt gewist.<br>Sla eerst op via tabblad Offertes als je de huidige offerte wil bewaren.</p><div style="display:flex;gap:10px;justify-content:center"><button class="btn b-red" style="min-width:120px" onclick="bevestigNieuw()">Ja, wis alles</button><button class="btn" style="background:#eee;color:var(--gr);min-width:100px" onclick="document.getElementById('new-modal').style.display='none'">Annuleren</button></div></div></div>
-<!-- OPENROUTER MODAL -->
+<!-- PASSWORD SETUP MODAL -->
+<div id="pwd-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999;align-items:center;justify-content:center;padding:14px;font-family:inherit">
+  <div style="background:#fff;border-radius:12px;padding:28px;max-width:380px;width:100%;box-shadow:0 12px 50px rgba(0,0,0,.3)">
+    <div id="pwd-title" style="font-size:18px;font-weight:bold;margin-bottom:6px;color:#222">Wachtwoord instellen</div>
+    <p id="pwd-desc" style="font-size:13px;color:#666;margin-bottom:20px;line-height:1.5">Stel een sterk wachtwoord in om uw account te beveiligen.</p>
+    <div style="margin-bottom:14px">
+      <label id="pwd-lbl1" style="display:block;font-size:12px;font-weight:600;color:#444;margin-bottom:5px">Wachtwoord</label>
+      <input type="password" id="pwd-new" placeholder="Minstens 8 karakters" style="width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:6px;font-size:13px;box-sizing:border-box;font-family:inherit">
+    </div>
+    <div style="margin-bottom:14px">
+      <label id="pwd-lbl2" style="display:block;font-size:12px;font-weight:600;color:#444;margin-bottom:5px">Bevestig wachtwoord</label>
+      <input type="password" id="pwd-confirm" placeholder="Herhaal wachtwoord" style="width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:6px;font-size:13px;box-sizing:border-box;font-family:inherit">
+    </div>
+    <div id="pwd-err" style="display:none;background:#fee;color:#c00;padding:10px;border-radius:5px;font-size:12px;margin-bottom:14px;border:1px solid #fcc"></div>
+    <div style="display:flex;gap:10px">
+      <button id="pwd-btn" class="btn b-red" style="flex:1;padding:12px" onclick="doSetPassword()">Wachtwoord instellen</button>
+    </div>
+  </div>
+</div>
 <div id="or-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9997;align-items:center;justify-content:center">
   <div style="background:#fff;border-radius:12px;padding:24px;max-width:440px;width:92%;box-shadow:0 8px 40px rgba(0,0,0,.3)">
     <div style="font-size:16px;font-weight:bold;color:#7c3aed;margin-bottom:8px">&#127775; OpenRouter AI (gratis)</div>
@@ -1442,7 +1536,7 @@ body:not(.is-admin) .admin-only{display:none!important}
 </div>
 
 <!-- CLAUDE API MODAL -->
-<div id="claude-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9997;align-items:center;justify-content:center">
+<div id="claude-modal" class="admin-only" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9997;align-items:center;justify-content:center">
   <div style="background:#fff;border-radius:12px;padding:24px;max-width:460px;width:92%;box-shadow:0 8px 40px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto">
     <div style="font-size:16px;font-weight:bold;color:#D97757;margin-bottom:8px">&#10022; AI verbinding instellen</div>
 
@@ -1473,6 +1567,22 @@ body:not(.is-admin) .admin-only{display:none!important}
   </div>
 </div>
 
+<!-- ADMIN INVITE MODAL -->
+<div id="invite-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9997;align-items:center;justify-content:center;padding:14px;font-family:inherit">
+  <div style="background:#fff;border-radius:12px;padding:28px;max-width:420px;width:100%;box-shadow:0 12px 50px rgba(0,0,0,.3)">
+    <div style="font-size:18px;font-weight:bold;margin-bottom:6px;color:#222">Gebruikers uitnodigen</div>
+    <p style="font-size:13px;color:#666;margin-bottom:18px;line-height:1.5">Voer het e-mailadres in van de persoon die je wilt uitnodigen. Ze ontvangen een bevestigingslink per e-mail.</p>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:12px;font-weight:600;color:#444;margin-bottom:5px">E-mailadres</label>
+      <input type="email" id="invite-email" placeholder="naam@bedrijf.be" style="width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:6px;font-size:13px;box-sizing:border-box;font-family:inherit">
+    </div>
+    <div id="invite-err" style="display:none;background:#fee;color:#c00;padding:10px;border-radius:5px;font-size:12px;margin-bottom:14px;border:1px solid #fcc"></div>
+    <div style="display:flex;gap:10px">
+      <button id="invite-btn" class="btn b-red" style="flex:1;padding:12px" onclick="doInviteUser()">Gebruiker uitnodigen</button>
+      <button class="btn" style="background:#eee;color:#333;padding:12px" onclick="document.getElementById('invite-modal').style.display='none'">Annuleren</button>
+    </div>
+  </div>
+</div>
 
 <div id="toast" style="position:fixed;bottom:18px;right:18px;background:#333;color:#fff;padding:8px 16px;border-radius:5px;font-size:12px;font-weight:bold;z-index:9999;opacity:0;transition:opacity .4s;pointer-events:none"></div>
 <script>
@@ -1579,6 +1689,52 @@ var T = {
     // Empty
     no_items:      "Geen items in deze zaal",
     no_zalen:      "Maak vergaderzalen aan op tabblad \u201eZalen\u201d",
+    price_calc:    "Het prijsaanbod werd berekend op basis van de huidige aankoopprijzen bij onze leveranciers.",
+    fill_contacts: "Vul contactgegevens in op tabblad Klant",
+    saved:         "Opgeslagen",
+    save_failed:   "Opslaan mislukt (te groot?)",
+    quote_saved:   "OK Offerte opgeslagen",
+    delete_quote:  "Offerte verwijderen?",
+    import_desc:   "Plak een screenshot met Ctrl+V (of Cmd+V) direct in het vak hieronder — of upload een bestand. Claude herkent automatisch de zalen, producten, aantallen en prijzen.",
+    // Toast & status messages
+    toast_photo_added:   "Foto toegevoegd aan",
+    toast_photos_found:  "foto's gevonden",
+    toast_no_photos:     "Geen foto's gevonden. Klik op 📷 per item voor handmatig zoeken.",
+    toast_add_items:     "Voeg eerst items toe aan de zaal.",
+    toast_tpl_saved:     "Sjabloon opgeslagen",
+    toast_tpl_loaded:    "toegevoegd",
+    toast_block_added:   "Blok toegevoegd - bewerk het via tabblad Blokken",
+    toast_foto_added:    "Foto toegevoegd aan offerte",
+    toast_no_item:       "Item niet gevonden",
+    toast_loaded:        "Geladen",
+    toast_cover_removed: "Coverafbeelding verwijderd",
+    toast_session_restored: "Sessie hersteld",
+    toast_new_quote:     "Nieuwe offerte gestart",
+    st_loading:          "Laden...",
+    st_error_img:        "Fout bij laden van afbeelding.",
+    st_error:            "Fout",
+    st_worker_saved:     "Worker URL opgeslagen.",
+    st_worker_ok:        "Worker OK! Claude reageert.",
+    st_worker_empty:     "Vul een Worker URL in.",
+    st_api_saved:        "Sleutel opgeslagen!",
+    st_api_invalid:      "Ongeldige sleutel. Moet beginnen met sk-or-",
+    st_api_empty:        "Vul eerst een sleutel in.",
+    st_api_error:        "Fout",
+    st_cors:             "CORS fout: open de app via Netlify, niet als lokaal bestand.",
+    toast_cam_https:     "Camera vereist HTTPS - gebruik de Netlify URL",
+    toast_cam_denied:    "Camera geweigerd",
+    toast_cam_fail:      "Camera wisselen mislukt",
+    toast_write_first:   "Schrijf of genereer eerst een introtekst.",
+    toast_screenshot_pasted: "Screenshot geplakt - klik op Analyseer om te importeren",
+    st_reanalyze:        "Heranalyseer",
+    step1:               "Stap 1/2: zalen en producten herkennen",
+    step2_photos:        "Stap 2/2: fotos zoeken",
+    analysing:           "Analyseren",
+    searching_photos:    "Fotos zoeken",
+    recognized:          "herkend",
+    no_items_found_ss:   "Geen geldige items herkend in de screenshot.",
+    no_items_ss:         "Geen items gevonden.",
+    foto_lbl:            "Foto",
     date_lbl:      "Datum",
     client_lbl:    "Klant",
     contact_lbl:   "Contact",
@@ -1646,6 +1802,13 @@ var T = {
     ai_click:      "Cliquez sur \u201e\u2726 Texte IA\u201d pour g\u00e9n\u00e9rer les sp\u00e9cifications.",
     no_items:      "Aucun article dans cette salle",
     no_zalen:      "Cr\u00e9ez des salles de r\u00e9union dans l\u2019onglet \u201eSalles\u201d",
+    price_calc:    "Le devis a \u00e9t\u00e9 calcul\u00e9 sur la base des prix d\u2019achat actuels aupr\u00e8s de nos fournisseurs.",
+    fill_contacts: "Remplissez les données de contact dans l'onglet Client",
+    saved:         "Enregistré",
+    save_failed:   "Enregistrement échoué (trop grand?)",
+    quote_saved:   "OK Devis enregistré",
+    delete_quote:  "Supprimer le devis?",
+    import_desc:   "Collez une capture d'écran avec Ctrl+V (ou Cmd+V) directement dans la boîte ci-dessous — ou téléchargez un fichier. Claude reconnaît automatiquement les salles, les produits, les quantités et les prix.",
     date_lbl:      "Date",
     client_lbl:    "Client",
     contact_lbl:   "Contact",
@@ -1713,6 +1876,13 @@ var T = {
     ai_click:      "Click \u201e\u2726 AI text\u201d to generate specifications.",
     no_items:      "No items in this room",
     no_zalen:      "Create meeting rooms in the \u201eRooms\u201d tab",
+    price_calc:    "This quote was calculated based on current purchase prices from our suppliers.",
+    fill_contacts: "Fill in contact details in the Client tab",
+    saved:         "Saved",
+    save_failed:   "Save failed (too large?)",
+    quote_saved:   "OK Quote saved",
+    delete_quote:  "Delete quote?",
+    import_desc:   "Paste a screenshot with Ctrl+V (or Cmd+V) directly in the box below — or upload a file. Claude automatically recognizes rooms, products, quantities and prices.",
     date_lbl:      "Date",
     client_lbl:    "Client",
     contact_lbl:   "Contact",
@@ -1721,11 +1891,162 @@ var T = {
     qty_lbl:       "Qty",
     price_lbl:     "Price",
     items_lbl:     " items",
-    item_lbl:      " item"
+    item_lbl:      " item",
+    // Toast & status messages
+    toast_photo_added:   "Photo added to",
+    toast_photos_found:  "photos found",
+    toast_no_photos:     "No photos found. Click 📷 per item to search manually.",
+    toast_add_items:     "Add items to the room first.",
+    toast_tpl_saved:     "Template saved",
+    toast_tpl_loaded:    "added",
+    toast_block_added:   "Block added - edit it in the Blocks tab",
+    toast_foto_added:    "Photo added to quote",
+    toast_no_item:       "Item not found",
+    toast_loaded:        "Loaded",
+    toast_cover_removed: "Cover image removed",
+    toast_session_restored: "Session restored",
+    toast_new_quote:     "New quote started",
+    st_loading:          "Loading...",
+    st_error_img:        "Error loading image.",
+    st_error:            "Error",
+    st_worker_saved:     "Worker URL saved.",
+    st_worker_ok:        "Worker OK! Claude is responding.",
+    st_worker_empty:     "Enter a Worker URL.",
+    st_api_saved:        "API key saved!",
+    st_api_invalid:      "Invalid key. Must start with sk-or-",
+    st_api_empty:        "Enter a key first.",
+    st_api_error:        "Error",
+    st_cors:             "CORS error: open the app via Netlify, not as a local file.",
+    toast_cam_https:     "Camera requires HTTPS - use the Netlify URL",
+    toast_cam_denied:    "Camera denied",
+    toast_cam_fail:      "Camera switch failed",
+    toast_write_first:   "Write or generate an intro text first.",
+    toast_screenshot_pasted: "Screenshot pasted - click Analyse to import",
+    st_reanalyze:        "Re-analyse",
+    step1:               "Step 1/2: recognising rooms and products",
+    step2_photos:        "Step 2/2: searching photos",
+    analysing:           "Analysing",
+    searching_photos:    "Searching photos",
+    recognized:          "recognised",
+    no_items_found_ss:   "No valid items recognised in the screenshot.",
+    no_items_ss:         "No items found.",
+    foto_lbl:            "Photo"
+  },
+  fr: {
+    cover_title:   "Devis\nbudgétaire détaillé",
+    cover_from:    "de",
+    cover_for:     "pour",
+    toc_title:     "Table des matières",
+    s1:            "Notre proposition",
+    s2:            "Personnes de contact",
+    s3:            "Spécifications techniques",
+    s4:            "Proposition de prix",
+    s5:            "Variantes de prix",
+    s6:            "Approbation & Signature",
+    s_cond:        "Conditions particulières",
+    s_maint:       "Contrat de maintenance",
+    th_desc:       "Description",
+    th_ref:        "Référence",
+    th_qty:        "Qté",
+    th_unit:       "Prix unitaire",
+    th_total:      "Prix total",
+    excl_vat:      "Total HTVA",
+    vat:           "TVA 21%",
+    incl_vat:      "Total TVAC",
+    valid_30:      "Cette offre est valable 30 jours calendrier à compter de sa date d'émission.",
+    ct_role:       "Fonction",
+    ct_name:       "Nom",
+    ct_email:      "E-mail",
+    ct_tel:        "Tél",
+    cond_intro:    "Cette offre est basée sur les conditions et principes suivants",
+    cond_items: [
+      "L'espace doit être propre et utilisable avant le début des travaux.",
+      "L'ouverture/fermeture de cloisons ou plafonds n'est pas de la responsabilité de Ricoh.",
+      "Ricoh se conforme aux normes HDCP (High Bandwidth Digital Content Protection)."
+    ],
+    client_items:  "Services à prévoir par le client",
+    client_list: [
+      "Travaux de découpe, câssage et fraisage.",
+      "Renforts pour montage de haut-parleurs, écrans plats ou projecteurs.",
+      "Installation du câblage, prises LAN et 230V.",
+      "Tous les frais liés au stationnement et aux temps d'attente."
+    ],
+    maint_text:    "Le contrat de maintenance couvre la gestion complète de la solution AV installée à partir de la date d'installation.",
+    maint_items: [
+      "Helpdesk via portail en ligne — attribution automatique des tickets",
+      "Rapport de terrain détaillé après chaque intervention",
+      "Délai de réparation: next business day",
+      "Première évaluation après 1 mois d'utilisation"
+    ],
+    prop_items: [
+      "Gestion de projet",
+      "Livraison et reprise des emballages",
+      "Installation & tests"
+    ],
+    sig_title:     "Approbation & Signature",
+    sig_text:      "Les parties soussignées déclarent accepter le contenu et les conditions de cette offre.",
+    ai_gen:        "⟳ Traitement IA…",
+    ai_click:      "Cliquez sur \u201e\u2726 Texte IA\u201d pour g\u00e9n\u00e9rer les sp\u00e9cifications.",
+    no_items:      "Aucun article dans cette salle",
+    no_zalen:      "Cr\u00e9ez des salles de r\u00e9union dans l\u2019onglet \u201eSalles\u201d",
+    price_calc:    "Le devis a été calculé sur la base des prix d'achat actuels auprès de nos fournisseurs.",
+    fill_contacts: "Remplissez les données de contact dans l'onglet Client",
+    saved:         "Enregistré",
+    save_failed:   "Enregistrement échoué (trop grand?)",
+    quote_saved:   "OK Devis enregistré",
+    delete_quote:  "Supprimer le devis?",
+    import_desc:   "Collez une capture d'écran avec Ctrl+V (ou Cmd+V) directement dans la boîte ci-dessous — ou téléchargez un fichier. Claude reconnaît automatiquement les salles, les produits, les quantités et les prix.",
+    // Toast & status messages
+    toast_photo_added:   "Photo ajoutée à",
+    toast_photos_found:  "photos trouvées",
+    toast_no_photos:     "Aucune photo trouvée. Cliquez sur 📷 par article pour chercher manuellement.",
+    toast_add_items:     "Ajoutez d'abord des articles à la salle.",
+    toast_tpl_saved:     "Modèle enregistré",
+    toast_tpl_loaded:    "ajouté",
+    toast_block_added:   "Bloc ajouté - modifiez-le dans l'onglet Blocs",
+    toast_foto_added:    "Photo ajoutée au devis",
+    toast_no_item:       "Article introuvable",
+    toast_loaded:        "Chargé",
+    toast_cover_removed: "Image de couverture supprimée",
+    toast_session_restored: "Session restaurée",
+    toast_new_quote:     "Nouveau devis démarré",
+    st_loading:          "Chargement...",
+    st_error_img:        "Erreur lors du chargement de l'image.",
+    st_error:            "Erreur",
+    st_worker_saved:     "URL Worker enregistrée.",
+    st_worker_ok:        "Worker OK! Claude répond.",
+    st_worker_empty:     "Saisissez une URL Worker.",
+    st_api_saved:        "Clé API enregistrée!",
+    st_api_invalid:      "Clé invalide. Doit commencer par sk-or-",
+    st_api_empty:        "Saisissez d'abord une clé.",
+    st_api_error:        "Erreur",
+    st_cors:             "Erreur CORS: ouvrez l'app via Netlify, pas comme fichier local.",
+    toast_cam_https:     "La caméra nécessite HTTPS - utilisez l'URL Netlify",
+    toast_cam_denied:    "Caméra refusée",
+    toast_cam_fail:      "Changement de caméra échoué",
+    toast_write_first:   "Écrivez ou générez d'abord un texte d'introduction.",
+    toast_screenshot_pasted: "Capture collée - cliquez sur Analyser pour importer",
+    st_reanalyze:        "Réanalyser",
+    step1:               "Étape 1/2: reconnaissance des salles et produits",
+    step2_photos:        "Étape 2/2: recherche de photos",
+    analysing:           "Analyse",
+    searching_photos:    "Recherche de photos",
+    recognized:          "reconnus",
+    no_items_found_ss:   "Aucun article valide reconnu dans la capture.",
+    no_items_ss:         "Aucun article trouvé.",
+    foto_lbl:            "Photo"
   }
 };
 
 function t(key){ return (T[_lang]||T.nl)[key]||T.nl[key]||key; }
+
+// ui(s) = vertaal een UI-string direct op het moment van gebruik
+function ui(s){ 
+  if(!s || _lang === "nl") return s;
+  var dict = UI[_lang];
+  if(!dict) return s;
+  return dict[s.trim()] || s;
+}
 
 function translateHTML(){
   var pa=document.getElementById("preview-area");
@@ -1875,7 +2196,19 @@ var UI = {
     "Klik om te gebruiken":"Cliquer pour utiliser","Toevoegen aan huidige zaal":"Ajouter à la salle actuelle","Klik om te gebruiken":"Cliquer pour utiliser",
     "Zoek product...":"Rechercher un produit...","Bibliotheek (":"Bibliothèque (",
     "Zalen & producten":"Salles & produits","Live preview":"Aperçu direct",
-    "Productfoto's toevoegen":"Ajouter des photos de produits","Upload je eigen productfoto's in één keer. Ze worden automatisch aan de juiste producten gekoppeld op basis van de bestandsnaam of het itemnummer.":"Téléchargez vos propres photos de produits en une fois. Elles sont automatiquement liées aux bons produits selon le nom de fichier ou le numéro d'article.","Tip: noem elk bestand naar het itemnummer voor automatische koppeling. Of klik op het potlood bij een product om er handmatig een foto aan toe te voegen.":"Astuce : nommez chaque fichier d'après le numéro d'article pour une liaison automatique. Ou cliquez sur le crayon à côté d'un produit pour y ajouter une photo manuellement.","Voeg toe of importeer":"Ajouter ou importer","Klaar":"Terminé","Controleer & PDF":"Vérifier & PDF","Gegevens":"Coordonnées","Geavanceerd":"Avancé","Project & introtekst":"Projet & texte d'intro","Vrije blokken":"Blocs libres","Leidraad (AI-stijl)":"Guide (style IA)","Opgeslagen offertes":"Devis enregistrés","Opgeslagen (":"Enregistré (","Zaalssjablonen":"Modèles de salle","Productenbibliotheek":"Bibliothèque de produits","Huidige producten opslaan":"Enregistrer les produits actuels","+ PDF opslaan":"+ Enregistrer PDF"
+    "Productfoto's toevoegen":"Ajouter des photos de produits","Upload je eigen productfoto's in één keer. Ze worden automatisch aan de juiste producten gekoppeld op basis van de bestandsnaam of het itemnummer.":"Téléchargez vos propres photos de produits en une fois. Elles sont automatiquement liées aux bons produits selon le nom de fichier ou le numéro d'article.","Tip: noem elk bestand naar het itemnummer voor automatische koppeling. Of klik op het potlood bij een product om er handmatig een foto aan toe te voegen.":"Astuce : nommez chaque fichier d'après le numéro d'article pour une liaison automatique. Ou cliquez sur le crayon à côté d'un produit pour y ajouter une photo manuellement.","Voeg toe of importeer":"Ajouter ou importer","Klaar":"Terminé","Controleer & PDF":"Vérifier & PDF","Gegevens":"Coordonnées","Geavanceerd":"Avancé","Project & introtekst":"Projet & texte d'intro","Vrije blokken":"Blocs libres","Leidraad (AI-stijl)":"Guide (style IA)","Opgeslagen offertes":"Devis enregistrés","Opgeslagen (":"Enregistré (","Zaalssjablonen":"Modèles de salle","Productenbibliotheek":"Bibliothèque de produits","Huidige producten opslaan":"Enregistrer les produits actuels","+ PDF opslaan":"+ Enregistrer PDF",
+    "Nog geen zalen.":"Aucune salle pour l'instant.","Foto's koppelen aan producten":"Lier les photos aux produits",
+    "Upload productfoto's eenmalig — ze worden automatisch aan de juiste producten gekoppeld via het itemnummer.":"Téléchargez les photos une fois — elles sont automatiquement liées aux bons produits via le numéro d'article.",
+    "Straat, postcode gemeente":"Rue, code postal commune","naam@bedrijf.be":"nom@entreprise.be","klant@bedrijf.be":"client@entreprise.be",
+    "Inrichting vergaderzalen":"Aménagement des salles de réunion","Zaalnaam (bv. Raadzaal)":"Nom de salle (ex. Salle du conseil)","Naam nieuwe zaal (bv. Vergaderzaal A)":"Nom nouvelle salle (ex. Salle de réunion A)","Variantnaam (bv. Premium)":"Nom de variante (ex. Premium)",
+    "bv. ZF Windpower 2026":"ex. ZF Windpower 2026","Beschrijving: situatie zaal, wensen, opmerkingen…":"Description: situation de la salle, souhaits, remarques…",
+    "Wijzig de tekst: bv. 'maak het korter', 'meer technisch', 'voeg TCO toe'…":"Modifiez le texte: ex. 'plus court', 'plus technique', 'ajouter TCO'…",
+    "Productnaam":"Nom du produit","Aantal":"Quantité","Totaal":"Total",
+    // Modale de configuration du mot de passe
+    "Wachtwoord instellen":"Définir le mot de passe","Stel een sterk wachtwoord in om uw account te beveiligen.":"Définissez un mot de passe fort pour sécuriser votre compte.","Minstens 8 karakters":"Au moins 8 caractères","Bevestig wachtwoord":"Confirmer le mot de passe","Herhaal wachtwoord":"Répéter le mot de passe",
+    "Beide velden zijn verplicht.":"Les deux champs sont obligatoires.","Wachtwoord moet minstens 8 karakters zijn.":"Le mot de passe doit contenir au moins 8 caractères.","Wachtwoorden komen niet overeen.":"Les mots de passe ne correspondent pas.","Supabase niet beschikbaar.":"Supabase non disponible.",
+    // Admin invite
+    "Gebruikers uitnodigen":"Inviter des utilisateurs","E-mailadres":"Adresse e-mail","Gebruiker uitnodigen":"Inviter un utilisateur","Uitnodigingslink verzonden naar":"Lien d'invitation envoyé à","Fout bij uitnodiging:":"Erreur lors de l'invitation :","Vul een e-mailadres in":"Entrez une adresse e-mail"
   },
   en: {
     "Klant":"Client","Zalen":"Rooms","Voorwaarden":"Conditions","Offertes":"Quotes","Bibliotheek":"Library","Blokken":"Blocks","Varianten":"Variants","Leidraad":"Guide","Handtekening":"Signature",
@@ -1946,7 +2279,19 @@ var UI = {
     "Klik om te gebruiken":"Click to use","Toevoegen aan huidige zaal":"Add to current room",
     "Zoek product...":"Search product...","Bibliotheek (":"Library (",
     "Zalen & producten":"Rooms & products","Live preview":"Live preview",
-    "Productfoto's toevoegen":"Add product photos","Upload je eigen productfoto's in één keer. Ze worden automatisch aan de juiste producten gekoppeld op basis van de bestandsnaam of het itemnummer.":"Upload your own product photos all at once. They are automatically linked to the right products based on the file name or item number.","Tip: noem elk bestand naar het itemnummer voor automatische koppeling. Of klik op het potlood bij een product om er handmatig een foto aan toe te voegen.":"Tip: name each file after the item number for automatic linking. Or click the pencil next to a product to add a photo manually.","Voeg toe of importeer":"Add or import","Klaar":"Done","Controleer & PDF":"Review & PDF","Gegevens":"Details","Geavanceerd":"Advanced","Project & introtekst":"Project & intro text","Vrije blokken":"Free blocks","Leidraad (AI-stijl)":"Guide (AI style)","Opgeslagen offertes":"Saved quotes","Opgeslagen (":"Saved (","Zaalssjablonen":"Room templates","Productenbibliotheek":"Product library","Huidige producten opslaan":"Save current products","+ PDF opslaan":"+ Save PDF"
+    "Productfoto's toevoegen":"Add product photos","Upload je eigen productfoto's in één keer. Ze worden automatisch aan de juiste producten gekoppeld op basis van de bestandsnaam of het itemnummer.":"Upload your own product photos all at once. They are automatically linked to the right products based on the file name or item number.","Tip: noem elk bestand naar het itemnummer voor automatische koppeling. Of klik op het potlood bij een product om er handmatig een foto aan toe te voegen.":"Tip: name each file after the item number for automatic linking. Or click the pencil next to a product to add a photo manually.","Voeg toe of importeer":"Add or import","Klaar":"Done","Controleer & PDF":"Review & PDF","Gegevens":"Details","Geavanceerd":"Advanced","Project & introtekst":"Project & intro text","Vrije blokken":"Free blocks","Leidraad (AI-stijl)":"Guide (AI style)","Opgeslagen offertes":"Saved quotes","Opgeslagen (":"Saved (","Zaalssjablonen":"Room templates","Productenbibliotheek":"Product library","Huidige producten opslaan":"Save current products","+ PDF opslaan":"+ Save PDF",
+    "Nog geen zalen.":"No rooms yet.","Foto's koppelen aan producten":"Link photos to products",
+    "Upload productfoto's eenmalig — ze worden automatisch aan de juiste producten gekoppeld via het itemnummer.":"Upload product photos once — they are automatically linked to the right products via the item number.",
+    "Straat, postcode gemeente":"Street, postal code city","naam@bedrijf.be":"name@company.com","klant@bedrijf.be":"client@company.com",
+    "Inrichting vergaderzalen":"Meeting room setup","Zaalnaam (bv. Raadzaal)":"Room name (e.g. Council room)","Naam nieuwe zaal (bv. Vergaderzaal A)":"New room name (e.g. Meeting room A)","Variantnaam (bv. Premium)":"Variant name (e.g. Premium)",
+    "bv. ZF Windpower 2026":"e.g. ZF Windpower 2026","Beschrijving: situatie zaal, wensen, opmerkingen…":"Description: room situation, wishes, remarks…",
+    "Wijzig de tekst: bv. 'maak het korter', 'meer technisch', 'voeg TCO toe'…":"Change the text: e.g. 'make it shorter', 'more technical', 'add TCO'…",
+    "Productnaam":"Product name","Aantal":"Quantity","Totaal":"Total",
+    // Password setup modal
+    "Wachtwoord instellen":"Set password","Stel een sterk wachtwoord in om uw account te beveiligen.":"Set a strong password to secure your account.","Minstens 8 karakters":"At least 8 characters","Bevestig wachtwoord":"Confirm password","Herhaal wachtwoord":"Repeat password",
+    "Beide velden zijn verplicht.":"Both fields are required.","Wachtwoord moet minstens 8 karakters zijn.":"Password must be at least 8 characters.","Wachtwoorden komen niet overeen.":"Passwords do not match.","Supabase niet beschikbaar.":"Supabase not available.",
+    // Admin invite
+    "Gebruikers uitnodigen":"Invite Users","E-mailadres":"Email address","Gebruiker uitnodigen":"Invite User","Uitnodigingslink verzonden naar":"Invitation link sent to","Fout bij uitnodiging:":"Error inviting user:","Vul een e-mailadres in":"Enter an email address"
   }
 };
 
@@ -2001,11 +2346,54 @@ function applyUILang(root){
   });
 }
 
+function updateInterfaceTexts(lang){
+  var importDesc = document.querySelector('[data-i18n="import_desc"]');
+  if(importDesc && lang !== "nl"){
+    var desc = {
+      "fr": "Collez une capture d'écran avec <strong>Ctrl+V</strong> (ou <strong>Cmd+V</strong>) directement dans la boîte ci-dessous — ou téléchargez un fichier. Claude reconnaît automatiquement les salles, les produits, les quantités et les prix.",
+      "en": "Paste a screenshot with <strong>Ctrl+V</strong> (or <strong>Cmd+V</strong>) directly in the box below — or upload a file. Claude automatically recognizes rooms, products, quantities and prices."
+    };
+    if(desc[lang]) importDesc.innerHTML = desc[lang];
+  }
+  var photoTip = document.querySelector('[data-i18n="photo_tip"]');
+  if(photoTip && lang !== "nl"){
+    var tip = {
+      "fr": "Conseil: nommez chaque fichier photo d'après le numéro d'article (ex. <em>FW-65BZ40L.jpg</em>) pour une liaison automatique. Ou cliquez sur le crayon à côté d'un produit pour lier une photo manuellement.",
+      "en": "Tip: name each photo file after the item number (e.g. <em>FW-65BZ40L.jpg</em>) for automatic linking. Or click the pencil next to a product to link a photo manually."
+    };
+    if(tip[lang]) photoTip.innerHTML = tip[lang];
+  }
+}
+
 function setLang(lang){
   _lang=lang;
   try{ localStorage.setItem("ricoh_lang", lang); }catch(e){}
-  swapTermsToLang(lang);       // vervang standaard-voorwaarden naar nieuwe taal
-  render();                    // herbouwt offerte-preview + vertaalt automatisch
+  swapTermsToLang(lang);
+  render();
+  updateInterfaceTexts(lang);
+  updatePasswordModal();
+  // Vertaal Acties button + dropdown labels direct via ID
+  var actiesLabels={
+    nl:{lbl:"Acties", ai:"AI-teksten genereren", ai_sub:"Beschrijvingen",  foto:"Foto's zoeken",   foto_sub:"Per product",    pdf:"PDF exporteren", pdf_sub:"Download offerte", preview:"Live preview", preview_sub:"Twee schermen"},
+    fr:{lbl:"Actions",ai:"Générer textes IA",    ai_sub:"Descriptions",    foto:"Chercher photos", foto_sub:"Par produit",     pdf:"Exporter PDF",   pdf_sub:"Télécharger devis",preview:"Aperçu live", preview_sub:"Double écran"},
+    en:{lbl:"Actions",ai:"Generate AI texts",    ai_sub:"Descriptions",    foto:"Find photos",     foto_sub:"Per product",     pdf:"Export PDF",     pdf_sub:"Download quote",   preview:"Live preview",preview_sub:"Split screen"}
+  };
+  var L=actiesLabels[lang]||actiesLabels.nl;
+  var el=function(id){return document.getElementById(id);};
+  if(el("acties-lbl"))          el("acties-lbl").textContent=L.lbl;
+  if(el("acties-ai-gen"))       el("acties-ai-gen").textContent=L.ai;
+  if(el("acties-ai-sub"))       el("acties-ai-sub").textContent=L.ai_sub;
+  if(el("acties-foto"))         el("acties-foto").textContent=L.foto;
+  if(el("acties-foto-sub"))     el("acties-foto-sub").textContent=L.foto_sub;
+  if(el("acties-pdf"))          el("acties-pdf").textContent=L.pdf;
+  if(el("acties-pdf-sub"))      el("acties-pdf-sub").textContent=L.pdf_sub;
+  if(el("acties-preview"))      el("acties-preview").textContent=L.preview;
+  if(el("acties-preview-sub"))  el("acties-preview-sub").textContent=L.preview_sub;
+  // Altijd applyUILang aanroepen — ook voor NL om vertaalde nodes te herstellen
+  setTimeout(function(){
+    applyUILang(document.body);
+    if(lang !== "nl") translateHTML();
+  }, 50);
   toast("Taal: "+{"nl":"Nederlands","fr":"Fran\u00e7ais","en":"English"}[lang]);
 }
 
@@ -2054,6 +2442,7 @@ function updateClaudeBtn(){
 }
 
 function showClaudeModal(){
+  if(!isAdmin()) return;
   var wu=document.getElementById("worker-url-input"); if(wu) wu.value=_workerUrl||"";
   var wt=document.getElementById("worker-token-input"); if(wt) wt.value=_workerToken||"";
   document.getElementById("claude-key-st").style.display="none";
@@ -2064,20 +2453,20 @@ function showClaudeModal(){
 function saveClaudeKey(){
   var wu=(document.getElementById("worker-url-input")||{value:""}).value.trim();
   if(wu){ _workerUrl=wu; try{localStorage.setItem(WORKER_URL_KEY,wu);}catch(e){} }
-  else if(!_workerUrl){ document.getElementById("claude-key-st").style.display="";document.getElementById("claude-key-st").className="st-err";document.getElementById("claude-key-st").textContent="Vul een Worker URL in."; return; }
+  else if(!_workerUrl){ document.getElementById("claude-key-st").style.display="";document.getElementById("claude-key-st").className="st-err";document.getElementById("claude-key-st").textContent=t("st_worker_empty"); return; }
   var wt=(document.getElementById("worker-token-input")||{value:""}).value.trim();
   if(wt){ _workerToken=wt; try{localStorage.setItem(WORKER_TOKEN_KEY,wt);}catch(e){} }
   updateClaudeBtn();
   var st=document.getElementById("claude-key-st");
-  st.style.display=""; st.className="st-ok"; st.textContent="\u2713 Worker URL opgeslagen.";
+  st.style.display=""; st.className="st-ok"; st.textContent="\u2713 "+t("st_worker_saved");
   setTimeout(function(){ document.getElementById("claude-modal").style.display="none"; },900);
 }
 
 async function testClaude(){
   var workerVal=(document.getElementById("worker-url-input")||{value:""}).value.trim()||_workerUrl;
   var st=document.getElementById("claude-key-st");
-  if(!workerVal){ st.style.display=""; st.className="st-err"; st.textContent="Vul eerst een Worker URL in."; return; }
-  st.style.display=""; st.className="st-inf"; st.innerHTML='<span class="spin spin-r"></span> Verbinding testen...';
+  if(!workerVal){ st.style.display=""; st.className="st-err"; st.textContent=t("st_worker_empty"); return; }
+  st.style.display=""; st.className="st-inf"; st.innerHTML='<span class="spin spin-r"></span> '+t("st_loading");
   try{
     var hdrs={"Content-Type":"application/json"};
     var tk=(document.getElementById("worker-token-input")||{value:""}).value.trim()||_workerToken;
@@ -2085,9 +2474,9 @@ async function testClaude(){
     var res=await fetch(workerVal,{method:"POST",headers:hdrs,
       body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:10,messages:[{role:"user",content:"OK"}]})});
     var d=await res.json();
-    if(res.ok){ st.className="st-ok"; st.textContent="\u2713 Worker OK! Claude reageert."; }
-    else{ st.className="st-err"; st.textContent="Fout "+(res.status)+": "+(d.error?d.error.message:JSON.stringify(d)); }
-  }catch(e){ st.className="st-err"; st.textContent="Niet bereikbaar: "+e.message; }
+    if(res.ok){ st.className="st-ok"; st.textContent="\u2713 "+t("st_worker_ok"); }
+    else{ st.className="st-err"; st.textContent=t("st_error")+" "+(res.status)+": "+(d.error?d.error.message:JSON.stringify(d)); }
+  }catch(e){ st.className="st-err"; st.textContent=t("st_error")+": "+e.message; }
 }
 
 // Claude API call
@@ -2156,23 +2545,23 @@ function showORModal(){
 function saveORKey(){
   var val = (document.getElementById("or-key-input").value||"").trim();
   var st = document.getElementById("or-key-st");
-  if(!val){ st.style.display=""; st.className="st-err"; st.textContent="Vul een sleutel in."; return; }
+  if(!val){ st.style.display=""; st.className="st-err"; st.textContent=t("st_api_empty"); return; }
   if(val.startsWith("sk-or-...")) { document.getElementById("or-modal").style.display="none"; return; }
-  if(!val.startsWith("sk-or-")){ st.style.display=""; st.className="st-err"; st.textContent="Ongeldige sleutel. Moet beginnen met sk-or-"; return; }
+  if(!val.startsWith("sk-or-")){ st.style.display=""; st.className="st-err"; st.textContent=t("st_api_invalid"); return; }
   _orKey = val;
   try{ localStorage.setItem(OR_KEY_STOR, val); }catch(e){}
-  st.style.display=""; st.className="st-ok"; st.textContent="✓ OpenRouter sleutel opgeslagen!";
+  st.style.display=""; st.className="st-ok"; st.textContent="\u2713 "+t("st_api_saved");
   updateORBtn();
   setTimeout(function(){ document.getElementById("or-modal").style.display="none"; }, 800);
-  toast("✓ OpenRouter AI actief!");
+  toast("\u2713 OpenRouter AI actief!");
 }
 
 async function testOR(){
   var val = (document.getElementById("or-key-input").value||"").trim();
   var key = (val && !val.startsWith("sk-or-...")) ? val : _orKey;
   var st = document.getElementById("or-key-st");
-  if(!key){ st.style.display=""; st.className="st-err"; st.textContent="Vul eerst een sleutel in."; return; }
-  st.style.display=""; st.className="st-inf"; st.innerHTML='<span class="spin spin-r"></span> Testen...';
+  if(!key){ st.style.display=""; st.className="st-err"; st.textContent=t("st_api_empty"); return; }
+  st.style.display=""; st.className="st-inf"; st.innerHTML='<span class="spin spin-r"></span> '+t("st_loading");
   try{
     var res = await fetch("https://openrouter.ai/api/v1/chat/completions",{
       method:"POST",
@@ -2180,13 +2569,13 @@ async function testOR(){
       body:JSON.stringify({model:"meta-llama/llama-3.1-8b-instruct:free",messages:[{role:"user",content:"Zeg OK"}],max_tokens:5})
     });
     var d = await res.json();
-    if(res.ok){ st.className="st-ok"; st.textContent="✓ Verbinding OK!"; }
-    else{ st.className="st-err"; st.textContent="Fout: "+(d.error?d.error.message:"status "+res.status); }
+    if(res.ok){ st.className="st-ok"; st.textContent="\u2713 "+t("st_worker_ok"); }
+    else{ st.className="st-err"; st.textContent=t("st_api_error")+": "+(d.error?d.error.message:"status "+res.status); }
   }catch(e){
     if(e.message&&e.message.indexOf("fetch")!==-1&&window.location.protocol==="file:"){
-      st.className="st-err"; st.textContent="CORS fout: open de app via Netlify, niet als lokaal bestand.";
+      st.className="st-err"; st.textContent=t("st_cors");
     } else {
-      st.className="st-err"; st.textContent="Niet bereikbaar: "+e.message;
+      st.className="st-err"; st.textContent=t("st_error")+": "+e.message;
     }
   }
 }
@@ -2437,7 +2826,7 @@ async function findProductImage(productName){
 // Open Google Images search voor een product (handmatige fallback)
 function searchProductPhoto(itemId){
   var item = allItems().find(function(i){ return i.id === itemId; });
-  if(!item){ toast("Item niet gevonden"); return; }
+  if(!item){ toast(t("toast_no_item")); return; }
   var q = encodeURIComponent(item.name + " product");
   var url = "https://www.google.com/search?tbm=isch&q=" + q;
   window.open(url, "_blank");
@@ -2449,7 +2838,7 @@ function searchProductPhoto(itemId){
       fotoBib = fotoBib.filter(function(f){ return f.key.toLowerCase() !== key.toLowerCase(); });
       fotoBib.push({key: key, url: imgUrl.trim()});
       renderZalen();renderFotoBib();fotoBibSave();saveState();render();
-      toast("\u2713 Foto toegevoegd aan " + item.name);
+      toast("\u2713 "+t("toast_photo_added")+" "+item.name);
     }
   }, 500);
 }
@@ -2494,18 +2883,18 @@ async function genAllFotos(){
   setTimeout(function(){ renderZalen(); render(); }, 200);
 
   spin.style.display = "none";
-  lbl.textContent = "\u{1F4F7} Fotos";
+  lbl.textContent = "\u{1F4F7} "+t("foto_lbl")+"s";
   document.getElementById("btn-ai-foto").disabled = false;
 
   if(found > 0){
-    toast("\u2713 " + found + "/" + all.length + " foto's gevonden");
+    toast("\u2713 "+found+"/"+all.length+" "+t("toast_photos_found"));
     if(found < all.length){
       setTimeout(function(){
         toast("Voor ontbrekende producten: klik op de \ud83d\udcf7 knop per item");
       }, 2500);
     }
   } else {
-    toast("Geen foto's gevonden. Klik op \ud83d\udcf7 per item voor handmatig zoeken.");
+    toast(t("toast_no_photos"));
   }
 }
 
@@ -2522,7 +2911,7 @@ function zaalTplSave(){
 function saveZaalTpl(zid){
   var z = zalen.find(function(z){ return z.id===zid; });
   if(!z || !z.items.length){
-    toast("Voeg eerst items toe aan de zaal.");
+    toast(t("toast_add_items"));
     return;
   }
   // Vraag naam
@@ -2546,7 +2935,7 @@ function saveZaalTpl(zid){
 
   zaalTplSave();
   renderZaalTpls();
-  toast("\u2713 Sjabloon '" + nm + "' opgeslagen (" + z.items.length + " items)");
+  toast("\u2713 "+t("toast_tpl_saved")+": '"+nm+"' ("+z.items.length+" items)");
 }
 
 function loadZaalTpl(tid){
@@ -2579,7 +2968,7 @@ function loadZaalTpl(tid){
   var zalenTab = document.querySelector(".main-tab[onclick*='p-zalen']");
   if(zalenTab) MT("p-zalen", zalenTab);
 
-  toast("\u2713 " + tpl.name + " toegevoegd (" + tpl.items.length + " items)");
+  toast("\u2713 "+tpl.name+" "+t("toast_tpl_loaded")+" ("+tpl.items.length+" items)");
 }
 
 function deleteZaalTpl(tid){
@@ -2596,7 +2985,7 @@ function renderZaalTpls(){
   if(!list) return;
 
   if(!zaalTpls.length){
-    list.innerHTML = '<div style="color:#bbb;font-size:11px;text-align:center;padding:12px">Nog geen sjablonen. Klik op &#128190; naast een zaal om hem op te slaan.</div>';
+    list.innerHTML = '<div style="color:#bbb;font-size:11px;text-align:center;padding:12px">'+ui("Nog geen sjablonen. Klik op &#128190; naast een zaal om hem op te slaan.")+'</div>';
     return;
   }
 
@@ -2747,11 +3136,11 @@ function dropBlockAtZone(dz){
 
   // Switch to Blokken tab for editing if text block
   if(_dragBlockType === "tekst" || _dragBlockType === "tco"){
-    toast("Blok toegevoegd - bewerk het via tabblad Blokken");
+    toast(t("toast_block_added"));
   } else if(_dragFotoUrl){
-    toast("Foto toegevoegd aan offerte");
+    toast(t("toast_foto_added"));
   } else {
-    toast("Blok toegevoegd");
+    toast(t("toast_block_added"));
   }
 
   _dragBlockType = null;
@@ -2815,11 +3204,11 @@ var _cameraFacing = "environment"; // rear camera by default
 
 async function openCamera(){
   var modal = document.getElementById("camera-modal");
-  if(!modal){ toast("Camera modal niet gevonden"); return; }
+  if(!modal){ toast(t("st_error")); return; }
 
   // HTTPS vereist voor camera (Netlify is HTTPS, lokaal niet)
   if(location.protocol !== "https:" && location.hostname !== "localhost" && location.hostname !== "127.0.0.1"){
-    toast("Camera vereist HTTPS - gebruik de Netlify URL");
+    toast(t("toast_cam_https"));
     openCameraFallback();
     return;
   }
@@ -2843,7 +3232,7 @@ async function openCamera(){
   } catch(err){
     console.error("Camera error:", err);
     modal.style.display = "none";
-    toast("Camera geweigerd: "+err.message);
+    toast(t("toast_cam_denied")+": "+err.message);
     openCameraFallback();
   }
 }
@@ -2882,7 +3271,7 @@ async function switchCamera(){
       audio: false
     });
     document.getElementById("camera-video").srcObject = _cameraStream;
-  } catch(e){ toast("Camera wisselen mislukt"); }
+  } catch(e){ toast(t("toast_cam_fail")); }
 }
 
 function capturePhoto(){
@@ -2968,10 +3357,10 @@ async function saveOfferte(withPDF){
     sp.style.display="none";lb.textContent=" + PDF opslaan";
   }
   offertes=offertes.filter(function(o){return o.name!==nm;});offertes.unshift(entry);offlSave();renderOffertes();
-  st.className="st-ok";st.innerHTML="OK Opgeslagen: <strong>"+esc(nm)+"</strong>"+(entry.pdfB64?" + PDF":"");
-  toast("OK Offerte opgeslagen");
+  st.className="st-ok";st.innerHTML="OK "+t("saved"||"Opgeslagen")+": <strong>"+esc(nm)+"</strong>"+(entry.pdfB64?" + PDF":"");
+  toast(t("quote_saved"||"OK Offerte opgeslagen"));
 }
-function delOfferte(id){if(!confirmTr("Offerte verwijderen?"))return;offertes=offertes.filter(function(o){return o.id!==id;});offlSave();renderOffertes();}
+function delOfferte(id){if(!confirmTr(t("delete_quote"||"Offerte verwijderen?")))return;offertes=offertes.filter(function(o){return o.id!==id;});offlSave();renderOffertes();}
 function loadOfferte(id){
   var e=offertes.find(function(o){return o.id===id;});if(!e)return;
   if(!confirm("Huidige sessie overschrijven met '"+e.name+"'?"))return;
@@ -2984,14 +3373,14 @@ function loadOfferte(id){
   if(s.sigData){sigData=s.sigData;sigName=s.sigName||"";sigDate=s.sigDate||"";}
   if(s.fields){Object.keys(s.fields).forEach(function(k){var el=document.getElementById(k);if(el)el.value=s.fields[k]||"";});}
   saveState();renderZalen();renderFotoBib();renderBlocks();renderVariants();renderLib();render();
-  toast("OK Geladen: "+e.name);
+  toast("\u2713 "+t("toast_loaded")+": "+e.name);
 }
 function dlOffertePDF(id){var e=offertes.find(function(o){return o.id===id;});if(!e||!e.pdfB64){alert("Geen PDF opgeslagen. Sla opnieuw op met PDF.");return;}var b=atob(e.pdfB64),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);var u=URL.createObjectURL(new Blob([a],{type:"application/pdf"}));var x=document.createElement("a");x.href=u;x.download=e.name.replace(/[^a-zA-Z0-9]/g,"_")+".pdf";x.click();setTimeout(function(){URL.revokeObjectURL(u);},1000);toast("OK PDF gedownload");}
 function dlOfferteRicoh(id){var e=offertes.find(function(o){return o.id===id;});if(!e)return;var u=URL.createObjectURL(new Blob([JSON.stringify(e.session)],{type:"application/json;charset=utf-8"}));var x=document.createElement("a");x.href=u;x.download=e.name.replace(/[^a-zA-Z0-9]/g,"_")+".ricoh";x.click();setTimeout(function(){URL.revokeObjectURL(u);},1000);toast("OK .ricoh gedownload");}
 function renderOffertes(){
   document.getElementById("off-cnt").textContent=offertes.length;
   var list=document.getElementById("off-list");
-  if(!offertes.length){list.innerHTML="<div style='color:#bbb;font-size:12px;text-align:center;padding:16px'>Nog geen offertes opgeslagen</div>";return;}
+  if(!offertes.length){list.innerHTML="<div style='color:#bbb;font-size:12px;text-align:center;padding:16px'>"+ui("Nog geen offertes opgeslagen")+"</div>";return;}
   list.innerHTML=offertes.map(function(o){
     var d=new Date(o.ts).toLocaleDateString("nl-BE",{day:"2-digit",month:"2-digit",year:"numeric"});
     return "<div style='border:1px solid var(--bd);border-radius:5px;padding:11px;margin-bottom:8px;background:#fff'>"+
@@ -3040,7 +3429,7 @@ function removeContact(id){contacts=contacts.filter(function(c){return c.id!==id
 function setContact(id,key,val){var c=contacts.find(function(c){return c.id===id;});if(c){c[key]=val;render();}}
 function renderContacts(){
   var list=document.getElementById("contacts-list");if(!list)return;
-  if(!contacts.length){list.innerHTML='<div style="color:#bbb;font-size:11px;text-align:center;padding:8px">Nog geen contactpersoon. Klik hieronder om er een toe te voegen.</div>';return;}
+  if(!contacts.length){list.innerHTML='<div style="color:#bbb;font-size:11px;text-align:center;padding:8px">'+ui("Nog geen contactpersoon. Klik hieronder om er een toe te voegen.")+'</div>';return;}
   list.innerHTML=contacts.map(function(c,i){return(
     '<div style="border:1px solid var(--bd);border-radius:6px;padding:10px;margin-bottom:9px;background:#fff">'+
     '<div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">'+
@@ -3216,7 +3605,7 @@ function loadCover(e){
     st.style.display="none";
   };
   r.onerror=function(){
-    st.className="st-err";st.textContent="Fout bij laden van afbeelding.";
+    st.className="st-err";st.textContent=t("st_error_img");
   };
   r.readAsDataURL(f);
 }
@@ -3241,7 +3630,7 @@ function setCoverImg(src){
   if(wrap){wrap.style.display="block";}
   document.getElementById("cover-url").value=src.startsWith("http")?src:"";
   render();
-  toast("Coverafbeelding ingesteld");
+  toast("\u2713 "+t("toast_cover_removed").replace("verwijderd","ingesteld"));
 }
 
 function clearCover(){
@@ -3250,10 +3639,10 @@ function clearCover(){
   var wrap=document.getElementById("cover-preview-wrap");
   if(th){th.src="";}
   if(wrap){wrap.style.display="none";}
-  document.getElementById("cover-file-name").textContent="Geen bestand gekozen";
+  document.getElementById("cover-file-name").textContent=ui("Geen bestand gekozen");
   document.getElementById("cover-url").value="";
   render();
-  toast("Coverafbeelding verwijderd");
+  toast(t("toast_cover_removed"));
 }
 function loadVB(e){
   var file=e.target.files[0];if(!file)return;
@@ -3296,8 +3685,8 @@ async function analyzeVB(){
     }
     document.getElementById("vb-st").className="st-ok";document.getElementById("vb-st").innerHTML="\u2713 Leidraad geëxtraheerd";
     var ctx=document.getElementById("vb-ctx");ctx.style.display="";ctx.className="ctxbox";ctx.textContent=vbCtx;
-    lbl.textContent="\u21ba Heranalyseer";
-  }catch(err){document.getElementById("vb-st").className="st-err";document.getElementById("vb-st").textContent="Fout: "+err.message;}
+    lbl.textContent="\u21ba "+t("st_reanalyze");
+  }catch(err){document.getElementById("vb-st").className="st-err";document.getElementById("vb-st").textContent=t("st_error")+": "+err.message;}
   btn.disabled=false;spin.style.display="none";
 }
 
@@ -3378,8 +3767,8 @@ async function genItemDescAI(){
   spin.style.display="inline-block";btn.disabled=true;
   try{
     ta.value=(await aiCall(
-      [{role:"user",content:"Product: "+it.name+"\nAantal: "+it.qty}],
-      getSys("Schrijf een beknopte productbeschrijving van 2 a 3 zinnen. Technische specs en toepassingsgebied. Geen prijzen, geen bullets, derde persoon enkelvoud.")
+      [{role:"user",content:"Product: "+it.name+"\nQty: "+it.qty}],
+      getSys("Write a concise product description of 2-3 sentences. Technical specs and application area. No prices, no bullets, third person singular.")
     )).trim();
   }catch(ex){toast("Fout: "+ex.message);}
   spin.style.display="none";btn.disabled=false;
@@ -3389,7 +3778,7 @@ function renderZalen(){
   var cnt=allItems().length;
   document.getElementById("badge").textContent=cnt+" items";
   var list=document.getElementById("zalen-list");
-  if(!zalen.length){list.innerHTML='<div style="color:#bbb;font-size:12px;text-align:center;padding:12px">Nog geen zalen.</div>';return;}
+  if(!zalen.length){list.innerHTML='<div style="color:#bbb;font-size:12px;text-align:center;padding:12px">'+ui("Nog geen zalen.")+'</div>';return;}
   list.innerHTML=zalen.map(function(z){
     var rows=z.items.length===0?'<div style="color:#bbb;font-size:11px;text-align:center;padding:7px">Geen items</div>':
       z.items.map(function(item){return(
@@ -3536,7 +3925,7 @@ document.addEventListener("paste", function(e) {
         if(zalenTab && !document.getElementById("p-zalen").classList.contains("on")) {
           MT("p-zalen", zalenTab);
         }
-        toast("Screenshot geplakt - klik op Analyseer om te importeren");
+        toast(t("toast_screenshot_pasted"));
       };})(mime);
       r.readAsDataURL(file);
       return; // only first image
@@ -3559,24 +3948,23 @@ async function analyzeSS(){
   if(!ssB64)return;
   var btn=document.getElementById("btn-ss"),spin=document.getElementById("ss-spin"),lbl=document.getElementById("ss-lbl"),st=document.getElementById("ss-st");
   btn.disabled=true;spin.style.display="inline-block";
-  st.style.display="";st.className="st-inf";st.innerHTML='<span class="spin spin-r"></span> '+t("step"||"Stap")+" 1/2: "+t("rec_rooms"||"zalen en producten herkennen")+'...';
-  lbl.textContent=t("analyzing"||"Analyseren")+"...";
+  st.style.display="";st.className="st-inf";st.innerHTML='<span class="spin spin-r"></span> '+t("step1")+'...';
+  lbl.textContent=t("analysing")+"...";
   try{
     // STAP 1: herken zalen + producten
-    // Eerst proberen vision, dan tekst fallback indien vision faalt
     var ssPrompt="Analyseer dit beeld. Dit is (een deel van) een offerte of kitlist met AV-producten.\n\nZALEN/RUIMTES - strikt:\n- Maak ALLEEN een aparte ruimte aan bij een DUIDELIJKE, expliciete ruimtetitel: een aparte kop-/bannerregel met een echte ruimtenaam (bv. \"Raadzaal\", \"Vergaderzaal A\", \"Zaal Noord\").\n- Verzin NOOIT ruimtes. Een productnaam (ook al staat hij vetgedrukt) is GEEN ruimtetitel.\n- Herhalende productblokken (bv. dezelfde microfoonset die meermaals voorkomt) zijn extra posities binnen DEZELFDE ruimte, GEEN aparte zalen.\n- Gebruik NOOIT \"Zaal 1\", \"Zaal 2\"... tenzij die letterlijk zo in het beeld staan.\n- Geen expliciete ruimtetitel zichtbaar? Geef dan voor ELK item room:\"\" (lege string).\n\nProducten staan met naam, referentiecode, aantal en eenheidsprijs. Extraheer ALLE productregels.\n\nGeef ENKEL een JSON array. Start met [ eindig met ]. Geen uitleg.\nPer item: {\"room\":\"exacte ruimtetitel of lege string\",\"name\":\"productnaam\",\"ref\":\"referentiecode of lege string\",\"qty\":getal,\"price\":eenheidsprijs als getal met punt of null}\nNegeer BTW/totaal/subtotaal-rijen.";
     var txt=await aiCallWithImage(ssPrompt, null, ssB64, ssMime);
     var s=txt.indexOf("["),e2=txt.lastIndexOf("]");
-    if(s===-1||e2<=s)throw new Error(t("no_items"||"Geen geldige items herkend in de screenshot."));
+    if(s===-1||e2<=s)throw new Error(t("no_items_found_ss"));
     var parsed=JSON.parse(txt.slice(s,e2+1));
-    if(!parsed.length)throw new Error(t("no_items_found"||"Geen items gevonden."));
+    if(!parsed.length)throw new Error(t("no_items_ss"));
     importParsedItems(applyForceRoom(parsed),"room");
     var nItems=parsed.length;
     var nZalen=[...new Set(parsed.map(function(i){return i.room||"Algemeen";}))].length;
 
     // STAP 2: zoek foto's
-    st.innerHTML='<span class="spin spin-r"></span> '+nItems+' '+t("items"||"items")+' '+t("recognized"||"herkend")+". "+t("step"||"Stap")+" 2/2: "+t("search_photos"||"fotos zoeken")+'...';
-    lbl.textContent=t("search_photos"||"Fotos zoeken")+"...";
+    st.innerHTML='<span class="spin spin-r"></span> '+nItems+' items '+t("recognized")+'. '+t("step2_photos")+'...';
+    lbl.textContent=t("searching_photos")+"...";
     var uniq={};var toSearch=[];
     parsed.forEach(function(item){
       var key=(item.ref&&item.ref.trim().length>2)?item.ref.trim():item.name.trim();
@@ -3586,7 +3974,7 @@ async function analyzeSS(){
     for(var j=0;j<Math.min(toSearch.length,8);j++){
       var prod=toSearch[j];
       var q=(prod.ref&&prod.ref.length>2)?prod.ref:prod.name;
-      lbl.textContent=t("photo"||"Foto ")+(j+1)+"/"+Math.min(toSearch.length,8)+": "+q.slice(0,18)+"...";
+      lbl.textContent=t("foto_lbl")+" "+(j+1)+"/"+Math.min(toSearch.length,8)+": "+q.slice(0,18)+"...";
       try{
         var fd=await apiFetch("/v1/messages",{
           model:"claude-sonnet-4-6",max_tokens:200,
@@ -3607,11 +3995,12 @@ async function analyzeSS(){
     }
     linkAllFotos();renderFotoBib();
     st.className="st-ok";
-    st.innerHTML="\u2713 "+nItems+" "+t("items"||"items")+" in "+nZalen+" "+t("room"||"zaal")+(nZalen!==1?t("rooms_plural"||"en"):"")+( found?" + "+found+" "+t("photos"||"fotos"):"")+". "+t("tip_ai_text"||"Klik 'AI tekst' voor beschrijvingen")+".";    lbl.textContent="\u2713 "+t("analyze_import"||"Analyseer & importeer");
+    st.innerHTML="\u2713 "+nItems+" items in "+nZalen+" "+(nZalen!==1?t("items_lbl").trim():t("item_lbl").trim())+(found?" + "+found+" "+t("foto_lbl").toLowerCase()+"s":"")+". "+t("ai_click");
+    lbl.textContent="\u2713 "+t("analysing");
   }catch(err){
     st.className="st-err";
     if(err.message&&err.message.indexOf("fetch")!==-1){
-      st.innerHTML=t("connection_error"||"Verbindingsfout")+". "+t("check_api"||"Controleer je API-sleutel of internetverbinding.")+"<br><small>"+err.message+"</small>";
+      st.innerHTML=t("st_error")+". "+t("st_cors")+"<br><small>"+err.message+"</small>";
     } else {
       st.textContent=t("error"||"Fout")+": "+err.message;
     }
@@ -3671,7 +4060,7 @@ async function extractPDF(){
         '<strong>Geïmporteerde referenties:</strong><br>'+sample+
         '<br><br><strong>Foto-sleutels in bibliotheek ('+fotoBib.length+'):</strong><br>'+esc(bibKeys)+'</div>';
     }, 1900);
-  }catch(err){st.className="st-err";st.textContent="Fout: "+err.message;}
+  }catch(err){st.className="st-err";st.textContent=t("st_error")+": "+err.message;}
 }
 // Excel
 function loadXL(e){
@@ -3683,13 +4072,13 @@ function loadXL(e){
     try{
       var wb=XLSX.read(ev.target.result,{type:"binary"});var ws=wb.Sheets[wb.SheetNames[0]];
       var raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
-      if(!raw||raw.length<2){st.className="st-err";st.textContent="Bestand lijkt leeg.";return;}
+      if(!raw||raw.length<2){st.className="st-err";st.textContent=t("st_error");return;}
       var hr=0;for(var i=0;i<Math.min(5,raw.length);i++){if(raw[i].some(function(c){return String(c).trim()!=="";})){hr=i;break;}}
       xlHdrs=raw[hr].map(function(h,i){return{label:String(h||"Kolom "+(i+1)).trim(),idx:i};});
       xlData=raw.slice(hr+1).filter(function(row){return row.some(function(c){return String(c).trim()!=="";});});
       st.className="st-ok";st.innerHTML="\u2713 <strong>"+file.name+"</strong> - "+xlData.length+" rijen";
       buildXLMap();map.style.display="";
-    }catch(err){st.className="st-err";st.textContent="Fout: "+err.message;}
+    }catch(err){st.className="st-err";st.textContent=t("st_error")+": "+err.message;}
   };
   r.readAsBinaryString(file);
 }
@@ -3905,7 +4294,7 @@ async function syncAndLinkFotos(){
 function renderFotoBib(){
   document.getElementById("fb-cnt").textContent=fotoBib.length;
   var list=document.getElementById("fb-list");
-  if(!fotoBib.length){list.innerHTML='<div style="color:#bbb;font-size:11px;text-align:center;padding:9px">Nog geen foto\'s</div>';return;}
+  if(!fotoBib.length){list.innerHTML='<div style="color:#bbb;font-size:11px;text-align:center;padding:9px">'+ui("Nog geen foto's")+'</div>';return;}
   list.innerHTML=fotoBib.map(function(f,i){return(
     '<div class="foto-row">'+
     '<img class="foto-thumb" src="'+esc(f.url)+'" alt="" onerror="this.style.opacity=\'.15\'">'+
@@ -3925,7 +4314,7 @@ function addFotoHand(){
   if(!key){alert("Vul een itemnummer in.");return;}if(!url){alert("Upload een foto of vul een URL in.");return;}
   function resetForm(){
     document.getElementById("f-key").value="";document.getElementById("f-url").value="";
-    document.getElementById("f-file-nm").textContent="Geen bestand";document.getElementById("f-prev").style.display="none";
+    document.getElementById("f-file-nm").textContent=ui("Geen bestand");document.getElementById("f-prev").style.display="none";
     fFileB64=null;fFileObj=null;
   }
   if(supaConfigured()){
@@ -3954,13 +4343,13 @@ function loadFotoXL(e){
   var file=e.target.files[0];if(!file)return;var st=document.getElementById("fxl-st");st.style.display="";st.className="st-inf";st.innerHTML='<span class="spin spin-r"></span> Laden\u2026';
   var r=new FileReader();r.onload=function(ev){
     try{var wb=XLSX.read(ev.target.result,{type:"binary"});var ws=wb.Sheets[wb.SheetNames[0]];var rows=XLSX.utils.sheet_to_json(ws,{defval:""});
-      if(!rows.length){st.className="st-err";st.textContent="Geen rijen gevonden.";return;}
+      if(!rows.length){st.className="st-err";st.textContent=t("no_items_ss");return;}
       var ks=Object.keys(rows[0]);
       var kC=ks.find(function(k){return/(item|ref|nr|name|naam|product|code|sku)/i.test(k);})||ks[0];
       var uC=ks.find(function(k){return/(url|foto|photo|image|img)/i.test(k);})||ks[1];
       var added=0;rows.forEach(function(row){var key=String(row[kC]||"").trim();var url=String(row[uC]||"").trim();if(!key||!url||!url.startsWith("http"))return;fotoBib=fotoBib.filter(function(f){return f.key.toLowerCase()!==key.toLowerCase();});fotoBib.push({key:key,url:url});added++;});
       st.className="st-ok";st.innerHTML="\u2713 "+added+" foto's geladen";renderFotoBib();linkAllFotos();
-    }catch(err){st.className="st-err";st.textContent="Fout: "+err.message;}
+    }catch(err){st.className="st-err";st.textContent=t("st_error")+": "+err.message;}
   };r.readAsBinaryString(file);
 }
 async function autoFotos(){
@@ -3971,7 +4360,7 @@ async function autoFotos(){
   spin.style.display="inline-block";lbl.textContent="Bezig...";
   for(var j=0;j<zonder.length;j++){
     var item=zonder[j];
-    lbl.textContent="Foto "+(j+1)+"/"+zonder.length+": "+item.name.slice(0,18)+"...";
+    lbl.textContent=t("foto_lbl")+" "+(j+1)+"/"+zonder.length+": "+item.name.slice(0,18)+"...";
     try{
       var d=await apiFetch("/v1/messages",{
         model:"claude-sonnet-4-6",max_tokens:300,
@@ -4150,7 +4539,7 @@ function supaSaveConfig(){
     if(st){st.className="st-ok";st.textContent="\u2713 Verbonden \u2014 "+fotoBib.length+" foto's gesynchroniseerd.";}
     supaUpdateStatus();
   }).catch(function(e){
-    if(st){st.className="st-err";st.textContent="Fout: "+e.message;}
+    if(st){st.className="st-err";st.textContent=t("st_error")+": "+e.message;}
   });
 }
 function openSupaModal(){
@@ -4263,7 +4652,7 @@ function renderProductLib(){
   var q = (document.getElementById("prodlib-q")||{}).value||"";
   var filtered = q ? productLib.filter(function(p){ return p.name.toLowerCase().indexOf(q.toLowerCase()) !== -1; }) : productLib;
   if(!filtered.length){
-    list.innerHTML = '<div style="color:#bbb;font-size:11px;text-align:center;padding:12px">'+(q?"Geen resultaten":"Nog geen producten opgeslagen")+'</div>';
+    list.innerHTML = '<div style="color:#bbb;font-size:11px;text-align:center;padding:12px">'+(q?ui("Geen resultaten"):ui("Nog geen producten opgeslagen"))+'</div>';
     return;
   }
   list.innerHTML = filtered.map(function(p,i){
@@ -4308,7 +4697,7 @@ function clearProductLib(){
 function renderLib(){
   document.getElementById("lib-cnt").textContent=fileLib.length;
   var list=document.getElementById("lib-list");
-  if(!fileLib.length){list.innerHTML='<div style="color:#bbb;font-size:11px;text-align:center;padding:12px">Nog geen bestanden</div>';return;}
+  if(!fileLib.length){list.innerHTML='<div style="color:#bbb;font-size:11px;text-align:center;padding:12px">'+ui("Nog geen bestanden")+'</div>';return;}
   var icons={foto:"Foto",cover:"Cover",pdf:"Doc",excel:"Excel"};
   var sorted=fileLib.slice().sort(function(a,b){return b.ts-a.ts;});
   list.innerHTML=sorted.map(function(f){var kb=Math.round(f.size/1024);var szStr=kb>1024?(kb/1024).toFixed(1)+"MB":kb+"KB";
@@ -4349,7 +4738,7 @@ function saveSig(){
   if(blank){alert("Teken eerst een handtekening op het canvas.");return;}
   sigData=sigCanvas.toDataURL("image/png");sigName=name;sigDate=new Date().toLocaleDateString("nl-BE");
   document.getElementById("sig-prev").src=sigData;
-  document.getElementById("sig-info").textContent="Ondertekend door "+sigName+" op "+sigDate;
+  document.getElementById("sig-info").textContent=(t("ct_role")||"Signed by")+" "+sigName+" "+("on")+" "+sigDate;
   document.getElementById("sig-prev-wrap").style.display="block";
   var st=document.getElementById("sig-st");st.style.display="";st.className="st-ok";st.innerHTML="\u2713 Handtekening opgeslagen - verschijnt op de laatste pagina van de offerte";
   render();toast("\u2713 Handtekening opgeslagen");
@@ -4437,7 +4826,8 @@ function checkAIAvailable(){
     return false;
   }
   if(!_workerUrl && !_orKey && !isArtifact()){
-    showClaudeModal();
+    if(isAdmin()) showClaudeModal();
+    else toast("AI niet beschikbaar — contacteer de beheerder.");
     return false;
   }
   return true;
@@ -4446,29 +4836,29 @@ function checkAIAvailable(){
 async function genAll(){
   if(!checkAIAvailable()) return;
   if(!isArtifact() && !_workerUrl && !_orKey){showAIUnavailable();return;}
-  var all=allItems();if(!all.length){alert("Voeg eerst items toe aan een zaal.");return;}
+  var all=allItems();if(!all.length){alert(t("toast_add_items"));return;}
   var btn=document.getElementById("btn-ai"),lbl=document.getElementById("ai-lbl"),spin=document.getElementById("ai-spin");
-  btn.disabled=true;spin.style.display="inline-block";lbl.textContent="Bezig...";
+  btn.disabled=true;spin.style.display="inline-block";lbl.textContent=t("analysing")+"...";
   for(var j=0;j<all.length;j++){
     var item=all[j];if(item.desc)continue;
     item.loading=true;render();
     lbl.textContent=item.name.slice(0,20)+"...";
     try{
       item.desc=(await aiCall(
-        [{role:"user",content:"Product: "+item.name+"\nAantal: "+item.qty}],
-        getSys("Schrijf een beknopte productbeschrijving van 2 a 3 zinnen. Technische specs en toepassingsgebied. Geen prijzen, geen bullets, derde persoon enkelvoud.")
+        [{role:"user",content:"Product: "+item.name+"\nQty: "+item.qty}],
+        getSys("Write a concise product description of 2-3 sentences. Technical specs and application area. No prices, no bullets, third person singular.")
       )).trim();
-    }catch(ex){item.desc="";toast("Fout: "+ex.message);}
+    }catch(ex){item.desc="";toast(t("st_error")+": "+ex.message);}
     item.loading=false;render();
   }
-  btn.disabled=false;spin.style.display="none";lbl.textContent="AI: tekst";
+  btn.disabled=false;spin.style.display="none";lbl.textContent=ui("AI: tekst");
 }
 async function genIntro(){
   if(!checkAIAvailable()) return;
   var ta=document.getElementById("p-in"),btn=document.getElementById("btn-intro");
-  ta.value="Bezig\u2026";ta.disabled=true;btn.disabled=true;
+  ta.value=t("analysing")+"\u2026";ta.disabled=true;btn.disabled=true;
   var zalenInfo=zalen.map(function(z){return z.name+": "+z.items.slice(0,3).map(function(i){return i.qty+"x "+i.name;}).join(", ");}).join(" | ");
-  try{ta.value=(await aiCall([{role:"user",content:"Klant: "+(gv("c-nm")||"de klant")+"\nProject: "+(gv("p-nm")||"vergaderzalen")+"\nZalen: "+zalenInfo}],getSys("Schrijf een inleidende alinea van 3 à 4 zinnen. Formele maar toegankelijke toon. Geen bullets."))).trim();}catch(ex){ta.value="";}
+  try{ta.value=(await aiCall([{role:"user",content:"Client: "+(gv("c-nm")||"the client")+"\nProject: "+(gv("p-nm")||"meeting rooms")+"\nRooms: "+zalenInfo}],getSys("Write an introductory paragraph of 3 to 4 sentences. Formal but accessible tone. No bullets."))).trim();}catch(ex){ta.value="";}
   ta.disabled=false;btn.disabled=false;render();
 }
 
@@ -4479,7 +4869,7 @@ async function refineIntro(){
   if(!checkAIAvailable())return;
   var ta=document.getElementById("p-in");
   var currentText=ta.value.trim();
-  if(!currentText){toast("Schrijf of genereer eerst een introtekst.");return;}
+  if(!currentText){toast(t("toast_write_first"));return;}
   // Toon chatlog
   var log=document.getElementById("intro-chat-log");
   log.style.display="block";
@@ -4572,22 +4962,22 @@ function render(){
   if(variants.length)tocRows+='<div class="trow"><span><b>5.</b>&nbsp;Prijsvarianten</span><span>'+pgVar+'</span></div>';
   var zaalToc=zalen.map(function(z,i){return'<div class="trow" style="padding-left:14px"><span>3.'+(i+1)+'. '+esc(z.name)+'</span><span>'+z.items.length+' items</span></div>';}).join("");
   var p2='<div class="a4">'+PH()+'<div class="pg-body">'+
-    '<div style="margin-bottom:18px"><span class="st" style="font-size:13px;font-weight:bold">Inhoudsopgave</span><div class="sr"></div>'+tocRows+zaalToc+'</div>'+
-    '<span class="sn">1.</span><span class="st">Ons voorstel</span><div class="sr"></div>'+
+    '<div style="margin-bottom:18px"><span class="st" style="font-size:13px;font-weight:bold">'+t("toc_title"||"Inhoudsopgave")+'</span><div class="sr"></div>'+tocRows+zaalToc+'</div>'+
+    '<span class="sn">1.</span><span class="st">'+t("s1"||"Ons voorstel")+'</span><div class="sr"></div>'+
     '<ul style="margin-left:16px;font-size:11px;line-height:1.9;color:var(--gr)"><li>'+esc(pn)+'</li>'+(terms.propItems||[]).filter(function(x){return x.trim();}).map(function(x){return'<li>'+esc(x)+'</li>';}).join('')+'</ul>'+
     (pi?'<div style="margin-top:12px;padding:12px 16px;border-left:3px solid var(--red);background:var(--rl);font-size:13px;line-height:1.8;color:var(--gr)">'+esc(pi)+'</div>':'')+
     // Content blokken
     (blocks.length?'<div style="margin-top:14px">'+renderBlocksHTML()+'</div>':'')+
-    '<div style="margin-top:20px"><span class="sn">2.</span><span class="st">Contactpersonen</span><div class="sr"></div>'+
-    '<table class="ctt"><thead><tr><th>Functie</th><th>Naam</th><th>E-mail</th><th>Tel</th></tr></thead><tbody>'+
+    '<div style="margin-top:20px"><span class="sn">2.</span><span class="st">'+t("s2"||"Contactpersonen")+'</span><div class="sr"></div>'+
+    '<table class="ctt"><thead><tr><th>'+t("ct_role"||"Functie")+'</th><th>'+t("ct_name"||"Naam")+'</th><th>'+t("ct_email"||"E-mail")+'</th><th>'+t("ct_tel"||"Tel")+'</th></tr></thead><tbody>'+
     (contacts.length?contacts.map(function(c){if(!(c.name||c.func||c.email||c.tel))return"";return'<tr><td>'+esc(c.func||"AV Specialist")+'</td><td>'+esc(c.name||"")+'</td><td>'+(c.email?'<a href="mailto:'+esc(c.email)+'">'+esc(c.email)+'</a>':'')+'</td><td>'+esc(c.tel||"")+'</td></tr>';}).join(""):'')+
-    (contacts.some(function(c){return c.name||c.func||c.email||c.tel;})?'':'<tr><td colspan="4" style="color:#bbb;font-style:italic;text-align:center">Vul contactgegevens in op tabblad Klant</td></tr>')+
+    (contacts.some(function(c){return c.name||c.func||c.email||c.tel;})?'':'<tr><td colspan="4" style="color:#bbb;font-style:italic;text-align:center">'+t("fill_contacts"||"Vul contactgegevens in op tabblad Klant")+'</td></tr>')+
     '</tbody></table></div>'+
     '</div>'+PF(2)+'</div>';
 
   // Technische bepalingen per zaal
   var techHTML="";
-  if(zalen.length===0){techHTML='<div class="a4">'+PH()+'<div class="pg-body"><span class="sn">3.</span><span class="st">Technische bepalingen</span><div class="sr"></div><div class="emp">Maak vergaderzalen aan op tabblad \u201eZalen\u201d</div></div>'+PF(pgTechStart)+'</div>';}
+  if(zalen.length===0){techHTML='<div class="a4">'+PH()+'<div class="pg-body"><span class="sn">3.</span><span class="st">'+t("s3"||"Technische bepalingen")+'</span><div class="sr"></div><div class="emp">'+t("no_zalen"||"Maak vergaderzalen aan op tabblad \u201eZalen\u201d")+'</div></div>'+PF(pgTechStart)+'</div>';}
   else{var techPg=pgTechStart;zalen.forEach(function(z,zi){
     var split=zaalSplits[zi]||[[]];
     var nPg=split.length;
@@ -4635,10 +5025,10 @@ function render(){
 
   // Prijsvoorstel
   var priceRows=zalen.map(function(z){if(!z.items.length)return"";return'<tr class="zg"><td colspan="5">'+esc(z.name)+'</td></tr>'+z.items.map(function(i){return'<tr><td>'+esc(i.name)+'</td><td style="color:#999;font-size:9px">'+esc(i.name.split(/\s+/).pop())+'</td><td style="text-align:center">'+i.qty+',0</td><td class="ri">'+(i.price!=null?fE(i.price):"-")+'</td><td class="ri">'+(i.price!=null?fE(i.price*i.qty):"-")+'</td></tr>';}).join("");}).join("");
-  var p4='<div class="a4">'+PH()+'<div class="pg-body"><span class="sn">4.</span><span class="st">Prijsvoorstel</span><div class="sr"></div>'+
-    '<p style="font-size:10px;color:#777;margin-bottom:10px">Het prijsaanbod werd berekend op basis van de huidige aankoopprijzen bij onze leveranciers.</p>'+
-    (zalen.length===0?'<div class="emp">Nog geen items.</div>':
-    '<table class="prt"><thead><tr><th style="width:36%">Omschrijving</th><th style="width:14%">Referentie</th><th style="width:8%;text-align:center">Qty</th><th style="width:20%;text-align:right">Eenheidsprijs</th><th style="width:20%;text-align:right">Totaalprijs</th></tr></thead><tbody>'+priceRows+'</tbody></table>'+
+  var p4='<div class="a4">'+PH()+'<div class="pg-body"><span class="sn">4.</span><span class="st">'+t("s4"||"Prijsvoorstel")+'</span><div class="sr"></div>'+
+    '<p style="font-size:10px;color:#777;margin-bottom:10px">'+t("price_calc"||"Het prijsaanbod werd berekend op basis van de huidige aankoopprijzen bij onze leveranciers.")+'</p>'+
+    (zalen.length===0?'<div class="emp">'+t("no_items"||"Nog geen items.")+'</div>':
+    '<table class="prt"><thead><tr><th style="width:36%">'+t("th_desc"||"Omschrijving")+'</th><th style="width:14%">'+t("th_ref"||"Referentie")+'</th><th style="width:8%;text-align:center">Qty</th><th style="width:20%;text-align:right">'+t("th_unit"||"Eenheidsprijs")+'</th><th style="width:20%;text-align:right">'+t("th_total"||"Totaalprijs")+'</th></tr></thead><tbody>'+priceRows+'</tbody></table>'+
     (hp?'<div class="tot-box"><div class="tot-r"><span>'+t("excl_vat")+'</span><span>'+fE(sub)+'</span></div><div class="tot-r"><span>'+t("vat")+'</span><span>'+fE(btw)+'</span></div><div class="tot-r grand"><span>'+t("incl_vat")+'</span><span>'+fE(grand)+'</span></div></div><p class="vn">'+t("valid_30")+(vlRaw?' <strong>'+dvl+'</strong>.':'')+'</p>':""))+
     '</div>'+PF(pgPrice)+'</div>';
 
@@ -4719,8 +5109,8 @@ function saveState(){
   try{
     var state={zalen:zalen,fotoBib:fotoBib,blocks:blocks,variants:variants,terms:terms,contacts:contacts,coverImg:coverImg,vbCtx:vbCtx,sigData:sigData,sigName:sigName,sigDate:sigDate,
       fields:{"c-nm":gv("c-nm"),"c-ad":gv("c-ad"),"c-ct":gv("c-ct"),"c-em":gv("c-em"),"c-dt":gv("c-dt"),"c-vl":gv("c-vl"),"m-nm":gv("m-nm"),"m-fn":gv("m-fn"),"m-em":gv("m-em"),"m-tl":gv("m-tl"),"p-nm":gv("p-nm"),"p-in":gv("p-in"),"sig-name":gv("sig-name"),"sig-func":gv("sig-func")}};
-    localStorage.setItem(STOR,JSON.stringify(state));toast("\u2713 Opgeslagen");
-  }catch(e){toast("\u26a0 Opslaan mislukt (te groot?)");}}
+    localStorage.setItem(STOR,JSON.stringify(state));toast("\u2713 "+t("saved"||"Opgeslagen"));
+  }catch(e){toast("\u26a0 "+t("save_failed"||"Opslaan mislukt (te groot?)"));}}
 function loadState(){
   try{var raw=localStorage.getItem(STOR);if(!raw)return false;var s=JSON.parse(raw);
     if(s.zalen)zalen=s.zalen;if(s.fotoBib)fotoBib=s.fotoBib;if(s.blocks){blocks=s.blocks;blocks.forEach(function(b){if(b.type==="foto"&&!b.imgSize)b.imgSize="full";});}if(s.variants)variants=s.variants;
@@ -4728,7 +5118,7 @@ function loadState(){
     contacts=s.contacts?s.contacts:seedContactsFromFields(s.fields);renderContacts();
     if(s.coverImg){coverImg=s.coverImg;var th=document.getElementById("cover-thumb");var cw=document.getElementById("cover-preview-wrap");if(th){th.src=coverImg;}if(cw){cw.style.display="block";}}
     if(s.vbCtx){vbCtx=s.vbCtx;var ctx=document.getElementById("vb-ctx");if(ctx){ctx.style.display="";ctx.className="ctxbox";ctx.textContent=vbCtx;}var vbst=document.getElementById("vb-st");if(vbst){vbst.style.display="";vbst.className="st-ok";vbst.innerHTML="\u2713 Leidraad hersteld";}}
-    if(s.sigData){sigData=s.sigData;sigName=s.sigName||"";sigDate=s.sigDate||"";var sp=document.getElementById("sig-prev");if(sp){sp.src=sigData;document.getElementById("sig-prev-wrap").style.display="block";document.getElementById("sig-info").textContent="Ondertekend door "+sigName+" op "+sigDate;}}
+    if(s.sigData){sigData=s.sigData;sigName=s.sigName||"";sigDate=s.sigDate||"";var sp=document.getElementById("sig-prev");if(sp){sp.src=sigData;document.getElementById("sig-prev-wrap").style.display="block";document.getElementById("sig-info").textContent=(t("ct_role")||"Signed by")+" "+sigName+" "+("on")+" "+sigDate;}}
     if(s.fields){Object.keys(s.fields).forEach(function(id){var el=document.getElementById(id);if(el)el.value=s.fields[id]||"";});}
     return true;
   }catch(e){return false;}}
@@ -4817,7 +5207,7 @@ function nieuweOfferte(){
   fotoBibLoad(); productLibLoad(); zaalTplLoad();
   renderFotoBib(); renderProductLib(); renderZaalTpls();
 
-  toast("Nieuwe offerte gestart");
+  toast(t("toast_new_quote"));
 }
 
 function resetForNewOfferte(){ nieuweOfferte(); }
@@ -4849,7 +5239,7 @@ function bevestigNieuw(){
   document.querySelectorAll(".main-tab").forEach(function(b){b.classList.remove("on");});
   var pl=document.getElementById("p-ldr");if(pl)pl.classList.add("on");
   var ft=document.querySelector(".main-tab");if(ft)ft.classList.add("on");
-  toast("Nieuwe offerte gestart");
+  toast(t("toast_new_quote"));
 }
 
 function clearState(){
@@ -4878,26 +5268,31 @@ function bevestigWissen(){
   renderProductLib();
   renderZaalTpls();
 
-  toast("Sessie gewist");
+  toast(t("toast_new_quote"));
   try{localStorage.setItem(STOR,JSON.stringify({zalen:[],fotoBib:[],blocks:[],variants:[],coverImg:null,vbCtx:null,sigData:null,fields:{}}));}catch(e){}
 }
 
 // Autosave
 var saveTimer=null;
 var saveVersion=0;
+var _langTimer=null;
+function _applyLangDebounced(){
+  clearTimeout(_langTimer);
+  _langTimer=setTimeout(function(){
+    if(_lang && _lang!=="nl"){
+      applyUILang(document.body);
+      translateHTML();
+    } else {
+      applyUILang(document.body);
+    }
+    // Zorg dat admin-only items altijd correct zichtbaar/verborgen zijn
+    applyRoleUI();
+  }, 80);
+}
 var _origRender=render;
 render=function(){
   _origRender();
-  // Geef de browser één tick om de DOM proper in te stellen voordat we vertalen
-  if(_lang&&_lang!=="nl"){ 
-    // BELANGRIJK: We moeten BEIDE translateHTML en applyUILang aanroepen
-    // translateHTML() = PDF preview content (hardcoded strings)
-    // applyUILang() = UI interface tekst nodes
-    setTimeout(function(){
-      translateHTML();              // PDF preview content vertalen
-      applyUILang(document.body);   // UI interface nodes vertalen
-    }, 0);
-  }
+  _applyLangDebounced();
   if(typeof updateStepper==="function"){ var _on=document.querySelector(".panel.on"); updateStepper(_on?_on.id:""); }
   clearTimeout(saveTimer);
   var v=++saveVersion;
@@ -4912,10 +5307,7 @@ render=function(){
     var orig=window[fn];
     window[fn]=function(){
       var r=orig.apply(this,arguments);
-      if(_lang&&_lang!=="nl"){ 
-        // Direct translate het bijgewerkte panel content
-        setTimeout(function(){ applyUILang(document.body); }, 0);
-      }
+      _applyLangDebounced();
       return r;
     };
   }
@@ -4923,7 +5315,7 @@ render=function(){
 
 // ═══════ SESSIE DELEN ════════════════════════════════════
 function exportSession(){
-  toast("\u23f3 Sessie exporteren\u2026");
+  toast("\u23f3 "+t("saved")+"\u2026");
   var session=collectSess();var _dummy={version:3,ts:Date.now(),client:gv("c-nm")||"offerte",zalen:zalen,fotoBib:fotoBib,blocks:blocks,variants:variants,coverImg:coverImg,vbCtx:vbCtx,fileLib:fileLib,sigData:sigData,sigName:sigName,sigDate:sigDate,
     fields:{"c-nm":gv("c-nm"),"c-ad":gv("c-ad"),"c-ct":gv("c-ct"),"c-em":gv("c-em"),"c-dt":gv("c-dt"),"c-vl":gv("c-vl"),"m-nm":gv("m-nm"),"m-fn":gv("m-fn"),"m-em":gv("m-em"),"m-tl":gv("m-tl"),"p-nm":gv("p-nm"),"p-in":gv("p-in")}};
   var json=JSON.stringify(session);
@@ -4931,15 +5323,15 @@ function exportSession(){
   var url=URL.createObjectURL(blob);var a=document.createElement("a");
   a.href=url;a.download="Ricoh_"+(gv("c-nm")||"sessie").replace(/[^a-zA-Z0-9]/g,"_")+".ricoh";a.click();
   setTimeout(function(){URL.revokeObjectURL(url);},1000);
-  toast("\u2713 Sessie gedeeld als .ricoh bestand");
+  toast("\u2713 "+t("toast_session_restored")+" (.ricoh)");
 }
 function importSession(e){
   var file=e.target.files[0];if(!file)return;
-  var st=document.getElementById("imp-sess-st");st.style.display="";st.className="st-inf";st.innerHTML='<span class="spin spin-r"></span> Importeren\u2026';
+  var st=document.getElementById("imp-sess-st");st.style.display="";st.className="st-inf";st.innerHTML='<span class="spin spin-r"></span> '+t("st_loading");
   var r=new FileReader();r.onload=function(ev){
     try{
       var session=JSON.parse(ev.target.result);
-      if(!session||!session.version)throw new Error("Ongeldig sessiebestand.");
+      if(!session||!session.version)throw new Error(t("st_error")+".");
       if(session.zalen)zalen=session.zalen;if(session.fotoBib)fotoBib=session.fotoBib;
       if(session.blocks)blocks=session.blocks;if(session.variants)variants=session.variants;
       terms=session.terms?normalizeTerms(session.terms):cloneTerms(TERMS_DEFAULT);fillTermsFields();
@@ -4951,9 +5343,9 @@ function importSession(e){
       if(session.fields){Object.keys(session.fields).forEach(function(id){var el=document.getElementById(id);if(el)el.value=session.fields[id]||"";});}
       saveState();renderZalen();renderFotoBib();renderBlocks();renderVariants();renderLib();renderOffertes();renderProductLib();renderZaalTpls();render();
       var nZ=session.zalen?session.zalen.length:0;var nI=session.zalen?session.zalen.reduce(function(s,z){return s+z.items.length;},0):0;
-      st.className="st-ok";st.innerHTML="\u2713 Sessie geladen \u2014 "+nZ+" zalen, "+nI+" items"+(session.fileLib?" + "+session.fileLib.length+" bestanden":"");
-      toast("\u2713 Sessie van collega geladen!");
-    }catch(err){st.className="st-err";st.textContent="Fout: "+err.message;}
+      st.className="st-ok";st.innerHTML="\u2713 "+t("toast_session_restored")+" \u2014 "+nZ+" "+t("zalen_lbl"||"zalen")+", "+nI+" items"+(session.fileLib?" + "+session.fileLib.length+" "+t("toast_loaded"):"");
+      toast("\u2713 "+t("toast_session_restored")+"!");
+    }catch(err){st.className="st-err";st.textContent=t("st_error")+": "+err.message;}
   };r.readAsText(file,"utf-8");
 }
 
@@ -5087,15 +5479,39 @@ function toggleSplit(){
   }
 }
 // ── SETTINGS DROPDOWN ─────────────────────────────────────────
+function _positionDropdown(menu, btn){
+  var r=btn.getBoundingClientRect();
+  menu.style.top=(r.bottom+6)+"px";
+  // Rechts uitlijnen op button, maar niet buiten scherm
+  var menuW=menu.offsetWidth||240;
+  var left=r.right-menuW;
+  if(left<8) left=8;
+  menu.style.left=left+"px";
+  menu.style.right="auto";
+}
 function toggleSettings(e){
   e.stopPropagation();
   var m=document.getElementById("settings-menu");
+  var btn=document.getElementById("settings-btn");
   if(!m)return;
   if(m.style.display==="block"){m.style.display="none";return;}
   m.style.display="block";
+  _positionDropdown(m,btn);
   setTimeout(function(){document.addEventListener("click",closeSettings,{once:true});},0);
 }
 function closeSettings(){var m=document.getElementById("settings-menu");if(m)m.style.display="none";}
+
+function toggleActiesMenu(e){
+  e.stopPropagation();
+  var m=document.getElementById("acties-menu");
+  var btn=document.getElementById("acties-btn");
+  if(!m)return;
+  if(m.style.display==="block"){m.style.display="none";return;}
+  m.style.display="block";
+  _positionDropdown(m,btn);
+  setTimeout(function(){document.addEventListener("click",closeActiesMenu,{once:true});},0);
+}
+function closeActiesMenu(){var m=document.getElementById("acties-menu");if(m)m.style.display="none";}
 
 // ── LOGIN ─────────────────────────────────────────────────────────
 // Wachtwoord wijzigen: genereer SHA-256 op https://emn178.github.io/online-tools/sha256.html
@@ -5146,11 +5562,106 @@ function isLoggedIn(){ return !!_currentUser; }
 function applyRoleUI(){
   if(isAdmin()) document.body.classList.add("is-admin");
   else document.body.classList.remove("is-admin");
-  // Toon gebruikersnaam in toolbar
+  // Toon initialen in de ronde badge
   var em=_currentUser&&_currentUser.email||"";
+  var name=em.split("@")[0]||"";
+  // Zet naam om naar initialen: stijn.borloo → SB, stijn → S
+  var parts=name.split(/[\.\-\_\s]+/).filter(Boolean);
+  var initials=parts.length>=2
+    ? (parts[0][0]+parts[parts.length-1][0]).toUpperCase()
+    : name.slice(0,2).toUpperCase();
   var badge=document.getElementById("user-badge");
-  if(badge) badge.textContent=em.split("@")[0]||em;
+  if(badge){
+    badge.textContent=initials||"?";
+    badge.title="Aangemeld als: "+em;
+  }
 }
+
+function checkPasswordRequired(){
+  if(!_currentUser) return;
+  // Controleer of user al een wachtwoord heeft ingesteld via metadata flag
+  // (identities array is niet betrouwbaar bij session-restore na refresh)
+  var meta=_currentUser.user_metadata||{};
+  if(meta.password_set) return; // al ingesteld, niets doen
+  // Fallback: controleer identities — maar alleen als metadata flag NIET aanwezig is
+  var identities=_currentUser.identities||[];
+  var hasPassword=identities.some(function(i){return i.provider==="password";});
+  // Als identities leeg zijn (session restore), neem aan dat wachtwoord al bestaat
+  if(identities.length===0) return;
+  if(!hasPassword){
+    // Toon wachtwoord-instellings modal
+    var m=document.getElementById("pwd-modal");
+    if(m) m.style.display="flex";
+    // Clear inputs
+    var pwd=document.getElementById("pwd-new");
+    var confirm=document.getElementById("pwd-confirm");
+    var err=document.getElementById("pwd-err");
+    if(pwd) pwd.value="";
+    if(confirm) confirm.value="";
+    if(err) err.style.display="none";
+    // Focus first field
+    setTimeout(function(){if(pwd)pwd.focus();},100);
+  }
+}
+
+function updatePasswordModal(){
+  // Update all translatable elements in password modal
+  var title=document.getElementById("pwd-title");
+  if(title) title.textContent=ui("Wachtwoord instellen");
+  
+  var desc=document.getElementById("pwd-desc");
+  if(desc) desc.textContent=ui("Stel een sterk wachtwoord in om uw account te beveiligen.");
+  
+  var lbl1=document.getElementById("pwd-lbl1");
+  if(lbl1) lbl1.textContent=ui("Wachtwoord");
+  var inp1=document.getElementById("pwd-new");
+  if(inp1) inp1.placeholder=ui("Minstens 8 karakters");
+  
+  var lbl2=document.getElementById("pwd-lbl2");
+  if(lbl2) lbl2.textContent=ui("Bevestig wachtwoord");
+  var inp2=document.getElementById("pwd-confirm");
+  if(inp2) inp2.placeholder=ui("Herhaal wachtwoord");
+  
+  var btn=document.getElementById("pwd-btn");
+  if(btn) btn.textContent=ui("Wachtwoord instellen");
+}
+
+async function doSetPassword(){
+  var pwd=(document.getElementById("pwd-new").value||"").trim();
+  var confirm=(document.getElementById("pwd-confirm").value||"").trim();
+  var err=document.getElementById("pwd-err");
+  
+  // Validatie met vertaalde berichten
+  if(!pwd || !confirm){
+    if(err){err.textContent=ui("Beide velden zijn verplicht.");err.style.display="block";}
+    return;
+  }
+  if(pwd.length<8){
+    if(err){err.textContent=ui("Wachtwoord moet minstens 8 karakters zijn.");err.style.display="block";}
+    return;
+  }
+  if(pwd!==confirm){
+    if(err){err.textContent=ui("Wachtwoorden komen niet overeen.");err.style.display="block";}
+    return;
+  }
+  
+  // Update password in Supabase
+  try{
+    var c=supaInit();
+    if(!c){if(err){err.textContent=ui("Supabase niet beschikbaar.");err.style.display="block";}return;}
+    var res=await c.auth.updateUser({password:pwd, data:{password_set:true}});
+    if(res.error) throw res.error;
+    // Update lokale user zodat checkPasswordRequired niet opnieuw triggert
+    if(res.data&&res.data.user) _currentUser=res.data.user;
+    // Success - sluit modal
+    var m=document.getElementById("pwd-modal");
+    if(m) m.style.display="none";
+    toast("✓ "+ui("Wachtwoord instellen"));
+  }catch(e){
+    if(err){err.textContent="Fout: "+(e.message||"Onbekende fout");err.style.display="block";}
+  }
+}
+
 
 async function initAuth(){
   if(!supaConfigured()){
@@ -5169,7 +5680,7 @@ async function initAuth(){
       _userRole=(user.app_metadata&&user.app_metadata.role)||"user";
       var ls=document.getElementById("login-screen");
       if(ls) ls.style.display="none";
-      startApp(); applyRoleUI();
+      applyRoleUI(); startApp(); checkPasswordRequired();
     } else {
       document.getElementById("login-screen").style.display="flex";
       translateLogin();
@@ -5186,6 +5697,62 @@ async function initAuth(){
     });
   }catch(e){
     document.getElementById("login-screen").style.display="flex";
+  }
+}
+
+function openInviteModal(){
+  var m=document.getElementById("invite-modal");
+  if(m) m.style.display="flex";
+  var inp=document.getElementById("invite-email");
+  if(inp) inp.value="";
+  var err=document.getElementById("invite-err");
+  if(err) err.style.display="none";
+  setTimeout(function(){if(inp)inp.focus();},100);
+}
+
+async function doInviteUser(){
+  if(!isAdmin()){
+    toast("Alleen beheerders kunnen gebruikers uitnodigen.");
+    return;
+  }
+  var email=(document.getElementById("invite-email").value||"").trim();
+  var err=document.getElementById("invite-err");
+  var btn=document.getElementById("invite-btn");
+  
+  if(!email){
+    if(err){err.textContent=ui("Vul een e-mailadres in");err.style.display="block";}
+    return;
+  }
+  if(!email.includes("@")){
+    if(err){err.textContent="Ongeldig e-mailadres";err.style.display="block";}
+    return;
+  }
+  
+  // Disable button
+  if(btn){btn.disabled=true;btn.textContent="Bezig...";}
+  
+  try{
+    // Call Cloudflare Worker to invite
+   var res=await fetch("https://quoteassist.stijn-borloo.workers.dev/invite-user", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({email: email})
+    });
+    var data=await res.json();
+    
+    if(!res.ok || data.error){
+      throw new Error(data.error || "Fout bij uitnodiging");
+    }
+    
+    // Success
+    var m=document.getElementById("invite-modal");
+    if(m) m.style.display="none";
+    toast("✓ "+ui("Uitnodigingslink verzonden naar")+" "+email);
+    
+  }catch(e){
+    if(err){err.textContent=ui("Fout bij uitnodiging:")+" "+(e.message||"Onbekende fout");err.style.display="block";}
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent=ui("Gebruiker uitnodigen");}
   }
 }
 
@@ -5208,7 +5775,7 @@ async function doLogin(){
     _userRole=(user.app_metadata&&user.app_metadata.role)||"user";
     var el=document.getElementById("login-screen");
     el.style.animation="lpOut .38s ease both";
-    setTimeout(function(){el.style.display="none";startApp();applyRoleUI();},380);
+    setTimeout(function(){el.style.display="none";applyRoleUI();startApp();checkPasswordRequired();},380);
   }catch(err){
     lpErr(err.message==="Invalid login credentials"?l.err_creds:err.message||l.err_conn);
     var p=document.getElementById("lp-pw");if(p)p.value="";
@@ -5250,26 +5817,23 @@ function startApp(){
   supaUpdateStatus();
   initSig();
   // Pas opgeslagen taalkeuze toe op de volledige interface
-  if(_lang&&_lang!=="nl"){
+  if(_lang && _lang !== "nl"){
     var sel=document.getElementById("lang-select");
-    if(sel)sel.value=_lang;
-    swapTermsToLang(_lang);
-    render();
-    setTimeout(function(){
-      translateHTML();           // BELANGRIJK: PDF preview content vertalen
-      applyUILang(document.body);
-    },30);
+    if(sel) sel.value=_lang;
+    setTimeout(function(){ setLang(_lang); applyRoleUI(); }, 150);
+  } else {
+    applyRoleUI();
   }
   if(typeof updateStepper==="function") updateStepper("p-klt");
   if(restored){
     try{
       if(sessionStorage.getItem("ricoh_new")==="1"){
         sessionStorage.removeItem("ricoh_new");
-        toast("Nieuwe offerte gestart");
+        toast(t("toast_new_quote"));
       } else {
-        toast("\u2713 Sessie hersteld");
+        toast("\u2713 "+t("toast_session_restored"));
       }
-    }catch(e){ toast("\u2713 Sessie hersteld"); }
+    }catch(e){ toast("\u2713 "+t("toast_session_restored")); }
   }
 }
 
@@ -5316,7 +5880,8 @@ window.addEventListener("resize", function() {
   var b=document.getElementById("ai-badge");
   if(!b)return;
   if(_workerUrl){b.textContent="AI: Worker actief";b.style.background="rgba(50,200,100,.3)";b.style.color="#fff";return;}
-  b.textContent="AI: instellen";b.style.background="rgba(255,255,255,.18)";b.style.color="rgba(255,255,255,.75)";b.style.cursor="pointer";b.onclick=showClaudeModal;
+  b.textContent="AI: instellen";b.style.background="rgba(255,255,255,.18)";b.style.color="rgba(255,255,255,.75)";
+  if(isAdmin()){ b.style.cursor="pointer"; b.onclick=showClaudeModal; }
 })();
 // Register Service Worker alleen als het bestand beschikbaar is (niet in Claude.ai)
 if("serviceWorker" in navigator && !isArtifact()) {
