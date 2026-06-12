@@ -6046,7 +6046,274 @@ async function downloadBlob(blob, filename){
   setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(u); }, 2000);
   return true;
 }
+// ═══════ CALC XLSM IMPORT/EXPORT + SHARE LIBRARY (admin) ═══════
+var CALC_BUCKET="templates", CALC_TEMPLATE="calc_new.xlsm";
+var CALC_ROW_START=6, CALC_ROW_END=147; // invoerrijen Calculator-tab
 
+function _jszipReady(cb){
+  if(window.JSZip){cb();return;}
+  var s=document.createElement("script");
+  s.src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+  s.onload=cb; s.onerror=function(){toast("\u26a0 JSZip kon niet laden");};
+  document.head.appendChild(s);
+}
+function _xmlEsc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function _colNum(c){var n=0;for(var i=0;i<c.length;i++)n=n*26+c.charCodeAt(i)-64;return n;}
+
+// Schrijft één celwaarde in sheet-XML; behoudt de stijl (s-attribuut) van de template.
+// typ "s" = tekst (inlineStr), "n" = getal. Vervangt formules indien aanwezig.
+function _setCellXml(xml,ref,val,typ){
+  var col=ref.match(/^[A-Z]+/)[0], rownum=ref.slice(col.length);
+  var cellRe=new RegExp('<c r="'+ref+'"([^>]*?)(\\/>|>[\\s\\S]*?<\\/c>)');
+  var m=cellRe.exec(xml), style="";
+  if(m){var sm=/s="(\d+)"/.exec(m[1]); if(sm)style=' s="'+sm[1]+'"';}
+  var newc=(typ==="s")
+    ? '<c r="'+ref+'"'+style+' t="inlineStr"><is><t xml:space="preserve">'+_xmlEsc(val)+'</t></is></c>'
+    : '<c r="'+ref+'"'+style+'><v>'+val+'</v></c>';
+  if(m) return xml.slice(0,m.index)+newc+xml.slice(m.index+m[0].length);
+  // Cel bestaat niet: invoegen in de juiste kolomvolgorde binnen de bestaande rij
+  var rowRe=new RegExp('(<row r="'+rownum+'"[^>]*>)([\\s\\S]*?)(<\\/row>)');
+  var rm=rowRe.exec(xml);
+  if(!rm) return xml; // rij niet aanwezig: overslaan (komt in deze template niet voor)
+  var cells=rm[2], target=_colNum(col), out="", ins=false;
+  var cRe=/<c r="([A-Z]+)\d+"[^>]*?(?:\/>|>[\s\S]*?<\/c>)/g, cm;
+  while((cm=cRe.exec(cells))!==null){
+    if(!ins && _colNum(cm[1])>target){out+=newc;ins=true;}
+    out+=cm[0];
+  }
+  if(!ins) out+=newc;
+  var start=rm.index+rm[1].length;
+  return xml.slice(0,start)+out+xml.slice(start+rm[2].length);
+}
+
+// rId -> pad en sheetnaam -> pad, per element geparst (attribuutvolgorde is NIET gegarandeerd!)
+function _xlsmSheetPaths(wbXml,relsXml){
+  var rid2t={}, relRe=/<Relationship\b[^>]*>/g, m;
+  while((m=relRe.exec(relsXml))!==null){
+    var i=/Id="([^"]+)"/.exec(m[0]), t=/Target="([^"]+)"/.exec(m[0]);
+    if(i&&t) rid2t[i[1]]=t[1];
+  }
+  var map={}, shRe=/<sheet\b[^>]*>/g;
+  while((m=shRe.exec(wbXml))!==null){
+    var nm=/name="([^"]+)"/.exec(m[0]), rid=/r:id="([^"]+)"/.exec(m[0]);
+    if(nm&&rid&&rid2t[rid[1]]) map[nm[1].replace(/&amp;/g,"&")]="xl/"+rid2t[rid[1]].replace(/^\//,"");
+  }
+  return map;
+}
+
+// ── EXPORT ──────────────────────────────────────────────────
+function exportCalcXlsm(){
+  if(typeof isAdmin!=="function"||!isAdmin()){toast("\u26a0 Alleen voor admins");return;}
+  var items=allItems();
+  if(!items.length){toast("\u26a0 Geen items om te exporteren");return;}
+  var c=supaInit();
+  if(!c){toast("\u26a0 Geen Supabase-verbinding");return;}
+  toast("Calc-template ophalen\u2026");
+  _jszipReady(function(){
+    shareLibLoad(function(){
+      c.storage.from(CALC_BUCKET).download(CALC_TEMPLATE).then(function(res){
+        if(res.error||!res.data){toast("\u26a0 Template niet gevonden in bucket '"+CALC_BUCKET+"'");return;}
+        res.data.arrayBuffer().then(function(buf){ _calcDoExport(buf,items); });
+      });
+    });
+  });
+}
+function _calcDoExport(buf,items){
+  JSZip.loadAsync(buf).then(function(zip){
+    return Promise.all([
+      zip.file("xl/workbook.xml").async("string"),
+      zip.file("xl/_rels/workbook.xml.rels").async("string")
+    ]).then(function(parts){
+      var paths=_xlsmSheetPaths(parts[0],parts[1]);
+      var calcPath=paths["Calculator"], offPath=paths["Offer ID"];
+      if(!calcPath||!offPath){toast("\u26a0 Tabs Calculator/Offer ID niet gevonden in template");return;}
+      return Promise.all([zip.file(calcPath).async("string"),zip.file(offPath).async("string")]).then(function(sheets){
+        var calc=sheets[0], off=sheets[1];
+        var maxRows=CALC_ROW_END-CALC_ROW_START+1;
+        if(items.length>maxRows){toast("\u26a0 "+items.length+" items, max "+maxRows+" \u2014 rest wordt overgeslagen");}
+        var noCode=0, row=CALC_ROW_START;
+        items.slice(0,maxRows).forEach(function(it){
+          var r=String(row);
+          var sug=(!it.shareItem&&!it.shareCode)?shareLibSuggest(it):null;
+          var shareItem=it.shareItem||(sug&&sug.item)||"";
+          var shareCode=it.shareCode||(sug&&sug.code)||"";
+          var supplier=it.supplier||(sug&&sug.supplier)||"";
+          var vendor=it.vendor||(sug&&sug.vendor)||"";
+          var vendorPart=it.vendorPart||(sug&&sug.vendor_part)||"";
+          // C (SHARE Item) laat de D-formule de code opzoeken; enkel een directe code? Dan D hardcoden.
+          if(shareItem)      calc=_setCellXml(calc,"C"+r,shareItem,"s");
+          else if(shareCode) calc=_setCellXml(calc,"D"+r,shareCode,"s");
+          else noCode++;
+          if(supplier)   calc=_setCellXml(calc,"F"+r,supplier,"s");
+          if(it.ref)     calc=_setCellXml(calc,"G"+r,it.ref,"s");
+          if(vendor)     calc=_setCellXml(calc,"H"+r,vendor,"s");
+          if(vendorPart) calc=_setCellXml(calc,"I"+r,vendorPart,"s");
+          calc=_setCellXml(calc,"J"+r,it.name||"","s");
+          calc=_setCellXml(calc,"K"+r,(it.qty!=null?it.qty:1),"n");
+          // Kost + marge indien gekend (uit eerdere Calc-import); anders verkoopprijs als kost, marge 0
+          var cost  =(it.cost!=null)?it.cost:(it.price!=null?it.price:0);
+          var margin=(it.marginPct!=null)?it.marginPct:((it.cost!=null&&it.price)?Math.max(0,1-it.cost/it.price):0);
+          calc=_setCellXml(calc,"L"+r,cost,"n");
+          calc=_setCellXml(calc,"N"+r,Math.round(margin*10000)/10000,"n");
+          row++;
+        });
+        // Offer ID: manuele fallback-velden (G-kolom voedt de C-formules zonder SPAC-lookup te breken)
+        if(gv("c-nm")) off=_setCellXml(off,"G6",gv("c-nm"),"s");
+        if(gv("c-ct")) off=_setCellXml(off,"G7",gv("c-ct"),"s");
+        if(gv("c-ad")){
+          var ad=gv("c-ad").split(/[,\n]/);
+          off=_setCellXml(off,"G10",ad[0].trim(),"s");
+          if(ad[1]) off=_setCellXml(off,"G11",ad.slice(1).join(", ").trim(),"s");
+        }
+        if(gv("p-nm")) off=_setCellXml(off,"C20",gv("p-nm"),"s");
+        // Volledige herberekening bij openen in Excel
+        var wb2=parts[0].replace(/<calcPr([^>]*?)\/>/,function(_,a){
+          return /fullCalcOnLoad/.test(a)?"<calcPr"+a+"/>":"<calcPr"+a+' fullCalcOnLoad="1"/>';
+        });
+        zip.file(calcPath,calc); zip.file(offPath,off); zip.file("xl/workbook.xml",wb2);
+        return zip.generateAsync({type:"blob",mimeType:"application/vnd.ms-excel.sheet.macroEnabled.12",compression:"DEFLATE"}).then(function(blob){
+          var fn="ITS-Calculation_"+((gv("p-nm")||gv("c-nm")||"offerte").replace(/[^a-zA-Z0-9]/g,"_"))+".xlsm";
+          var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fn;a.click();
+          setTimeout(function(){URL.revokeObjectURL(a.href);},5000);
+          // Geleerde koppelingen bewaren voor hergebruik
+          shareLibLearn(items.slice(0,maxRows));
+          toast("\u2713 "+fn+" ge\u00ebxporteerd"+(noCode?" \u2014 \u26a0 "+noCode+" item(s) zonder SHARE-code":""));
+        });
+      });
+    });
+  }).catch(function(e){toast("\u26a0 Export mislukt: "+(e.message||e));});
+}
+
+// ── IMPORT ──────────────────────────────────────────────────
+function importCalcXlsm(ev){
+  if(typeof isAdmin!=="function"||!isAdmin()){toast("\u26a0 Alleen voor admins");return;}
+  var f=ev.target.files[0]; ev.target.value="";
+  if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:"array"});
+      var ws=wb.Sheets["Calculator"];
+      if(!ws){toast("\u26a0 Geen Calculator-tab gevonden");return;}
+      function cv(ref){var c=ws[ref];return c?c.v:undefined;}
+      var newItems=[];
+      for(var r=CALC_ROW_START;r<=CALC_ROW_END;r++){
+        var name=cv("J"+r), cost=cv("L"+r);
+        if((name==null||String(name).trim()===""||String(name).trim()==="-")&&!(cost>0))continue;
+        var qty=(cv("K"+r)!=null)?Number(cv("K"+r)):1;
+        var margin=(cv("N"+r)!=null)?Number(cv("N"+r)):0.3;
+        cost=Number(cost)||0;
+        var price=(cv("Q"+r)!=null)?Number(cv("Q"+r)):Math.round((cost/(1-margin))*100)/100;
+        newItems.push({
+          id:uid(), name:String(name||"").trim(), ref:String(cv("G"+r)||"").trim(),
+          qty:qty, price:price, desc:null, img:null, loading:false, optional:false,
+          cost:cost, marginPct:margin,
+          shareItem:String(cv("C"+r)||"").trim(), shareCode:String(cv("D"+r)||"").trim(),
+          supplier:String(cv("F"+r)||"").trim(), vendor:String(cv("H"+r)||"").trim(),
+          vendorPart:String(cv("I"+r)||"").trim()
+        });
+      }
+      if(!newItems.length){toast("\u26a0 Geen items gevonden in Calculator-tab");return;}
+      // Offer ID -> klantvelden (alleen invullen wat nog leeg is)
+      var oid=wb.Sheets["Offer ID"];
+      if(oid){
+        function ov(ref){var c=oid[ref];return c&&c.v?String(c.v).trim():"";}
+        function setIf(id,v){var e=document.getElementById(id);if(e&&!e.value.trim()&&v&&v!==" ")e.value=v;}
+        setIf("c-nm",ov("C6")); setIf("c-ct",ov("C7"));
+        var adr=[ov("C10"),ov("C11")].filter(function(x){return x&&x!==" ";}).join(", ");
+        setIf("c-ad",adr); setIf("p-nm",ov("C20"));
+      }
+      var znm=(oid&&oid["C20"]&&oid["C20"].v)?String(oid["C20"].v):f.name.replace(/\.(xlsm|xlsx)$/i,"");
+      zalen.push({id:uid(),name:znm,items:newItems});
+      render();
+      // Library: canonieke SHARE Source seeden + geleerde koppelingen bewaren
+      shareLibSeed(wb.Sheets["SHARE Source"]);
+      shareLibLearn(newItems);
+      toast("\u2713 "+newItems.length+" items ge\u00efmporteerd uit "+f.name);
+    }catch(err){toast("\u26a0 Import mislukt: "+(err.message||err));}
+  };
+  rd.readAsArrayBuffer(f);
+}
+
+// ── SHARE-CODE LIBRARY (Supabase, gecachet in geheugen) ─────
+var _shareLib=null;
+function shareLibLoad(cb){
+  var c=supaInit(); if(!c){_shareLib=[];cb&&cb();return;}
+  c.from("share_codes").select("kind,category,item,code,supplier,vendor,vendor_part,descr").then(function(res){
+    _shareLib=res.data||[]; cb&&cb();
+  });
+}
+function shareLibSuggest(it){
+  if(!_shareLib)return null;
+  var ref=(it.ref||it.vendorPart||"").toLowerCase().trim();
+  var nm=(it.name||"").toLowerCase().trim();
+  var hit=null;
+  if(ref) hit=_shareLib.find(function(s){return s.kind==="learned"&&s.vendor_part&&s.vendor_part.toLowerCase()===ref;});
+  if(!hit&&nm) hit=_shareLib.find(function(s){return s.kind==="learned"&&s.descr&&s.descr.toLowerCase()===nm;});
+  return hit||null;
+}
+function shareLibLearn(items){
+  var c=supaInit(); if(!c)return;
+  var rows=[];
+  items.forEach(function(it){
+    var code=it.shareCode||"", item=it.shareItem||"";
+    if(!code&&!item)return;
+    if(!(it.name||it.vendorPart))return;
+    rows.push({kind:"learned",code:code||item,item:item||null,
+      supplier:it.supplier||null,vendor:it.vendor||null,
+      vendor_part:it.vendorPart||null,descr:it.name||null,updated_at:new Date().toISOString()});
+  });
+  if(!rows.length)return;
+  c.from("share_codes").upsert(rows,{onConflict:"match_key",ignoreDuplicates:false}).then(function(res){
+    if(res.error)console.warn("shareLibLearn:",res.error.message);
+    else _shareLib=null; // cache invalideren
+  });
+}
+function shareLibSeed(ws){
+  var c=supaInit(); if(!c||!ws)return;
+  var rows=[];
+  for(var r=4;r<=100;r++){
+    var item=ws["C"+r]&&ws["C"+r].v, code=ws["D"+r]&&ws["D"+r].v, cat=ws["B"+r]&&ws["B"+r].v;
+    if(item&&code)rows.push({kind:"share",category:String(cat||"").trim(),item:String(item).trim(),code:String(code).trim()});
+  }
+  if(!rows.length)return;
+  c.from("share_codes").upsert(rows,{onConflict:"category,item,code",ignoreDuplicates:true}).then(function(res){
+    if(res.error)console.warn("shareLibSeed:",res.error.message);
+  });
+}
+
+// ── LIBRARY-MODAL (admin) ───────────────────────────────────
+function openShareLibModal(){
+  if(typeof isAdmin!=="function"||!isAdmin()){toast("\u26a0 Alleen voor admins");return;}
+  var old=document.getElementById("sharelib-modal"); if(old)old.remove();
+  var d=document.createElement("div");
+  d.id="sharelib-modal";
+  d.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9997;display:flex;align-items:center;justify-content:center";
+  d.innerHTML='<div style="background:#fff;border-radius:10px;max-width:680px;width:92%;max-height:80vh;display:flex;flex-direction:column;padding:18px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><strong style="font-size:15px">SHARE-code library</strong>'
+    +'<button onclick="document.getElementById(\'sharelib-modal\').remove()" style="background:none;border:none;font-size:20px;cursor:pointer">&times;</button></div>'
+    +'<input id="sharelib-q" placeholder="Zoek op code, item of omschrijving..." oninput="renderShareLib()" '
+    +'style="font-family:Arial,sans-serif;font-size:12px;padding:7px 9px;border:1px solid var(--bd);border-radius:4px;margin-bottom:8px">'
+    +'<div id="sharelib-list" style="overflow:auto;font-size:12px"></div>';
+  d.onclick=function(e){if(e.target===d)d.remove();};
+  document.body.appendChild(d);
+  _shareLib=null;
+  shareLibLoad(renderShareLib);
+}
+function renderShareLib(){
+  var el=document.getElementById("sharelib-list"); if(!el)return;
+  var q=(document.getElementById("sharelib-q").value||"").toLowerCase();
+  var rows=(_shareLib||[]).filter(function(s){
+    if(!q)return true;
+    return [s.code,s.item,s.descr,s.vendor_part,s.supplier].some(function(v){return v&&v.toLowerCase().indexOf(q)!==-1;});
+  });
+  if(!rows.length){el.innerHTML='<div style="color:#999;padding:14px;text-align:center">Geen codes'+(q?' voor "'+esc(q)+'"':' \u2014 importeer eerst een Calc-file om de library te vullen')+'</div>';return;}
+  var h='<table style="width:100%;border-collapse:collapse"><tr style="text-align:left;color:#777"><th style="padding:4px">Code</th><th>SHARE Item</th><th>Omschrijving / Part</th><th>Type</th></tr>';
+  rows.slice(0,300).forEach(function(s){
+    h+='<tr style="border-top:1px solid #eee"><td style="padding:4px;font-weight:600">'+esc(s.code)+'</td><td>'+esc(s.item||"")+'</td><td>'+esc(s.descr||s.vendor_part||"")+'</td><td style="color:#999">'+(s.kind==="share"?"SHARE":"geleerd")+'</td></tr>';
+  });
+  el.innerHTML=h+'</table>'+(rows.length>300?'<div style="color:#999;padding:6px">'+(rows.length-300)+' meer\u2026 verfijn je zoekopdracht</div>':'');
+}
 // ═══════ WORD EXPORT ═════════════════════════════════════
 function exportWord(){
   var pgs=document.querySelectorAll("#preview-area .a4");
