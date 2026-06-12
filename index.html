@@ -990,6 +990,15 @@ body:not(.is-admin) .admin-only{display:none!important}
   </div>
   <div class="tb-dropdown-divider"></div>
   <div class="tb-dropdown-item" onclick="exportExcel();closeActiesMenu()">
+     <div class="tb-dropdown-item admin-only" onclick="exportCalcXlsm();closeActiesMenu()">
+    <span class="tb-dd-ic">&#128202;</span>
+    <div><strong>Calc exporteren</strong><small>ITS-Calculation .xlsm met SHARE-codes</small></div>
+  </div>
+  <div class="tb-dropdown-item admin-only" onclick="document.getElementById('calc-xlsm-input').click();closeActiesMenu()">
+    <span class="tb-dd-ic">&#128203;</span>
+    <div><strong>Calc importeren</strong><small>Ingevulde .xlsm inlezen</small></div>
+  </div>
+  <input type="file" id="calc-xlsm-input" accept=".xlsm,.xlsx" style="display:none" onchange="importCalcXlsm(event)">
     <span class="tb-dd-icon">&#128202;</span>
     <div><strong>Excel exporteren</strong><small>Items als .xlsx</small></div>
   </div>
