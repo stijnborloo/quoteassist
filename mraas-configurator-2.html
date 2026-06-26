@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MRaaS Configurator – Ricoh Belgium</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --red: #e8001c; --dark: #0d0d14; --ink: #1e1e2e;
+  --muted: #6b7280; --border: #e5e7eb; --surface: #f8f9fb;
+  --green: #10b981; --orange: #f59e0b;
+  --shadow: 0 4px 20px rgba(0,0,0,.08);
+}
+body { font-family: 'Outfit', sans-serif; background: var(--surface); color: var(--ink); min-height: 100vh; }
+
+/* AUTH */
+#auth-gate { position:fixed;inset:0;z-index:9999;background:var(--dark);display:flex;align-items:center;justify-content:center; }
+.auth-card { background:white;border-radius:16px;padding:32px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.3); }
+.auth-logo { font-size:20px;font-weight:800;margin-bottom:4px; }
+.auth-logo span { color:var(--red); }
+.auth-sub { font-size:12px;color:var(--muted);margin-bottom:24px; }
+.auth-field { margin-bottom:12px; }
+.auth-field label { display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px; }
+.auth-field input { width:100%;height:42px;border:1.5px solid var(--border);border-radius:9px;padding:0 12px;font-family:'Outfit',sans-serif;font-size:14px;outline:none; }
+.auth-field input:focus { border-color:var(--red); }
+.auth-btn { width:100%;height:44px;background:var(--red);color:white;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer; }
+.auth-err { font-size:12px;color:var(--red);background:#fff0f1;border:1px solid #fca5a5;border-radius:7px;padding:8px 11px;margin-bottom:10px;display:none; }
+
+/* TOPBAR */
+.topbar { background:var(--dark);color:white;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:56px;position:sticky;top:0;z-index:100; }
+.tl { display:flex;align-items:center;gap:14px; }
+.logo { font-weight:800;font-size:17px; }
+.logo span { color:var(--red); }
+.page-title { font-size:13px;color:rgba(255,255,255,.6);padding-left:14px;border-left:1px solid rgba(255,255,255,.15); }
+.tr-btns { display:flex;gap:8px; }
+.tb-btn { background:rgba(255,255,255,.1);border:none;border-radius:8px;color:white;padding:7px 13px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px; }
+.tb-btn:hover { background:rgba(255,255,255,.18); }
+.tb-btn.primary { background:var(--red); }
+
+/* LAYOUT: desktop side-by-side, mobile stacked */
+.layout { display:grid;grid-template-columns:1fr 300px;min-height:calc(100vh - 56px); }
+.main { padding:24px;overflow-y:auto; }
+.sidebar { background:white;border-left:1px solid var(--border);padding:20px 18px;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;display:flex;flex-direction:column;gap:16px; }
+
+/* STEP */
+.step-group { margin-bottom:24px; }
+.step-label { display:flex;align-items:center;gap:10px;margin-bottom:12px; }
+.step-num { width:24px;height:24px;background:var(--red);color:white;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.step-num.done { background:var(--green); }
+.step-title { font-size:14px;font-weight:700; }
+
+/* OPTION CARDS */
+.option-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:10px; }
+.option-card { border:2px solid var(--border);border-radius:11px;padding:14px 12px;cursor:pointer;background:white;text-align:center;transition:all .15s;position:relative; }
+.option-card:hover { border-color:#cbd5e1; }
+.option-card.selected { border-color:var(--red);background:#fff5f6; }
+.option-card .icon { font-size:26px;margin-bottom:6px; }
+.option-card .name { font-size:12px;font-weight:700; }
+.option-card .sub { font-size:10px;color:var(--muted);margin-top:2px; }
+.check { position:absolute;top:7px;right:7px;width:16px;height:16px;background:var(--red);border-radius:50%;color:white;font-size:9px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s; }
+.option-card.selected .check { opacity:1; }
+
+/* MFR CHIPS */
+.mfr-row { display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px; }
+.mfr-chip { border:2px solid var(--border);border-radius:100px;padding:7px 16px;cursor:pointer;font-size:12px;font-weight:600;background:white;transition:all .15s;color:var(--muted); }
+.mfr-chip.selected { border-color:var(--red);color:var(--red);background:#fff5f6; }
+
+/* PLATFORM TOGGLE */
+.toggle-row { display:flex;background:#f1f3f6;border-radius:9px;padding:3px;width:fit-content; }
+.toggle-btn { border:none;background:transparent;border-radius:7px;padding:7px 18px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .15s; }
+.toggle-btn.active { background:white;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1); }
+
+/* SETTINGS */
+.settings-row { display:grid;grid-template-columns:repeat(3,1fr);gap:12px; }
+.field label { display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px; }
+.field select, .field input { width:100%;border:1.5px solid var(--border);border-radius:8px;padding:8px 11px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;outline:none;background:white; }
+.field select:focus, .field input:focus { border-color:var(--red); }
+
+/* ROOM PREVIEW */
+.room-preview { background:linear-gradient(135deg,#0d0d14 0%,#1e1e2e 100%);border-radius:13px;padding:18px;margin-bottom:20px;color:white;position:relative;overflow:hidden; }
+.room-preview::before { content:'';position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=50') center/cover;opacity:.1; }
+.rp-inner { position:relative; }
+.rp-badge { display:inline-flex;align-items:center;gap:5px;background:rgba(232,0,28,.7);border-radius:5px;padding:3px 9px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px; }
+.rp-name { font-size:18px;font-weight:700;margin-bottom:2px; }
+.rp-sub { font-size:12px;color:rgba(255,255,255,.6); }
+.rp-specs { display:flex;gap:18px;margin-top:12px; }
+.rp-spec { font-size:11px;color:rgba(255,255,255,.6); }
+.rp-spec strong { display:block;font-size:14px;font-weight:700;color:white; }
+
+/* PRODUCTS TABLE */
+.table-card { background:white;border-radius:13px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow); }
+.table-head { padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; }
+.table-head-title { font-size:13px;font-weight:700; }
+.count-badge { font-size:11px;font-weight:600;padding:2px 8px;border-radius:100px;background:#fff0f1;color:var(--red); }
+table { width:100%;border-collapse:collapse; }
+thead tr { background:#f8f9fb; }
+th { padding:8px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border); }
+th:last-child, td:last-child { text-align:right; }
+td { padding:10px 14px;font-size:12px;border-bottom:1px solid #f1f3f6;vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:#fafafa; }
+.section-row td { background:#f8f9fb;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:6px 14px;border-bottom:1px solid var(--border); }
+td.mono { font-family:monospace;font-size:10px;color:var(--muted); }
+td.fw { font-weight:700; }
+td.red { font-weight:700;color:var(--red); }
+.cat-badge { display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px; }
+.cat-badge.av { background:#eef2ff;color:#4f46e5; }
+.cat-badge.service { background:#f0fdf4;color:#16a34a; }
+.cat-badge.cable { background:#fff7ed;color:#c2410c; }
+.cat-badge.mount { background:#fdf4ff;color:#9333ea; }
+
+/* SIDEBAR */
+.sb-title { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:10px; }
+.sb-row { display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f1f3f6; }
+.sb-row:last-child { border-bottom:none; }
+.sb-label { font-size:12px;color:var(--muted); }
+.sb-val { font-size:12px;font-weight:700; }
+
+/* TOTAL BOX */
+.total-box { background:var(--dark);border-radius:12px;padding:16px;color:white; }
+.opco-pill { display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.1);border-radius:6px;padding:4px 9px;font-size:11px;color:rgba(255,255,255,.8);font-weight:500;margin-bottom:10px; }
+.ct-toggle { display:flex;background:rgba(255,255,255,.1);border-radius:7px;padding:2px;margin-bottom:12px; }
+.ct-btn { flex:1;border:none;background:transparent;color:rgba(255,255,255,.5);font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;padding:5px 6px;border-radius:5px;cursor:pointer;transition:all .15s; }
+.ct-btn.active { background:rgba(255,255,255,.18);color:white; }
+.mg-row { display:flex;align-items:center;justify-content:space-between;margin-bottom:8px; }
+.mg-label { font-size:11px;color:rgba(255,255,255,.6); }
+.mg-input { width:54px;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);border-radius:6px;padding:4px 8px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;color:white;text-align:right;outline:none; }
+.mg-input:focus { border-color:rgba(255,255,255,.5); }
+.t-label { font-size:11px;color:rgba(255,255,255,.5);margin-bottom:3px; }
+.t-amount { font-size:26px;font-weight:800;line-height:1; }
+.t-sub { font-size:11px;color:rgba(255,255,255,.4);margin-top:3px; }
+.t-divider { height:1px;background:rgba(255,255,255,.1);margin:10px 0; }
+.t-break { display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px; }
+
+.action-btns { display:flex;flex-direction:column;gap:7px;margin-top:auto; }
+.sb-btn { border:none;border-radius:9px;padding:10px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px; }
+.sb-btn-primary { background:var(--red);color:white; }
+.sb-btn-secondary { background:#f1f3f6;color:var(--ink); }
+.sb-btn:hover { opacity:.85; }
+
+/* LOADING */
+.loading-overlay { position:fixed;inset:0;background:rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;z-index:500;flex-direction:column;gap:12px; }
+.spin { display:inline-block;width:32px;height:32px;border:3px solid #f1f3f6;border-top-color:var(--red);border-radius:50%;animation:spin .6s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-text { font-size:13px;color:var(--muted); }
+
+/* DATA VERSION BANNER */
+.data-banner { background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;font-size:12px;color:#15803d;margin-bottom:16px;display:flex;align-items:center;gap:8px; }
+.data-banner.warn { background:#fffbeb;border-color:#fde68a;color:#b45309; }
+
+/* TOAST */
+#toast { position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--dark);color:white;padding:9px 18px;border-radius:9px;font-size:12px;font-weight:500;opacity:0;transition:opacity .2s;pointer-events:none;z-index:999; }
+#toast.show { opacity:1; }
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .layout { grid-template-columns:1fr; }
+  .sidebar { position:static;height:auto;border-left:none;border-top:1px solid var(--border); }
+  .option-grid { grid-template-columns:repeat(2,1fr); }
+  .settings-row { grid-template-columns:1fr 1fr; }
+  .rp-specs { gap:12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spin"></div>
+  <div class="loading-text">Productdata laden…</div>
+</div>
+
+<!-- AUTH GATE -->
+<div id="auth-gate" style="display:none;">
+  <div class="auth-card">
+    <div class="auth-logo">Ricoh<span>.</span></div>
+    <div class="auth-sub">MRaaS Configurator · Easy Quotation</div>
+    <div class="auth-err" id="auth-err"></div>
+    <div class="auth-field">
+      <label>E-mailadres</label>
+      <input type="email" id="auth-email" placeholder="naam@ricoh.be">
+    </div>
+    <div class="auth-field">
+      <label>Wachtwoord</label>
+      <input type="password" id="auth-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="auth-btn" onclick="doLogin()">Inloggen</button>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tl">
+    <div class="logo">Ricoh<span>.</span></div>
+    <div class="page-title">MRaaS Configurator</div>
+  </div>
+  <div class="tr-btns">
+    <button class="tb-btn" onclick="copySummary()">📋 Kopieer</button>
+    <button class="tb-btn primary" onclick="addToQuote()">➕ Naar offerte</button>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- DATA VERSION BANNER -->
+    <div class="data-banner" id="data-banner" style="display:none;"></div>
+
+    <!-- STAP 1: KAMERGROOTTE -->
+    <div class="step-group">
+      <div class="step-label">
+        <div class="step-num done">1</div>
+        <div class="step-title">Kamergrootte</div>
+      </div>
+      <div class="option-grid">
+        <div class="option-card" onclick="selectRoom('focus')" id="room-focus">
+          <div class="check">✓</div><div class="icon">👤</div>
+          <div class="name">Focus</div><div class="sub">≤ 3 pers · 2×2,5m</div>
+        </div>
+        <div class="option-card selected" onclick="selectRoom('small')" id="room-small">
+          <div class="check">✓</div><div class="icon">👥</div>
+          <div class="name">Small</div><div class="sub">≤ 6 pers · 3×4m</div>
+        </div>
+        <div class="option-card" onclick="selectRoom('medium')" id="room-medium">
+          <div class="check">✓</div><div class="icon">🏢</div>
+          <div class="name">Medium</div><div class="sub">≤ 8 pers · 4×5m</div>
+        </div>
+        <div class="option-card" onclick="selectRoom('large')" id="room-large">
+          <div class="check">✓</div><div class="icon">🏛️</div>
+          <div class="name">Large</div><div class="sub">≤ 12 pers · 5×6m</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAP 2: FABRIKANT & PLATFORM -->
+    <div class="step-group">
+      <div class="step-label">
+        <div class="step-num done">2</div>
+        <div class="step-title">Fabrikant &amp; Platform</div>
+      </div>
+      <div class="mfr-row" id="mfr-row">
+        <!-- dynamisch ingevuld op basis van beschikbare data -->
+      </div>
+      <div class="toggle-row">
+        <button class="toggle-btn active" onclick="selectPlatform(this,'Android')">🤖 Android</button>
+        <button class="toggle-btn" onclick="selectPlatform(this,'Windows')">🪟 Windows</button>
+      </div>
+    </div>
+
+    <!-- STAP 3: MARGE & CONTRACT -->
+    <div class="step-group">
+      <div class="step-label">
+        <div class="step-num">3</div>
+        <div class="step-title">Marge &amp; Contract</div>
+      </div>
+      <div class="settings-row">
+        <div class="field">
+          <label>OpCo</label>
+          <select id="sel-opco" onchange="render()">
+            <option value="be">België (2,4%)</option>
+            <option value="nl">Nederland (2,4%)</option>
+            <option value="uk">United Kingdom (3,75%)</option>
+            <option value="se">Sweden (1,75%)</option>
+            <option value="de">Germany (2,4%)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Contractduur</label>
+          <select id="sel-years" onchange="render()">
+            <option value="3">3 jaar</option>
+            <option value="5">5 jaar</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Marge %</label>
+          <input type="number" id="inp-margin" value="28" min="17" max="40" onchange="syncMargin(this.value)">
+        </div>
+      </div>
+    </div>
+
+    <!-- ROOM PREVIEW -->
+    <div class="room-preview" style="margin-bottom:20px;">
+      <div class="rp-inner">
+        <div class="rp-badge">🟢 MRaaS</div>
+        <div class="rp-name" id="rp-name">Small Meeting Room</div>
+        <div class="rp-sub" id="rp-sub">Yealink · Android · 3 jaar · BE</div>
+        <div class="rp-specs">
+          <div class="rp-spec"><strong id="rp-persons">6</strong>personen</div>
+          <div class="rp-spec"><strong id="rp-size">3 × 4m</strong>ruimte</div>
+          <div class="rp-spec"><strong id="rp-items">—</strong>producten</div>
+          <div class="rp-spec"><strong id="rp-trade" style="color:#f59e0b;">—</strong>trade cost</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTEN TABLE -->
+    <div class="table-card">
+      <div class="table-head">
+        <div class="table-head-title">Productsamenstelling</div>
+        <span class="count-badge" id="item-count">—</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th><th>SKU</th><th>Cat.</th><th>Qty</th><th>Trade cost</th><th>Verkoopprijs</th>
+          </tr>
+        </thead>
+        <tbody id="products-body"></tbody>
+      </table>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div>
+      <div class="sb-title">Configuratie</div>
+      <div class="sb-row"><span class="sb-label">Kamer</span><span class="sb-val" id="sb-room">Small</span></div>
+      <div class="sb-row"><span class="sb-label">Fabrikant</span><span class="sb-val" id="sb-mfr">Yealink</span></div>
+      <div class="sb-row"><span class="sb-label">Platform</span><span class="sb-val" id="sb-plat">Android</span></div>
+      <div class="sb-row"><span class="sb-label">Contract</span><span class="sb-val" id="sb-contract">3 jaar</span></div>
+    </div>
+
+    <div>
+      <div class="sb-title">Kostenverdeling</div>
+      <div class="sb-row"><span class="sb-label">Hardware</span><span class="sb-val" id="sb-hw">—</span></div>
+      <div class="sb-row"><span class="sb-label">Services</span><span class="sb-val" id="sb-svc">—</span></div>
+      <div class="sb-row" style="border-top:2px solid var(--border);padding-top:8px;margin-top:4px;">
+        <span class="sb-label" style="font-weight:700;">Trade cost</span>
+        <span class="sb-val" id="sb-trade">—</span>
+      </div>
+    </div>
+
+    <!-- TOTAL BOX -->
+    <div class="total-box">
+      <div class="opco-pill" id="tb-opco">🇧🇪 België · 2,4%</div>
+      <div class="ct-toggle">
+        <button class="ct-btn active" onclick="setView('quarterly',this)">Kwartaal</button>
+        <button class="ct-btn" onclick="setView('monthly',this)">Maand</button>
+        <button class="ct-btn" onclick="setView('total',this)">Totaal</button>
+      </div>
+      <div class="mg-row">
+        <span class="mg-label">Marge</span>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <input class="mg-input" type="number" id="tb-margin" value="28" onchange="syncMargin(this.value)">
+          <span style="font-size:11px;color:rgba(255,255,255,.4);">%</span>
+        </div>
+      </div>
+      <div class="t-label" id="t-label">Kwartaalbedrag (excl. BTW)</div>
+      <div class="t-amount" id="t-amount">—</div>
+      <div class="t-sub" id="t-sub">3 jaar · 12 termijnen</div>
+      <div class="t-divider"></div>
+      <div class="t-break"><span>Verkoopprijs</span><span id="t-sale">—</span></div>
+      <div class="t-break"><span>Financieringskosten</span><span id="t-fin">—</span></div>
+    </div>
+
+    <div class="action-btns">
+      <button class="sb-btn sb-btn-primary" onclick="addToQuote()">➕ Voeg toe aan offerte</button>
+      <button class="sb-btn sb-btn-secondary" onclick="copySummary()">📋 Kopieer samenvatting</button>
+    </div>
+
+  </div><!-- /sidebar -->
+
+</div><!-- /layout -->
+
+<div id="toast"></div>
+
+<script>
+// ── SUPABASE ─────────────────────────────────────────────────────────────────
+const SUPA_URL  = "https://aocdvzrjwljmiqnuklkn.supabase.co";
+const SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvY2R2enJqd2xqbWlxbnVrbGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MTcwNzAsImV4cCI6MjA5NjM5MzA3MH0.3VWhhLZJxtV0io4FucWjxF5FN1ABRKzGbfyqR6NP4M4";
+let _supa = null;
+function sc() { if(!_supa) _supa = supabase.createClient(SUPA_URL, SUPA_ANON); return _supa; }
+
+// ── OPCO CONFIG ───────────────────────────────────────────────────────────────
+const OPCO = {
+  be: { label:'België', flag:'🇧🇪', rate:0.024 },
+  nl: { label:'Nederland', flag:'🇳🇱', rate:0.024 },
+  uk: { label:'United Kingdom', flag:'🇬🇧', rate:0.0375 },
+  se: { label:'Sweden', flag:'🇸🇪', rate:0.0175 },
+  de: { label:'Germany', flag:'🇩🇪', rate:0.024 }
+};
+
+const ROOMS = {
+  focus:  { label:'Focus', persons:'3', size:'2 × 2,5m' },
+  small:  { label:'Small', persons:'6', size:'3 × 4m' },
+  medium: { label:'Medium', persons:'8', size:'4 × 5m' },
+  large:  { label:'Large', persons:'12', size:'5 × 6m' }
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let state = { room:'small', mfr:'Yealink', platform:'Android', years:3, margin:28, view:'quarterly' };
+let ALL_PRODUCTS = [];   // loaded from Supabase
+let DATA_VERSION = null; // version metadata
+let _fallback = false;
+
+// ── FALLBACK DATA (als Supabase leeg is) ─────────────────────────────────────
+const FALLBACK = {
+  small: {
+    Yealink: { Android: [
+      {cat:'AV Technology', name:'LG 55" Screen - 55UH5N', sku:'55UH5N-E', qty:1, trade:551.25},
+      {cat:'AV Technology', name:'EDID minder Lindy 32114', sku:'32114', qty:1, trade:67.90},
+      {cat:'AV Technology', name:'Yealink A40-031 Conference Unit', sku:'A40-031', qty:1, trade:1264.20},
+      {cat:'Montage', name:'Chief Wall Mount MSM1U', sku:'MSM1U', qty:1, trade:95.76},
+      {cat:'Kabels', name:'HDMI Cable 2m', sku:'CAB-HDMI20-PHS200F', qty:1, trade:12.29},
+      {cat:'Kabels', name:'Cat6 Patch Cable 3m', sku:'89918', qty:1, trade:6.50},
+      {cat:'Kabels', name:'USB-C Cable 3m', sku:'CAB-USBC-T300A', qty:1, trade:40.95},
+      {cat:'Service', name:'Installatie & Commissioning', sku:'OPCO-INST', qty:1, trade:300},
+      {cat:'Service', name:'RESCM Prestaging Android MTR', sku:'N/A', qty:1, trade:34.85},
+      {cat:'Service', name:'Local Helpdesk 3yr AVNOC', sku:'LOCAL', qty:1, trade:200},
+    ]}
+  }
+};
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    // Check auth session
+    const { data: { session } } = await sc().auth.getSession();
+    if (!session) {
+      document.getElementById('loading-overlay').style.display = 'none';
+      document.getElementById('auth-gate').style.display = 'flex';
+      return;
+    }
+    await loadData();
+  } catch(e) {
+    loadFallbackData();
+  }
+}
+
+async function doLogin() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass  = document.getElementById('auth-pass').value;
+  const err   = document.getElementById('auth-err');
+  err.style.display = 'none';
+  try {
+    const { data, error } = await sc().auth.signInWithPassword({ email, password: pass });
+    if (error) throw error;
+    document.getElementById('auth-gate').style.display = 'none';
+    document.getElementById('loading-overlay').style.display = 'flex';
+    await loadData();
+  } catch(e) {
+    err.textContent = e.message; err.style.display = 'block';
+  }
+}
+
+async function loadData() {
+  try {
+    const { data, error } = await sc()
+      .from('mraas_templates')
+      .select('id, filename, uploaded_at, product_count, uploaded_by, products_json')
+      .eq('is_active', true)
+      .single();
+
+    if (error || !data) throw new Error('Geen actieve template');
+
+    ALL_PRODUCTS = data.products_json || [];
+    DATA_VERSION = data;
+    _fallback = false;
+
+    showDataBanner(data);
+  } catch(e) {
+    loadFallbackData();
+    return;
+  }
+
+  buildMfrChips();
+  document.getElementById('loading-overlay').style.display = 'none';
+  render();
+}
+
+function loadFallbackData() {
+  _fallback = true;
+  ALL_PRODUCTS = [];
+  // flatten fallback into same format
+  for (const [room, mfrs] of Object.entries(FALLBACK)) {
+    for (const [mfr, plats] of Object.entries(mfrs)) {
+      for (const [plat, products] of Object.entries(plats)) {
+        products.forEach(p => ALL_PRODUCTS.push({ ...p, room, manufacturer: mfr, platform: plat }));
+      }
+    }
+  }
+
+  const banner = document.getElementById('data-banner');
+  banner.className = 'data-banner warn';
+  banner.style.display = 'flex';
+  banner.innerHTML = '⚠️ Geen actieve template in Supabase — demo data getoond. Upload een Excel via <a href="admin-mraas.html" style="font-weight:700;color:inherit;">Admin MRaaS</a>.';
+
+  buildMfrChips();
+  document.getElementById('loading-overlay').style.display = 'none';
+  render();
+}
+
+function showDataBanner(data) {
+  const banner = document.getElementById('data-banner');
+  banner.style.display = 'flex';
+  banner.innerHTML = '✓ Data: <strong>' + data.filename + '</strong> · ' + data.product_count + ' producten · Geüpload door ' + data.uploaded_by + ' op ' + new Date(data.uploaded_at).toLocaleDateString('nl-BE');
+}
+
+// ── BUILD MFR CHIPS ───────────────────────────────────────────────────────────
+function buildMfrChips() {
+  const mfrs = [...new Set(ALL_PRODUCTS.map(p => p.manufacturer))].filter(Boolean);
+  if (!mfrs.length) mfrs.push('Yealink');
+  state.mfr = mfrs[0];
+
+  const row = document.getElementById('mfr-row');
+  row.innerHTML = mfrs.map(m =>
+    `<div class="mfr-chip ${m === state.mfr ? 'selected' : ''}" onclick="selectMfr(this,'${m}')">${m}${m==='Yealink'?' <span style=\'font-size:10px;opacity:.7;\'>(Ricoh rec.)</span>':''}</div>`
+  ).join('');
+}
+
+// ── GET PRODUCTS ──────────────────────────────────────────────────────────────
+function getProducts() {
+  let p = ALL_PRODUCTS.filter(x =>
+    x.room === state.room &&
+    x.manufacturer === state.mfr &&
+    (x.platform === state.platform || x.platform === 'Android')
+  );
+  // Prefer exact platform match
+  const exact = p.filter(x => x.platform === state.platform);
+  if (exact.length) p = exact;
+  return p;
+}
+
+// ── CALC ──────────────────────────────────────────────────────────────────────
+function calcSale(trade) { return trade / (1 - state.margin / 100); }
+function calcQuarterly(sale) {
+  const opco = OPCO[document.getElementById('sel-opco').value] || OPCO.be;
+  const n = state.years * 4;
+  const r = opco.rate / 4;
+  if (r === 0) return sale / n;
+  return sale * r / (1 - Math.pow(1+r, -n));
+}
+function fmt(v) { return '€ ' + v.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+  const products = getProducts();
+  const trade = products.reduce((s,p) => s + p.trade * p.qty, 0);
+  const sale = calcSale(trade);
+  const quarterly = calcQuarterly(sale);
+  const monthly = quarterly / 3;
+  const total = quarterly * state.years * 4;
+  const room = ROOMS[state.room];
+  const opcoKey = document.getElementById('sel-opco').value;
+  const opco = OPCO[opcoKey] || OPCO.be;
+
+  // Update years from select
+  state.years = parseInt(document.getElementById('sel-years').value);
+
+  // Room preview
+  document.getElementById('rp-name').textContent = room.label + ' Meeting Room';
+  document.getElementById('rp-sub').textContent = state.mfr + ' · ' + state.platform + ' · ' + state.years + ' jaar · ' + opco.label;
+  document.getElementById('rp-persons').textContent = room.persons;
+  document.getElementById('rp-size').textContent = room.size;
+  document.getElementById('rp-items').textContent = products.length;
+  document.getElementById('rp-trade').textContent = fmt(trade);
+
+  // Badge + item count
+  document.getElementById('item-count').textContent = products.length + ' items';
+
+  // Products table
+  const catClass = { 'AV Technology':'av', 'Service':'service', 'Kabels':'cable', 'Montage':'mount' };
+  let html = '', lastCat = '';
+  products.forEach(p => {
+    if (p.cat !== lastCat) {
+      html += '<tr class="section-row"><td colspan="6">' + p.cat + '</td></tr>';
+      lastCat = p.cat;
+    }
+    const sprice = p.trade / (1 - state.margin/100);
+    html += '<tr>' +
+      '<td style="max-width:220px;">' + p.name + '</td>' +
+      '<td class="mono">' + (p.sku||'—') + '</td>' +
+      '<td><span class="cat-badge ' + (catClass[p.cat]||'') + '">' + p.cat + '</span></td>' +
+      '<td style="color:var(--muted);">' + p.qty + '</td>' +
+      '<td class="fw">' + fmt(p.trade * p.qty) + '</td>' +
+      '<td class="red">' + fmt(sprice * p.qty) + '</td>' +
+      '</tr>';
+  });
+  if (!html) html = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted);">Geen producten voor deze combinatie</td></tr>';
+  document.getElementById('products-body').innerHTML = html;
+
+  // Sidebar
+  document.getElementById('sb-room').textContent = room.label;
+  document.getElementById('sb-mfr').textContent = state.mfr;
+  document.getElementById('sb-plat').textContent = state.platform;
+  document.getElementById('sb-contract').textContent = state.years + ' jaar';
+
+  const hw = products.filter(p=>p.cat!=='Service').reduce((s,p)=>s+p.trade*p.qty,0);
+  const svc = products.filter(p=>p.cat==='Service').reduce((s,p)=>s+p.trade*p.qty,0);
+  document.getElementById('sb-hw').textContent = fmt(hw);
+  document.getElementById('sb-svc').textContent = fmt(svc);
+  document.getElementById('sb-trade').textContent = fmt(trade);
+
+  // Total box
+  document.getElementById('tb-opco').textContent = opco.flag + ' ' + opco.label + ' · ' + (opco.rate*100).toFixed(2).replace('.','') + '%';
+  document.getElementById('tb-opco').textContent = opco.flag + ' ' + opco.label + ' · ' + (opco.rate*100) + '%';
+
+  let dispAmt, dispLabel, dispSub;
+  if (state.view === 'quarterly') { dispAmt=quarterly; dispLabel='Kwartaalbedrag (excl. BTW)'; dispSub=state.years+' jaar · '+(state.years*4)+' termijnen'; }
+  else if (state.view === 'monthly') { dispAmt=monthly; dispLabel='Maandbedrag (excl. BTW)'; dispSub=state.years+' jaar · '+(state.years*12)+' maanden'; }
+  else { dispAmt=total; dispLabel='Totaalprijs (excl. BTW)'; dispSub=state.years+' jaar contract'; }
+
+  document.getElementById('t-label').textContent = dispLabel;
+  document.getElementById('t-amount').textContent = fmt(dispAmt);
+  document.getElementById('t-sub').textContent = dispSub;
+  document.getElementById('t-sale').textContent = fmt(sale);
+  document.getElementById('t-fin').textContent = fmt(total - sale);
+}
+
+// ── INTERACTIONS ──────────────────────────────────────────────────────────────
+function selectRoom(room) {
+  state.room = room;
+  document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('room-'+room).classList.add('selected');
+  render();
+}
+function selectMfr(el, mfr) {
+  state.mfr = mfr;
+  document.querySelectorAll('.mfr-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  if (mfr === 'Cisco') { state.platform = 'Android'; document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active')); document.querySelector('.toggle-btn').classList.add('active'); }
+  render();
+}
+function selectPlatform(el, plat) {
+  if (state.mfr === 'Cisco' && plat === 'Windows') { toast('Cisco is niet beschikbaar op Windows'); return; }
+  state.platform = plat;
+  document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+function syncMargin(v) {
+  state.margin = parseFloat(v) || 28;
+  document.getElementById('inp-margin').value = state.margin;
+  document.getElementById('tb-margin').value = state.margin;
+  render();
+}
+function setView(view, el) {
+  state.view = view;
+  document.querySelectorAll('.ct-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function addToQuote() {
+  const products = getProducts();
+  if (!products.length) { toast('Geen producten voor deze combinatie'); return; }
+
+  const opcoKey = document.getElementById('sel-opco').value;
+  const opco    = OPCO[opcoKey] || OPCO.be;
+  state.years   = parseInt(document.getElementById('sel-years').value);
+  state.margin  = parseFloat(document.getElementById('inp-margin').value) || 28;
+
+  const trade     = products.reduce((s,p) => s + p.trade * p.qty, 0);
+  const sale      = calcSale(trade);
+  const quarterly = calcQuarterly(sale);
+  const room      = ROOMS[state.room];
+
+  const payload = {
+    roomLabel:    room.label,
+    roomKey:      state.room,
+    manufacturer: state.mfr,
+    platform:     state.platform,
+    years:        state.years,
+    margin:       state.margin,
+    opco:         opco.label,
+    opcoRate:     opco.rate,
+    trade:        fmt(trade),
+    sale:         fmt(sale),
+    quarterly:    fmt(quarterly),
+    products:     products.map(p => ({
+      name: p.name, sku: p.sku || '', qty: p.qty,
+      trade: p.trade, cat: p.cat,
+      manufacturer: p.manufacturer || state.mfr
+    }))
+  };
+
+  try {
+    localStorage.setItem('mraas_pending', JSON.stringify(payload));
+  } catch(e) {
+    toast('localStorage vol'); return;
+  }
+
+  showHandoffModal(payload);
+}
+
+function showHandoffModal(payload) {
+  const old = document.getElementById('handoff-modal');
+  if (old) old.remove();
+
+  const m = document.createElement('div');
+  m.id = 'handoff-modal';
+  m.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px;';
+  m.innerHTML = '<div style="background:white;border-radius:16px;padding:28px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);">'
+    + '<div style="font-size:36px;text-align:center;margin-bottom:12px;">&#10003;</div>'
+    + '<h3 style="font-size:16px;font-weight:700;text-align:center;margin-bottom:6px;">Configuratie klaar</h3>'
+    + '<p style="font-size:13px;color:#6b7280;text-align:center;margin-bottom:20px;">'
+    + payload.roomLabel + ' &middot; ' + payload.manufacturer + ' ' + payload.platform + '<br>'
+    + 'Kwartaal: <strong>' + payload.quarterly + '</strong> &middot; Verkoopprijs: <strong>' + payload.sale + '</strong>'
+    + '</p>'
+    + '<div style="background:#f8f9fb;border-radius:10px;padding:14px;margin-bottom:20px;font-size:12px;color:#6b7280;">'
+    + '<strong style="color:#1e1e2e;display:block;margin-bottom:6px;">Wat er gebeurt:</strong>'
+    + 'De ' + payload.products.length + ' producten worden als nieuwe zaal toegevoegd aan je lopende offerte in Easy Quotation.'
+    + '</div>'
+    + '<a href="index.html" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#e8001c;color:white;border-radius:10px;padding:12px 20px;text-decoration:none;font-weight:700;font-size:14px;margin-bottom:10px;">'
+    + '&#10145; Naar Easy Quotation</a>'
+    + '<button onclick="document.getElementById(\'handoff-modal\').remove()" '
+    + 'style="width:100%;background:#f1f3f6;border:none;border-radius:10px;padding:11px;font-family:\'Outfit\',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:#1e1e2e;">'
+    + 'Annuleren</button>'
+    + '</div>';
+  document.body.appendChild(m);
+  m.addEventListener('click', function(e){ if(e.target===m) m.remove(); });
+}
+function copySummary() {
+  const room = ROOMS[state.room];
+  const products = getProducts();
+  const trade = products.reduce((s,p)=>s+p.trade*p.qty,0);
+  const sale = calcSale(trade);
+  const q = calcQuarterly(sale);
+  const text = `MRaaS ${room.label} – ${state.mfr} ${state.platform}\nTrade: ${fmt(trade)} | Verkoopprijs: ${fmt(sale)} | Kwartaal: ${fmt(q)}`;
+  navigator.clipboard.writeText(text).then(() => toast('✓ Gekopieerd'));
+}
+
+function toast(msg, dur=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+init();
+</script>
+</body>
+</html>
