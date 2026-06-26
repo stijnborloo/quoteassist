@@ -1025,6 +1025,16 @@ body:not(.is-admin) .admin-only{display:none!important}
     <div class="app-t">Easy Quotation</div>
   </div>
   <div class="tb-r">
+    <a href="configurator.html"
+      style="display:flex;align-items:center;gap:5px;padding:6px 14px;
+             background:linear-gradient(135deg,#e8001c,#ff6b35);color:white;
+             border-radius:8px;font-size:12px;font-weight:700;
+             text-decoration:none;white-space:nowrap;
+             box-shadow:0 2px 8px rgba(232,0,28,.25);transition:.15s"
+      onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'"
+      title="AV Configurator openen">
+      🏗️ Configurator
+    </a>
     <span id="badge" class="tb-badge">0 items</span>
     <span id="user-badge" class="user-badge" title="Aangemeld als"></span>
     <button id="acties-btn" class="btn b-tb tb-btn" onclick="toggleActiesMenu(event)" title="AI, PDF, Foto's, Live preview" style="gap:6px;max-width:120px;overflow:hidden">
@@ -9499,7 +9509,7 @@ function applyRoleUI(){
   // ── SALES REDIRECT ──────────────────────────────────────
   if(_userRole === "sales"){
     window.location.replace(
-      window.location.origin + "/offertetool/configurator.html"
+      window.location.origin + "/configurator.html"
     );
     return;
   }
