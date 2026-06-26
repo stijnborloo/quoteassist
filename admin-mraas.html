@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MRaaS Admin – Ricoh Belgium</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --red: #e8001c;
+  --dark: #0d0d14;
+  --ink: #1e1e2e;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --surface: #f8f9fb;
+  --green: #10b981;
+  --orange: #f59e0b;
+  --shadow: 0 4px 20px rgba(0,0,0,.08);
+}
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--surface);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* AUTH GATE */
+#auth-gate {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--dark);
+  display: flex; align-items: center; justify-content: center;
+}
+.auth-card {
+  background: white; border-radius: 16px;
+  padding: 32px; width: 340px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+.auth-logo { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+.auth-logo span { color: var(--red); }
+.auth-sub { font-size: 12px; color: var(--muted); margin-bottom: 24px; }
+.auth-field { margin-bottom: 12px; }
+.auth-field label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; }
+.auth-field input { width: 100%; height: 42px; border: 1.5px solid var(--border); border-radius: 9px; padding: 0 12px; font-family: 'Outfit', sans-serif; font-size: 14px; outline: none; }
+.auth-field input:focus { border-color: var(--red); }
+.auth-btn { width: 100%; height: 44px; background: var(--red); color: white; border: none; border-radius: 10px; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 4px; }
+.auth-err { font-size: 12px; color: var(--red); background: #fff0f1; border: 1px solid #fca5a5; border-radius: 7px; padding: 8px 11px; margin-bottom: 10px; display: none; }
+
+/* TOPBAR */
+.topbar {
+  background: var(--dark); color: white;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; height: 56px;
+  position: sticky; top: 0; z-index: 100;
+}
+.tl { display: flex; align-items: center; gap: 16px; }
+.logo { font-weight: 800; font-size: 18px; }
+.logo span { color: var(--red); }
+.page-pill { font-size: 12px; font-weight: 600; padding: 4px 12px; background: rgba(255,255,255,.1); border-radius: 100px; color: rgba(255,255,255,.8); }
+.user-pill { font-size: 12px; color: rgba(255,255,255,.6); display: flex; align-items: center; gap: 8px; }
+.logout-btn { background: rgba(255,255,255,.1); border: none; border-radius: 7px; color: rgba(255,255,255,.7); padding: 5px 12px; font-family: 'Outfit', sans-serif; font-size: 12px; cursor: pointer; }
+.logout-btn:hover { background: rgba(255,255,255,.18); color: white; }
+
+/* MAIN */
+.main { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
+
+.page-header { margin-bottom: 32px; }
+.page-header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.page-header p { font-size: 14px; color: var(--muted); }
+
+/* CARDS */
+.card {
+  background: white; border-radius: 16px; border: 1px solid var(--border);
+  padding: 24px; margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.card-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.card-title .icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.icon-blue { background: #eff6ff; }
+.icon-green { background: #f0fdf4; }
+.icon-orange { background: #fffbeb; }
+
+/* UPLOAD ZONE */
+.upload-zone {
+  border: 2.5px dashed var(--border);
+  border-radius: 14px;
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--red);
+  background: #fff5f6;
+}
+.upload-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.upload-icon { font-size: 40px; margin-bottom: 12px; }
+.upload-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.upload-sub { font-size: 13px; color: var(--muted); }
+.upload-formats { font-size: 11px; color: var(--muted); margin-top: 8px; padding: 4px 12px; background: var(--surface); border-radius: 100px; display: inline-block; }
+
+/* FILE INFO */
+.file-info {
+  display: flex; align-items: center; gap: 12px;
+  background: #f0fdf4; border: 1.5px solid #bbf7d0;
+  border-radius: 10px; padding: 12px 16px;
+  margin-top: 12px; display: none;
+}
+.file-icon { font-size: 24px; }
+.file-name { font-size: 14px; font-weight: 600; }
+.file-size { font-size: 12px; color: var(--muted); }
+.file-remove { margin-left: auto; background: none; border: none; font-size: 18px; color: var(--muted); cursor: pointer; }
+
+/* PARSE RESULTS */
+.parse-status {
+  margin-top: 16px;
+  display: none;
+}
+.status-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.status-row.ok { background: #f0fdf4; color: #15803d; }
+.status-row.warn { background: #fffbeb; color: #b45309; }
+.status-row.err { background: #fff0f1; color: var(--red); }
+.status-icon { font-size: 16px; }
+
+/* PREVIEW TABLE */
+.preview-section { display: none; }
+.filter-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-chip {
+  border: 1.5px solid var(--border); border-radius: 100px;
+  padding: 6px 14px; font-family: 'Outfit', sans-serif;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  background: white; transition: all .15s; color: var(--muted);
+}
+.filter-chip.active { border-color: var(--red); color: var(--red); background: #fff5f6; }
+
+.preview-table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead tr { background: #f8f9fb; }
+th { padding: 9px 12px; text-align: left; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 9px 12px; border-bottom: 1px solid #f1f3f6; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafafa; }
+td.mono { font-family: monospace; font-size: 11px; color: var(--muted); }
+.badge-cat {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 5px;
+}
+.badge-cat.av { background: #eef2ff; color: #4f46e5; }
+.badge-cat.service { background: #f0fdf4; color: #16a34a; }
+.badge-cat.cable { background: #fff7ed; color: #c2410c; }
+.badge-cat.mount { background: #fdf4ff; color: #9333ea; }
+
+/* STATS ROW */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat-box { background: var(--surface); border-radius: 10px; padding: 14px 16px; }
+.stat-val { font-size: 22px; font-weight: 700; }
+.stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* HISTORY TABLE */
+.version-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f1f3f6; }
+.version-row:last-child { border-bottom: none; }
+.version-num { font-size: 11px; font-weight: 700; background: #f1f3f6; border-radius: 6px; padding: 3px 8px; color: var(--muted); }
+.version-num.active { background: #fff0f1; color: var(--red); }
+.version-info { flex: 1; }
+.version-name { font-size: 13px; font-weight: 600; }
+.version-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.version-actions { display: flex; gap: 6px; }
+.ver-btn { border: 1.5px solid var(--border); border-radius: 7px; background: white; padding: 5px 10px; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; }
+.ver-btn:hover { border-color: var(--red); color: var(--red); }
+.ver-btn.danger:hover { border-color: #ef4444; color: #ef4444; }
+
+/* ACTION BAR */
+.action-bar {
+  background: white; border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; margin-bottom: 20px;
+  box-shadow: var(--shadow);
+  display: none;
+}
+.action-bar-info { font-size: 13px; color: var(--muted); }
+.action-bar-info strong { color: var(--ink); }
+.action-btns { display: flex; gap: 10px; }
+.btn { border: none; border-radius: 10px; padding: 10px 20px; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: opacity .15s; }
+.btn:hover { opacity: .85; }
+.btn-primary { background: var(--red); color: white; }
+.btn-secondary { background: #f1f3f6; color: var(--ink); }
+.btn-success { background: var(--green); color: white; }
+
+/* TOAST */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--dark); color: white;
+  padding: 10px 20px; border-radius: 10px;
+  font-size: 13px; font-weight: 500;
+  box-shadow: 0 4px 20px rgba(0,0,0,.3);
+  opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 999;
+}
+#toast.show { opacity: 1; }
+
+/* PROGRESS */
+.progress-bar { height: 4px; background: #f1f3f6; border-radius: 2px; margin-top: 12px; overflow: hidden; display: none; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--red), var(--orange)); border-radius: 2px; width: 0; transition: width .3s; }
+
+/* SPINNER */
+.spin { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3); border-top-color: white; border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-history { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div id="auth-gate">
+  <div class="auth-card">
+    <div class="auth-logo">Ricoh<span>.</span> Admin</div>
+    <div class="auth-sub">MRaaS Configuratie Beheer · Alleen voor admins</div>
+    <div class="auth-err" id="auth-err"></div>
+    <div class="auth-field">
+      <label>E-mailadres</label>
+      <input type="email" id="auth-email" placeholder="naam@ricoh.be">
+    </div>
+    <div class="auth-field">
+      <label>Wachtwoord</label>
+      <input type="password" id="auth-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="auth-btn" onclick="doLogin()" id="login-btn">Inloggen</button>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tl">
+    <div class="logo">Ricoh<span>.</span></div>
+    <div class="page-pill">🛠 MRaaS Admin</div>
+  </div>
+  <div class="user-pill">
+    <span id="user-email-display"></span>
+    <button class="logout-btn" onclick="doLogout()">Uitloggen</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="page-header">
+    <h1>MRaaS Configuratie Beheer</h1>
+    <p>Upload een nieuwe Excel om producten, prijzen en kamertypes bij te werken. Alle gebruikers krijgen direct de nieuwe data.</p>
+  </div>
+
+  <!-- ACTION BAR (verschijnt na parse) -->
+  <div class="action-bar" id="action-bar">
+    <div class="action-bar-info">
+      <strong id="ab-title">Klaar om op te slaan</strong><br>
+      <span id="ab-sub"></span>
+    </div>
+    <div class="action-btns">
+      <button class="btn btn-secondary" onclick="resetUpload()">✕ Annuleer</button>
+      <button class="btn btn-primary" onclick="saveToSupabase()" id="save-btn">
+        💾 Opslaan in Supabase
+      </button>
+    </div>
+  </div>
+
+  <!-- UPLOAD CARD -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <div class="icon icon-blue">📤</div>
+        Excel uploaden
+      </div>
+    </div>
+
+    <div class="upload-zone" id="upload-zone" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+      <input type="file" id="file-input" accept=".xlsx,.xlsm,.xls" onchange="onFileSelected(event)">
+      <div class="upload-icon">📊</div>
+      <div class="upload-title">Sleep je Excel hier naartoe</div>
+      <div class="upload-sub">of klik om een bestand te kiezen</div>
+      <div class="upload-formats">.xlsx · .xlsm · .xls</div>
+    </div>
+
+    <div class="file-info" id="file-info">
+      <div class="file-icon">📗</div>
+      <div>
+        <div class="file-name" id="file-name-display"></div>
+        <div class="file-size" id="file-size-display"></div>
+      </div>
+      <button class="file-remove" onclick="resetUpload()">✕</button>
+    </div>
+
+    <div class="progress-bar" id="progress-bar">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+
+    <div class="parse-status" id="parse-status"></div>
+  </div>
+
+  <!-- PREVIEW CARD -->
+  <div class="card preview-section" id="preview-section">
+    <div class="card-header">
+      <div class="card-title">
+        <div class="icon icon-green">🔍</div>
+        Voorvertoning geïmporteerde data
+      </div>
+    </div>
+
+    <div class="stats-row" id="stats-row"></div>
+
+    <div class="filter-row" id="filter-row"></div>
+
+    <div class="preview-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Kamer</th>
+            <th>Fabrikant</th>
+            <th>Platform</th>
+            <th>Categorie</th>
+            <th>Product</th>
+            <th>SKU</th>
+            <th>Qty</th>
+            <th>Trade cost</th>
+          </tr>
+        </thead>
+        <tbody id="preview-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- HISTORY CARD -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <div class="icon icon-orange">🕐</div>
+        Versiegeschiedenis
+      </div>
+      <span id="history-count" style="font-size:12px;color:var(--muted);"></span>
+    </div>
+    <div id="history-list"><div class="empty-history">Laden…</div></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── SUPABASE ────────────────────────────────────────────────────────────────
+const SUPA_URL  = "https://aocdvzrjwljmiqnuklkn.supabase.co";
+const SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvY2R2enJqd2xqbWlxbnVrbGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MTcwNzAsImV4cCI6MjA5NjM5MzA3MH0.3VWhhLZJxtV0io4FucWjxF5FN1ABRKzGbfyqR6NP4M4";
+let _supa = null;
+function sc() {
+  if (!_supa) _supa = supabase.createClient(SUPA_URL, SUPA_ANON);
+  return _supa;
+}
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let _user = null;
+let _parsedData = null;   // parsed products array
+let _parsedMeta = null;   // { filename, sheets, counts }
+let _filterRoom = 'all';
+
+// ── AUTH ─────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass  = document.getElementById('auth-pass').value;
+  const btn   = document.getElementById('login-btn');
+  const err   = document.getElementById('auth-err');
+  err.style.display = 'none';
+  btn.innerHTML = '<span class="spin"></span>';
+  btn.disabled = true;
+  try {
+    const { data, error } = await sc().auth.signInWithPassword({ email, password: pass });
+    if (error) throw error;
+    const role = data.user?.app_metadata?.role || 'user';
+    if (role !== 'admin') throw new Error('Geen admin-rechten. Neem contact op met Stijn.');
+    _user = data.user;
+    document.getElementById('auth-gate').style.display = 'none';
+    document.getElementById('user-email-display').textContent = email;
+    await loadHistory();
+  } catch(e) {
+    err.textContent = e.message;
+    err.style.display = 'block';
+  } finally {
+    btn.innerHTML = 'Inloggen';
+    btn.disabled = false;
+  }
+}
+
+async function doLogout() {
+  await sc().auth.signOut();
+  location.reload();
+}
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+function toast(msg, dur = 3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// ── DRAG & DROP ──────────────────────────────────────────────────────────────
+function onDragOver(e) { e.preventDefault(); document.getElementById('upload-zone').classList.add('dragover'); }
+function onDragLeave(e) { document.getElementById('upload-zone').classList.remove('dragover'); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+function onFileSelected(e) { if (e.target.files[0]) handleFile(e.target.files[0]); }
+
+// ── FILE HANDLING ─────────────────────────────────────────────────────────────
+function resetUpload() {
+  _parsedData = null; _parsedMeta = null; _filterRoom = 'all';
+  document.getElementById('file-input').value = '';
+  document.getElementById('file-info').style.display = 'none';
+  document.getElementById('parse-status').style.display = 'none';
+  document.getElementById('parse-status').innerHTML = '';
+  document.getElementById('preview-section').style.display = 'none';
+  document.getElementById('action-bar').style.display = 'none';
+  document.getElementById('progress-bar').style.display = 'none';
+}
+
+async function handleFile(file) {
+  const allowed = ['.xlsx', '.xlsm', '.xls'];
+  const ext = '.' + file.name.split('.').pop().toLowerCase();
+  if (!allowed.includes(ext)) { toast('❌ Alleen .xlsx, .xlsm of .xls bestanden'); return; }
+
+  // Show file info
+  document.getElementById('file-info').style.display = 'flex';
+  document.getElementById('file-name-display').textContent = file.name;
+  document.getElementById('file-size-display').textContent = (file.size / 1024).toFixed(1) + ' KB';
+
+  // Progress
+  const pb = document.getElementById('progress-bar');
+  const pf = document.getElementById('progress-fill');
+  pb.style.display = 'block';
+  pf.style.width = '20%';
+
+  const ps = document.getElementById('parse-status');
+  ps.style.display = 'block';
+  ps.innerHTML = '<div class="status-row ok"><span class="status-icon">⏳</span> Bestand lezen…</div>';
+
+  try {
+    const buffer = await file.arrayBuffer();
+    pf.style.width = '50%';
+
+    const wb = XLSX.read(buffer, { type: 'array' });
+    pf.style.width = '70%';
+
+    const result = parseWorkbook(wb, file.name);
+    pf.style.width = '100%';
+
+    _parsedData = result.products;
+    _parsedMeta = { filename: file.name, sheets: wb.SheetNames, ...result.counts };
+
+    renderParseStatus(result);
+    renderPreview();
+
+    document.getElementById('action-bar').style.display = 'flex';
+    document.getElementById('ab-title').textContent = result.products.length + ' producten klaar om op te slaan';
+    document.getElementById('ab-sub').textContent =
+      result.counts.rooms + ' kamertypes · ' + result.counts.mfrs + ' fabrikanten · ' + result.counts.platforms + ' platformen';
+
+    setTimeout(() => { pb.style.display = 'none'; }, 600);
+  } catch(e) {
+    ps.innerHTML = '<div class="status-row err"><span class="status-icon">❌</span> Fout bij inlezen: ' + e.message + '</div>';
+    pb.style.display = 'none';
+    toast('❌ ' + e.message);
+  }
+}
+
+// ── PARSE WORKBOOK ────────────────────────────────────────────────────────────
+function parseWorkbook(wb, filename) {
+  const status = [];
+  const products = [];
+
+  // ─ Sheet: Configurator (Yealink/Ricoh recommended data) ─
+  const cfgSheet = wb.Sheets['Configurator'] || wb.Sheets['configurator'];
+  if (!cfgSheet) throw new Error('Sheet "Configurator" niet gevonden. Controleer de bestandsnaam.');
+  status.push({ ok: true, msg: 'Sheet "Configurator" gevonden' });
+
+  // Parse Configurator sheet row by row
+  const cfgRows = XLSX.utils.sheet_to_json(cfgSheet, { header: 1, defval: '' });
+
+  // We detect room sections by looking for "Space" header rows
+  // Then collect products until next section
+  const ROOM_MAP = {
+    'Focus': 'focus',
+    'Huddle/Small': 'small',
+    'Executive/Medium': 'medium',
+    'Executive+/Large': 'large'
+  };
+  const CAT_MAP = {
+    'In Room Technology': 'AV Technology',
+    'Huddle': 'AV Technology',
+    'Mraas': 'AV Technology',
+    'Mounting': 'Montage',
+    'Cable pack': 'Kabels',
+    'Installation, configuration': 'Service',
+    'RESCM service': 'Service',
+    'AVNOC Services': 'Service',
+    'Service & support': 'Service',
+    'Manufacturer warranty': 'Service',
+    'Onsite Support': 'Service',
+    'End of life services': 'Service'
+  };
+
+  let currentRoom = null;
+  let inProducts = false;
+
+  for (let i = 0; i < cfgRows.length; i++) {
+    const row = cfgRows[i];
+    const r0 = String(row[0] || '').trim();
+    const r1 = String(row[1] || '').trim();
+
+    // Detect room section header (has "Microsoft Teams Room" in a cell)
+    const rowStr = row.join(' ');
+    if (rowStr.includes('Microsoft Teams Room') && rowStr.includes('people')) {
+      // Find which room
+      for (const [k, v] of Object.entries(ROOM_MAP)) {
+        if (rowStr.includes(k) || rowStr.toLowerCase().includes(k.toLowerCase())) {
+          currentRoom = v; inProducts = false; break;
+        }
+      }
+      // Focus fallback
+      if (rowStr.includes('Focus') || rowStr.includes('up to 3')) currentRoom = 'focus';
+      else if (rowStr.includes('up to 6') || rowStr.includes('3 x 4')) currentRoom = 'small';
+      else if (rowStr.includes('up to 8') || rowStr.includes('4 x 5')) currentRoom = 'medium';
+      else if (rowStr.includes('up to 12') || rowStr.includes('5 x 6')) currentRoom = 'large';
+      continue;
+    }
+
+    // Detect product header row
+    if (r1 === 'Space' || (row[3] === 'Product type' && row[4] === 'Product')) {
+      inProducts = true; continue;
+    }
+
+    if (!currentRoom || !inProducts) continue;
+
+    // Try to parse a product row
+    // Columns (0-indexed): Space, SubCat, Manufacturer, Platform, ProductType, Product, SKU, Qty, CLCode, CCode, TradeCost
+    const productName = String(row[5] || '').trim();
+    const sku = String(row[6] || '').trim();
+    const qty = parseFloat(row[7]) || 1;
+    const tradeCost = parseFloat(row[10]) || 0;
+    const subCat = String(row[1] || '').trim();
+
+    if (!productName || productName.includes('Project costs') || tradeCost === 0 && !productName) continue;
+    if (productName.startsWith('Quarterly') || productName.startsWith('Total')) continue;
+    if (sku === 'OpCo to add') continue;
+
+    // Map category
+    let cat = 'AV Technology';
+    for (const [k, v] of Object.entries(CAT_MAP)) {
+      if (subCat.toLowerCase().startsWith(k.toLowerCase())) { cat = v; break; }
+    }
+    // Override by product type
+    const pt = String(row[4] || '').toLowerCase();
+    if (pt.includes('professional service') || pt.includes('service')) cat = 'Service';
+    if (pt.includes('installation component') || pt.includes('cable')) cat = 'Kabels';
+    if (subCat.toLowerCase().includes('mount')) cat = 'Montage';
+    if (subCat.toLowerCase().includes('cable')) cat = 'Kabels';
+
+    if (!productName || tradeCost === 0 && cat !== 'Service') continue;
+
+    products.push({
+      room: currentRoom,
+      manufacturer: 'Yealink',
+      platform: 'Android',
+      cat, name: productName, sku, qty, trade: tradeCost
+    });
+  }
+
+  status.push({ ok: true, msg: 'Configurator: ' + products.filter(p=>p.manufacturer==='Yealink').length + ' Yealink/Ricoh producten geïmporteerd' });
+
+  // ─ Sheet: Products (Logitech, Cisco, etc.) ─
+  const prodSheet = wb.Sheets['Products'] || wb.Sheets['products'];
+  if (prodSheet) {
+    const prodRows = XLSX.utils.sheet_to_json(prodSheet, { header: 1, defval: '' });
+    let extraCount = 0;
+    let currentSection = null; // e.g. "Focus Microsoft Teams Room"
+    let currentRoomProd = null;
+    let currentMfr = null;
+    let currentPlat = null;
+
+    for (let i = 0; i < prodRows.length; i++) {
+      const row = prodRows[i];
+      const r0 = String(row[0] || '').trim();
+
+      // Section header: "Focus Microsoft Teams Room"
+      if (r0.includes('Microsoft Teams Room')) {
+        currentSection = r0;
+        if (r0.includes('Focus')) currentRoomProd = 'focus';
+        else if (r0.includes('Huddle/Small')) currentRoomProd = 'small';
+        else if (r0.includes('Executive/Medium')) currentRoomProd = 'medium';
+        else if (r0.includes('Executive+/Large') || r0.includes('Large')) currentRoomProd = 'large';
+        continue;
+      }
+
+      if (!currentRoomProd) continue;
+
+      // Data rows: col1=room, col2=mfr, col3=platform, col4=category, col5=name, col6=sku, col7=qty, col10=trade
+      const mfr = String(row[2] || '').trim();
+      const plat = String(row[3] || '').trim();
+      const cat4 = String(row[4] || '').trim();
+      const name = String(row[5] || '').trim();
+      const sku = String(row[6] || '').trim();
+      const qty = parseFloat(row[7]) || 1;
+      const trade = parseFloat(row[10]) || 0;
+
+      if (!name || !mfr || mfr === 'Manufacturer') continue;
+      if (name.toLowerCase().includes('not available')) continue;
+      if (trade === 0 && cat4 !== '3 Year' && cat4 !== '5 Year' && !cat4.includes('Service')) continue;
+
+      // Map category
+      let cat = 'AV Technology';
+      if (cat4.toLowerCase().includes('service') || cat4 === '3 Year' || cat4 === '5 Year') cat = 'Service';
+      else if (cat4.toLowerCase().includes('mount')) cat = 'Montage';
+      else if (cat4.toLowerCase().includes('cable') || cat4.toLowerCase().includes('content')) cat = 'Kabels';
+      else if (cat4.toLowerCase().includes('controller') || cat4.toLowerCase().includes('compute')) cat = 'AV Technology';
+
+      products.push({
+        room: currentRoomProd,
+        manufacturer: mfr,
+        platform: plat || 'Android',
+        cat, name, sku, qty, trade
+      });
+      extraCount++;
+    }
+    status.push({ ok: true, msg: 'Products sheet: ' + extraCount + ' extra producten (Logitech, Cisco…) geïmporteerd' });
+  } else {
+    status.push({ ok: false, msg: 'Sheet "Products" niet gevonden — alleen Yealink data beschikbaar' });
+  }
+
+  // ─ Sheet: Services ─
+  const svcSheet = wb.Sheets['Services'] || wb.Sheets['services'];
+  const services = {};
+  if (svcSheet) {
+    const svcRows = XLSX.utils.sheet_to_json(svcSheet, { header: 1, defval: '' });
+    for (let i = 0; i < svcRows.length; i++) {
+      const row = svcRows[i];
+      const opco = String(row[1] || '').trim();
+      const rate = parseFloat(row[2]);
+      if (opco && !isNaN(rate) && rate > 0) {
+        services[opco.toLowerCase()] = {
+          rate, pm: parseFloat(row[3]) || 0, survey: parseFloat(row[4]) || 0,
+          inst: { focus: parseFloat(row[5])||200, small: parseFloat(row[6])||300, medium: parseFloat(row[7])||400, large: parseFloat(row[8])||500 },
+          onsite: { focus: parseFloat(row[9])||200, small: parseFloat(row[10])||300, medium: parseFloat(row[11])||400, large: parseFloat(row[12])||500 },
+          decom: { focus: parseFloat(row[13])||200, small: parseFloat(row[14])||300, medium: parseFloat(row[15])||400, large: parseFloat(row[16])||500 },
+          helpdesk3: parseFloat(row[17]) || 200, helpdesk5: parseFloat(row[18]) || 600
+        };
+      }
+    }
+    status.push({ ok: true, msg: 'Services sheet: ' + Object.keys(services).length + ' OpCo\'s geïmporteerd (' + Object.keys(services).join(', ') + ')' });
+  } else {
+    status.push({ ok: false, msg: 'Sheet "Services" niet gevonden — standaard servicetarieven gebruikt' });
+  }
+
+  // Counts
+  const rooms = [...new Set(products.map(p => p.room))];
+  const mfrs = [...new Set(products.map(p => p.manufacturer))];
+  const platforms = [...new Set(products.map(p => p.platform))];
+
+  return {
+    products, services, status,
+    counts: { total: products.length, rooms: rooms.length, mfrs: mfrs.length, platforms: platforms.length, roomList: rooms, mfrList: mfrs }
+  };
+}
+
+// ── RENDER PARSE STATUS ───────────────────────────────────────────────────────
+function renderParseStatus(result) {
+  const ps = document.getElementById('parse-status');
+  ps.innerHTML = result.status.map(s =>
+    `<div class="status-row ${s.ok ? 'ok' : 'warn'}">
+      <span class="status-icon">${s.ok ? '✓' : '⚠️'}</span>
+      ${s.msg}
+    </div>`
+  ).join('');
+}
+
+// ── RENDER PREVIEW ────────────────────────────────────────────────────────────
+function renderPreview() {
+  const sec = document.getElementById('preview-section');
+  sec.style.display = 'block';
+
+  // Stats
+  const rooms = [...new Set(_parsedData.map(p => p.room))];
+  const mfrs  = [...new Set(_parsedData.map(p => p.manufacturer))];
+  const plats = [...new Set(_parsedData.map(p => p.platform))];
+  document.getElementById('stats-row').innerHTML = [
+    { val: _parsedData.length, label: 'Totaal producten' },
+    { val: rooms.length, label: 'Kamertypes' },
+    { val: mfrs.length, label: 'Fabrikanten' },
+    { val: plats.length, label: 'Platformen' }
+  ].map(s => `<div class="stat-box"><div class="stat-val">${s.val}</div><div class="stat-label">${s.label}</div></div>`).join('');
+
+  // Filter chips
+  const chips = [{ key: 'all', label: 'Alles' },
+    ...rooms.map(r => ({ key: r, label: r.charAt(0).toUpperCase() + r.slice(1) }))
+  ];
+  document.getElementById('filter-row').innerHTML = chips.map(c =>
+    `<div class="filter-chip ${c.key === _filterRoom ? 'active' : ''}" onclick="setFilter('${c.key}')">${c.label}</div>`
+  ).join('');
+
+  renderTable();
+}
+
+function setFilter(room) {
+  _filterRoom = room;
+  document.querySelectorAll('.filter-chip').forEach(c => {
+    c.classList.toggle('active', c.textContent.toLowerCase() === room || (room === 'all' && c.textContent === 'Alles'));
+  });
+  renderTable();
+}
+
+function renderTable() {
+  const filtered = _filterRoom === 'all' ? _parsedData : _parsedData.filter(p => p.room === _filterRoom);
+  const catClass = { 'AV Technology': 'av', 'Service': 'service', 'Kabels': 'cable', 'Montage': 'mount' };
+  const tbody = document.getElementById('preview-body');
+  tbody.innerHTML = filtered.slice(0, 100).map(p =>
+    `<tr>
+      <td>${p.room}</td>
+      <td>${p.manufacturer}</td>
+      <td>${p.platform}</td>
+      <td><span class="badge-cat ${catClass[p.cat]||''}">${p.cat}</span></td>
+      <td style="max-width:220px;">${p.name}</td>
+      <td class="mono">${p.sku || '—'}</td>
+      <td>${p.qty}</td>
+      <td style="font-weight:600;">€ ${p.trade.toFixed(2)}</td>
+    </tr>`
+  ).join('') + (filtered.length > 100 ? `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:12px;">… en nog ${filtered.length - 100} producten</td></tr>` : '');
+}
+
+// ── SAVE TO SUPABASE ──────────────────────────────────────────────────────────
+async function saveToSupabase() {
+  if (!_parsedData || !_parsedData.length) { toast('Geen data om op te slaan'); return; }
+
+  const btn = document.getElementById('save-btn');
+  btn.innerHTML = '<span class="spin"></span> Opslaan…';
+  btn.disabled = true;
+
+  try {
+    // Build version record
+    const version = {
+      filename: _parsedMeta.filename,
+      uploaded_by: _user.email,
+      uploaded_at: new Date().toISOString(),
+      product_count: _parsedData.length,
+      is_active: true,
+      products_json: _parsedData
+    };
+
+    // 1. Deactivate previous active version
+    const { error: deactErr } = await sc()
+      .from('mraas_templates')
+      .update({ is_active: false })
+      .eq('is_active', true);
+    if (deactErr && !deactErr.message.includes('No rows')) throw deactErr;
+
+    // 2. Insert new version
+    const { data: inserted, error: insErr } = await sc()
+      .from('mraas_templates')
+      .insert(version)
+      .select()
+      .single();
+    if (insErr) throw insErr;
+
+    toast('✓ ' + _parsedData.length + ' producten opgeslagen als versie ' + inserted.id);
+    await loadHistory();
+    resetUpload();
+
+  } catch(e) {
+    // Table might not exist yet — show SQL hint
+    if (e.message && e.message.includes('relation') && e.message.includes('does not exist')) {
+      showCreateTableHint();
+    } else {
+      toast('❌ ' + e.message);
+    }
+  } finally {
+    btn.innerHTML = '💾 Opslaan in Supabase';
+    btn.disabled = false;
+  }
+}
+
+function showCreateTableHint() {
+  const ps = document.getElementById('parse-status');
+  ps.innerHTML += `<div class="status-row err">
+    <span class="status-icon">⚠️</span>
+    Tabel <strong>mraas_templates</strong> bestaat nog niet in Supabase.
+    Voer dit SQL uit in de Supabase SQL editor:
+  </div>
+  <pre style="background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:14px;font-size:11px;margin-top:8px;overflow-x:auto;">
+CREATE TABLE mraas_templates (
+  id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  filename      text,
+  uploaded_by   text,
+  uploaded_at   timestamptz DEFAULT now(),
+  product_count integer,
+  is_active     boolean DEFAULT false,
+  products_json jsonb
+);
+ALTER TABLE mraas_templates ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admin only" ON mraas_templates
+  USING (auth.jwt()->'app_metadata'->>'role' = 'admin');
+  </pre>`;
+}
+
+// ── HISTORY ───────────────────────────────────────────────────────────────────
+async function loadHistory() {
+  try {
+    const { data, error } = await sc()
+      .from('mraas_templates')
+      .select('id, filename, uploaded_by, uploaded_at, product_count, is_active')
+      .order('uploaded_at', { ascending: false })
+      .limit(10);
+
+    if (error) throw error;
+
+    const list = document.getElementById('history-list');
+    document.getElementById('history-count').textContent = data.length + ' versies';
+
+    if (!data.length) {
+      list.innerHTML = '<div class="empty-history">Nog geen versies opgeslagen. Upload een Excel om te beginnen.</div>';
+      return;
+    }
+
+    list.innerHTML = data.map(v => `
+      <div class="version-row">
+        <div class="version-num ${v.is_active ? 'active' : ''}">v${v.id}${v.is_active ? ' ✓' : ''}</div>
+        <div class="version-info">
+          <div class="version-name">${v.filename}</div>
+          <div class="version-meta">${v.product_count} producten · ${v.uploaded_by} · ${new Date(v.uploaded_at).toLocaleString('nl-BE')}</div>
+        </div>
+        <div class="version-actions">
+          ${!v.is_active ? `<button class="ver-btn" onclick="activateVersion(${v.id})">Activeer</button>` : '<span style="font-size:11px;color:var(--green);font-weight:700;">Actief</span>'}
+          <button class="ver-btn danger" onclick="deleteVersion(${v.id}, '${v.filename}')">Verwijder</button>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    document.getElementById('history-list').innerHTML =
+      '<div class="empty-history">Tabel nog niet aangemaakt. Sla eerst een versie op.</div>';
+  }
+}
+
+async function activateVersion(id) {
+  try {
+    await sc().from('mraas_templates').update({ is_active: false }).eq('is_active', true);
+    await sc().from('mraas_templates').update({ is_active: true }).eq('id', id);
+    toast('✓ Versie ' + id + ' geactiveerd');
+    await loadHistory();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+async function deleteVersion(id, name) {
+  if (!confirm(`Versie "${name}" (v${id}) verwijderen?`)) return;
+  try {
+    const { error } = await sc().from('mraas_templates').delete().eq('id', id);
+    if (error) throw error;
+    toast('✓ Versie verwijderd');
+    await loadHistory();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+</script>
+</body>
+</html>
