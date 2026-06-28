@@ -1053,7 +1053,12 @@ function renderProducts(){
       <td><span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;${bg}">${p.cat}</span></td>
       <td><div class="qty-ctrl">
         <button class="qty-b" onclick="changeQty(${i},-1)">−</button>
-        <span class="qty-v">${p.qty}</span>
+        <input type="number" min="1" value="${p.qty}"
+          onchange="setQty(${i},this.value)"
+          onclick="this.select()"
+          style="width:46px;height:22px;border:1px solid var(--border);border-radius:4px;text-align:center;font-size:11px;font-weight:700;font-family:inherit;outline:none;padding:0 2px;"
+          onfocus="this.style.borderColor='var(--orange)'"
+          onblur="this.style.borderColor='var(--border)'">
         <button class="qty-b" onclick="changeQty(${i},1)">+</button>
       </div></td>
       <td class="price-cell" style="text-align:right;cursor:pointer;" onclick="editCell(${i},'trade',this)">${fmt(p.trade*p.qty)}</td>
@@ -1081,6 +1086,12 @@ function changeQty(i,d){
   if(!liveProducts[i]) return;
   liveProducts[i].qty=Math.max(1,liveProducts[i].qty+d);
   renderProducts(); recalc();
+}
+function setQty(i,val){
+  if(!liveProducts[i]) return;
+  const n=parseInt(val);
+  if(!isNaN(n)&&n>=1) liveProducts[i].qty=n;
+  recalc();
 }
 function deleteProd(i){ liveProducts.splice(i,1); renderProducts(); recalc(); }
 
