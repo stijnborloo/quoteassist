@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>MRaaS Presentatie — Ricoh</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --red:#e8001c;--orange:#ff6b35;
+  --grad:linear-gradient(135deg,#e8001c,#ff6b35);
+  --ink:#0d0d14;--muted:#6b7280;--border:#e5e7eb;--surface:#f8f9fb;
+  --shadow-lg:0 12px 48px rgba(0,0,0,.16);
+}
+body{font-family:'Inter',sans-serif;background:#0d0d14;color:white;height:100dvh;overflow:hidden;display:flex;flex-direction:column;}
+
+/* AUTH */
+#auth-gate{position:fixed;inset:0;z-index:9999;background:#0d0d14;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.auth-card{background:white;border-radius:16px;padding:28px 32px;width:340px;box-shadow:var(--shadow-lg);color:var(--ink);}
+.auth-card h2{font-size:16px;font-weight:800;margin-bottom:4px;}
+.auth-card p{font-size:12px;color:var(--muted);margin-bottom:20px;}
+.auth-err{font-size:12px;color:var(--red);background:#fff0f1;border:1px solid #fca5a5;border-radius:7px;padding:8px 11px;margin-bottom:12px;display:none;}
+.auth-field{margin-bottom:12px;}
+.auth-field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.auth-field input{width:100%;height:40px;border:1.5px solid var(--border);border-radius:9px;padding:0 12px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;}
+.auth-field input:focus{border-color:var(--orange);}
+.auth-btn{width:100%;height:42px;background:var(--grad);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 3px 14px rgba(232,0,28,.3);}
+.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* TOPBAR */
+.topbar{height:50px;background:rgba(10,10,20,.95);border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;position:relative;z-index:100;}
+.topbar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--grad);}
+.tb-logo{font-size:14px;font-weight:900;color:white;margin-right:10px;flex-shrink:0;}
+.tb-logo em{font-style:normal;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.tb-tag{font-size:10px;font-weight:700;background:rgba(255,107,53,.15);color:var(--orange);border:1px solid rgba(255,107,53,.3);border-radius:6px;padding:2px 8px;white-space:nowrap;flex-shrink:0;}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:6px;}
+.tb-btn{height:30px;padding:0 10px;border-radius:7px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);font-size:11px;font-weight:600;color:rgba(255,255,255,.7);cursor:pointer;display:flex;align-items:center;gap:4px;transition:background .12s;font-family:inherit;white-space:nowrap;flex-shrink:0;}
+.tb-btn:hover{background:rgba(255,255,255,.12);color:white;}
+.tb-btn-primary{background:var(--grad);color:white;border-color:transparent;box-shadow:0 2px 10px rgba(232,0,28,.3);}
+.tb-btn-primary:hover{opacity:.9;background:var(--grad);}
+.tb-user{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:4px 10px 4px 6px;font-size:11px;}
+.tb-avatar{width:22px;height:22px;border-radius:5px;background:var(--grad);display:flex;align-items:center;justify-content:center;color:white;font-size:9px;font-weight:800;}
+.tb-username{font-weight:600;color:rgba(255,255,255,.7);}
+
+/* EMPTY STATE */
+#empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px;}
+#empty-state .big-icon{font-size:56px;}
+#empty-state h2{font-size:20px;font-weight:800;}
+#empty-state p{font-size:13px;color:rgba(255,255,255,.45);text-align:center;line-height:1.6;max-width:360px;}
+.btn-back{height:42px;padding:0 24px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);color:white;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+
+/* MAIN: foto + sidebar */
+#app{display:none;flex:1;overflow:hidden;position:relative;}
+
+/* Foto canvas */
+#canvas{position:absolute;inset:0;overflow:hidden;background:#111;}
+#zaalPhoto{width:100%;height:100%;object-fit:cover;object-position:center 22%;display:block;transition:opacity .45s;}
+#zaalPhoto::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.4) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 55%,rgba(0,0,0,.65) 100%);pointer-events:none;}
+.foto-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.4) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 55%,rgba(0,0,0,.65) 100%);pointer-events:none;z-index:2;}
+.room-badge{position:absolute;top:14px;left:14px;z-index:10;background:rgba(13,13,20,.72);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:6px 14px;display:inline-flex;align-items:center;gap:8px;}
+.room-badge-dot{width:7px;height:7px;border-radius:50%;background:var(--grad);}
+#rName{font-size:12px;font-weight:700;color:white;}
+#rSize{font-size:10px;color:rgba(255,255,255,.4);}
+
+/* Hotspot layer */
+#hsLayer{position:absolute;inset:0;z-index:30;pointer-events:none;}
+#hsLayer > *{pointer-events:auto;}
+.hs{position:absolute;transform:translate(-50%,-50%);cursor:pointer;display:flex;align-items:center;z-index:31;}
+.hs.left{flex-direction:row-reverse;}
+.hs-dot{width:22px;height:22px;border-radius:50%;border:2.5px solid;background:rgba(0,0,0,.2);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s;box-shadow:0 2px 10px rgba(0,0,0,.4);}
+.hs:hover .hs-dot{transform:scale(1.15);}
+.hs-dot-inner{width:9px;height:9px;border-radius:50%;}
+.hs-tag{background:rgba(10,10,20,.9);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:7px 10px;margin:0 7px;display:flex;flex-direction:column;gap:2px;min-width:130px;max-width:180px;box-shadow:0 4px 16px rgba(0,0,0,.4);}
+.hs-tag-name{font-size:11px;font-weight:700;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hs-tag-row{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.hs-tag-brand{font-size:9px;font-weight:800;text-transform:uppercase;}
+.hs-tag-price{font-size:9px;color:rgba(255,255,255,.4);}
+.hs-photo{width:40px;height:40px;border-radius:7px;object-fit:cover;border:1px solid rgba(255,255,255,.12);margin-bottom:4px;}
+
+/* Sidebar */
+#sidebar{position:absolute;top:0;right:0;bottom:0;width:260px;background:rgba(13,13,20,.85);backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;overflow:hidden;z-index:40;}
+#sidebar-scroll{flex:1;overflow-y:auto;padding:14px;}
+.sb-section-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.3);margin:10px 0 6px;}
+.sb-prod-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.04);margin-bottom:4px;border:1px solid rgba(255,255,255,.06);}
+.sb-prod-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.sb-prod-name{flex:1;font-size:10px;font-weight:600;color:rgba(255,255,255,.75);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sb-prod-qty{font-size:9px;color:rgba(255,255,255,.35);flex-shrink:0;}
+/* Term chips */
+.term-chips{display:flex;gap:5px;margin-bottom:12px;}
+.term-chip{flex:1;height:28px;border-radius:7px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.45);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
+.term-chip.active{background:rgba(255,107,53,.15);border-color:rgba(255,107,53,.4);color:var(--orange);}
+/* Totaal */
+.sb-totaal-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px;}
+.sb-totaal-row{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.4);margin-bottom:5px;}
+.sb-totaal-row:last-child{margin-bottom:0;}
+.sb-totaal-main{display:flex;justify-content:space-between;align-items:baseline;padding-top:8px;margin-top:8px;border-top:1px solid rgba(255,255,255,.08);}
+.sb-totaal-lbl{font-size:11px;font-weight:700;color:white;}
+.sb-totaal-val{font-size:20px;font-weight:900;font-family:'DM Mono',monospace;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+/* Action buttons */
+.sb-actions{padding:12px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.sb-btn{width:100%;height:36px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:.15s;}
+.sb-btn-primary{background:var(--grad);color:white;border:none;box-shadow:0 2px 10px rgba(232,0,28,.3);}
+.sb-btn-secondary{background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.1);}
+.sb-btn-secondary:hover{background:rgba(255,255,255,.1);color:white;}
+
+/* Presentatiemodus fullscreen */
+#presMode{display:none;position:fixed;inset:0;z-index:800;background:#000;flex-direction:column;}
+#presCanvas{position:relative;flex:1;overflow:hidden;cursor:none;}
+#presPhoto{width:100%;height:100%;object-fit:cover;display:block;}
+#presHsLayer{position:absolute;inset:0;z-index:10;}
+.pres-gradient{position:absolute;bottom:0;left:0;right:0;height:140px;background:linear-gradient(to top,rgba(0,0,0,.75),transparent);pointer-events:none;z-index:9;}
+#pres-room-badge{position:absolute;top:20px;left:20px;z-index:20;background:rgba(10,10,20,.72);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 16px;display:flex;align-items:center;gap:8px;}
+#pres-room-name{font-size:14px;font-weight:800;color:white;}
+#pres-room-size{font-size:11px;color:rgba(255,255,255,.4);}
+#pres-controls{position:absolute;top:16px;right:16px;z-index:20;display:flex;gap:8px;}
+.pres-ctrl-btn{height:38px;padding:0 14px;background:rgba(255,255,255,.12);backdrop-filter:blur(8px);color:white;border:1px solid rgba(255,255,255,.2);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;}
+.pres-ctrl-btn.red{background:rgba(232,0,28,.75);border-color:transparent;}
+#pres-price-badge{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:20;background:rgba(10,10,20,.75);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:10px 22px;display:flex;align-items:center;gap:16px;}
+.pres-price-item{text-align:center;}
+.pres-price-lbl{font-size:10px;color:rgba(255,255,255,.45);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
+#pres-total{font-size:22px;font-weight:900;color:white;font-family:'DM Mono',monospace;}
+#pres-mraas{font-size:22px;font-weight:900;font-family:'DM Mono',monospace;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.pres-divider{width:1px;height:36px;background:rgba(255,255,255,.15);}
+#pres-hint{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.3);font-size:11px;font-weight:600;pointer-events:none;z-index:9;white-space:nowrap;transition:opacity .5s;}
+@keyframes pres-hs-ripple{0%{transform:translate(-50%,-50%) scale(.5);opacity:.8;}80%{transform:translate(-50%,-50%) scale(2);opacity:0;}100%{opacity:0;}}
+
+/* Product detail overlay */
+#prodDetailOverlay{display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);align-items:center;justify-content:center;}
+#pdo-inner{background:rgba(14,14,24,.95);border:1px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:440px;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.5);}
+#pdo-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.1);border:none;border-radius:50%;width:32px;height:32px;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+/* Client modal */
+#clientModal{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:16px;}
+#clientModal-inner{background:white;border-radius:20px;width:100%;max-width:440px;color:var(--ink);max-height:92vh;overflow-y:auto;}
+.nf label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.nf input,.nf select{width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:12px;font-family:inherit;color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s;}
+.nf input:focus,.nf select:focus{border-color:var(--orange);}
+
+/* TCO modal */
+#tcoModal{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:16px;}
+#tcoModal-inner{background:white;border-radius:20px;width:100%;max-width:500px;color:var(--ink);max-height:92vh;overflow-y:auto;padding:24px;}
+
+/* Scanner modal */
+#scannerModal{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);align-items:flex-end;justify-content:center;}
+#scannerModal-inner{background:white;border-radius:24px 24px 0 0;width:100%;max-width:520px;max-height:92dvh;display:flex;flex-direction:column;color:var(--ink);}
+.scan-chip{padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:white;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;transition:.12s;}
+.scan-chip.active{background:#f0f9ff;border-color:#0284c7;color:#0284c7;}
+
+/* QR overlay */
+#presQrOverlay{display:none;position:absolute;inset:0;z-index:50;background:rgba(0,0,0,.85);backdrop-filter:blur(16px);}
+
+/* Toast */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(13,13,20,.95);border:1px solid rgba(255,255,255,.1);color:white;padding:9px 18px;border-radius:9px;font-size:12px;font-weight:500;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9999;white-space:nowrap;}
+#toast.show{opacity:1;}
+
+/* More menu */
+#tb-more-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:rgba(14,14,24,.98);border:1px solid rgba(255,255,255,.1);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.4);min-width:200px;z-index:200;padding:4px;}
+.tb-dd-item{width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;color:rgba(255,255,255,.7);border-radius:8px;display:flex;align-items:center;gap:8px;transition:background .1s;}
+.tb-dd-item:hover{background:rgba(255,255,255,.08);color:white;}
+
+/* PDF template */
+#pdf-tpl{display:none;position:fixed;left:-9999px;top:0;width:210mm;background:white;}
+
+@media(max-width:700px){
+  #sidebar{display:none;}
+  #pres-price-badge{flex-direction:column;gap:6px;padding:10px 16px;}
+  .pres-divider{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div id="auth-gate">
+  <div style="font-size:22px;font-weight:900;color:white;margin-bottom:4px;">Ricoh<em style="font-style:normal;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">.</em></div>
+  <div class="auth-card">
+    <h2>MRaaS Presentatie</h2>
+    <p>Aanmelden om te presenteren</p>
+    <div class="auth-err" id="auth-err"></div>
+    <div class="auth-field"><label>E-mailadres</label><input type="email" id="a-email" placeholder="naam@ricoh.be" onkeydown="if(event.key==='Enter')document.getElementById('a-pass').focus()"></div>
+    <div class="auth-field"><label>Wachtwoord</label><input type="password" id="a-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="auth-btn" onclick="doLogin()" id="login-btn">Inloggen</button>
+  </div>
+  <div style="font-size:11px;color:rgba(255,255,255,.3);">Of open <a href="mraas-config.html" style="color:rgba(255,255,255,.5);">MRaaS Configurator</a> en klik "Toon aan klant"</div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar" id="topbar" style="display:none;">
+  <div class="tb-logo">Ricoh<em>.</em></div>
+  <div class="tb-tag" id="tb-tag">MRaaS Presentatie</div>
+  <div class="tb-right">
+    <button class="tb-btn" onclick="openScanner()">🔍 Ruimtescanner</button>
+    <button class="tb-btn" onclick="openTCO()">📊 TCO</button>
+    <button class="tb-btn" onclick="enterPresentation()" style="background:var(--grad);border-color:transparent;color:white;">⛶ Presenteer</button>
+    <button class="tb-btn tb-btn-primary" onclick="openClientModal()">✍️ Afronden</button>
+    <div class="tb-user">
+      <div class="tb-avatar" id="tb-avatar">?</div>
+      <span class="tb-username" id="tb-username">—</span>
+    </div>
+    <button class="tb-btn" onclick="doLogout()">↩</button>
+  </div>
+</div>
+
+<!-- EMPTY STATE -->
+<div id="empty-state" style="display:none;">
+  <div class="big-icon">🏢</div>
+  <h2>Geen configuratie geladen</h2>
+  <p>Open de MRaaS Configurator, stel je zaal in en klik op "Toon aan klant" om de visuele presentatie te starten.</p>
+  <a href="mraas-config.html" class="btn-back">← Terug naar configurator</a>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+
+  <!-- CANVAS: zalfoto + hotspots -->
+  <div id="canvas">
+    <img id="zaalPhoto" src="" alt="">
+    <div class="foto-overlay"></div>
+    <div class="room-badge">
+      <div class="room-badge-dot"></div>
+      <div>
+        <div id="rName">—</div>
+        <div id="rSize">—</div>
+      </div>
+    </div>
+    <!-- Hotspot layer -->
+    <div id="hsLayer"></div>
+    <!-- Hint -->
+    <div style="position:absolute;bottom:18px;left:50%;transform:translateX(-50%);z-index:20;pointer-events:none;background:rgba(13,13,20,.65);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:7px 16px;font-size:11px;color:rgba(255,255,255,.5);white-space:nowrap;" id="canvas-hint">
+      Klik op een hotspot voor productdetails &nbsp;·&nbsp; <span style="color:var(--orange);font-weight:700;cursor:pointer;" onclick="enterPresentation()">⛶ Presenteer fullscreen</span>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div id="sidebar-scroll">
+      <!-- Config info -->
+      <div class="sb-section-title">Configuratie</div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:9px;padding:10px;margin-bottom:10px;font-size:11px;line-height:1.8;">
+        <div style="display:flex;justify-content:space-between;"><span style="color:rgba(255,255,255,.4);">Kamer</span><span id="cfg-room" style="font-weight:700;">—</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:rgba(255,255,255,.4);">Fabrikant</span><span id="cfg-mfr" style="font-weight:700;">—</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:rgba(255,255,255,.4);">Platform</span><span id="cfg-plat" style="font-weight:700;">—</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:rgba(255,255,255,.4);">Contract</span><span id="cfg-years" style="font-weight:700;">—</span></div>
+      </div>
+
+      <!-- Producten -->
+      <div class="sb-section-title">Producten</div>
+      <div id="sb-prod-list"></div>
+
+      <!-- MRaaS looptijd -->
+      <div class="sb-section-title">MRaaS looptijd</div>
+      <div class="term-chips">
+        <button class="term-chip" onclick="setTerm(36,this)">36 mnd</button>
+        <button class="term-chip active" onclick="setTerm(48,this)">48 mnd</button>
+        <button class="term-chip" onclick="setTerm(60,this)">60 mnd</button>
+      </div>
+
+      <!-- Totaal -->
+      <div class="sb-totaal-box">
+        <div class="sb-totaal-row"><span>Verkoopprijs excl. BTW</span><span id="sb-sale">—</span></div>
+        <div class="sb-totaal-row"><span>Financieringskosten</span><span id="sb-fin">—</span></div>
+        <div class="sb-totaal-main">
+          <span class="sb-totaal-lbl" id="sb-term-lbl">Per maand MRaaS</span>
+          <span class="sb-totaal-val" id="sb-mraas">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actieknoppen -->
+    <div class="sb-actions">
+      <button class="sb-btn sb-btn-primary" onclick="enterPresentation()">⛶ Presenteer aan klant</button>
+      <button class="sb-btn sb-btn-secondary" onclick="openClientModal()">✍️ Afronden &amp; Delen</button>
+      <button class="sb-btn sb-btn-secondary" onclick="generatePDF()">📄 PDF genereren</button>
+      <a href="mraas-config.html" style="text-decoration:none;"><button class="sb-btn sb-btn-secondary" style="width:100%;">← Terug naar config</button></a>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- PRESENTATIEMODUS -->
+<div id="presMode">
+  <div id="presCanvas">
+    <img id="presPhoto" src="" style="width:100%;height:100%;object-fit:cover;display:block;">
+    <div id="presHsLayer"></div>
+    <div class="pres-gradient"></div>
+    <div id="pres-room-badge">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--grad);"></div>
+      <div>
+        <div id="pres-room-name"></div>
+        <div id="pres-room-size"></div>
+      </div>
+    </div>
+    <div id="pres-controls">
+      <button class="pres-ctrl-btn" onclick="openClientModal()">✍️ Afronden</button>
+      <button class="pres-ctrl-btn" onclick="presShowQR()">◼ QR-code</button>
+      <button class="pres-ctrl-btn red" onclick="exitPresentation()">✕ Sluiten</button>
+    </div>
+    <div id="pres-price-badge">
+      <div class="pres-price-item">
+        <div class="pres-price-lbl">Verkoopprijs excl. BTW</div>
+        <div id="pres-total">—</div>
+      </div>
+      <div class="pres-divider"></div>
+      <div class="pres-price-item">
+        <div class="pres-price-lbl" id="pres-mraas-lbl">MRaaS / maand</div>
+        <div id="pres-mraas">—</div>
+      </div>
+    </div>
+    <div id="pres-hint">Tik op een hotspot voor productdetails</div>
+
+    <!-- QR overlay -->
+    <div id="presQrOverlay" onclick="closePresentationQR()">
+      <div onclick="event.stopPropagation()" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;border-radius:20px;padding:28px;text-align:center;max-width:340px;width:calc(100% - 32px);box-shadow:0 24px 80px rgba(0,0,0,.4);">
+        <div style="font-size:16px;font-weight:900;margin-bottom:4px;color:var(--ink);">Scan de QR-code</div>
+        <div style="font-size:12px;color:#6b7280;margin-bottom:16px;">Klant scant met de camera-app voor de configuratie</div>
+        <div id="presQrDiv" style="display:flex;align-items:center;justify-content:center;min-height:220px;margin-bottom:10px;"></div>
+        <div id="presQrLabel" style="font-size:11px;color:#9ca3af;margin-bottom:16px;"></div>
+        <button onclick="closePresentationQR()" style="width:100%;height:42px;background:var(--grad);color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Sluiten</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCT DETAIL OVERLAY -->
+<div id="prodDetailOverlay" style="display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px;">
+  <div id="pdo-inner" style="position:relative;background:rgba(14,14,24,.95);border:1px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:400px;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.5);">
+    <button onclick="closeProdDetail()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;border-radius:50%;width:30px;height:30px;color:white;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    <div id="pdo-content"></div>
+  </div>
+</div>
+
+<!-- CLIENT MODAL -->
+<div id="clientModal">
+  <div id="clientModal-inner">
+    <div style="padding:24px 28px 0;">
+      <div style="font-size:18px;font-weight:900;color:var(--ink);margin-bottom:4px;">Configuratie delen</div>
+      <div style="font-size:12px;color:#6b7280;margin-bottom:20px;" id="cm-sub">Vul de klantgegevens in</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+        <div class="nf"><label>Klantnaam / bedrijf *</label><input type="text" id="cm-client" placeholder="bv. Accenture Belgium"></div>
+        <div class="nf"><label>Projectnaam</label><input type="text" id="cm-project" placeholder="bv. HQ Meeting Rooms 2026"></div>
+        <div class="nf"><label>E-mail klant</label><input type="email" id="cm-email" placeholder="naam@bedrijf.be"></div>
+        <div class="nf"><label>Looptijd MRaaS</label>
+          <select id="cm-term" onchange="updateCmMraas()">
+            <option value="36">36 maanden</option>
+            <option value="48" selected>48 maanden</option>
+            <option value="60">60 maanden</option>
+          </select>
+        </div>
+      </div>
+      <div style="background:#f8f9fb;border-radius:10px;padding:12px 14px;margin-bottom:20px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;color:#6b7280;margin-bottom:4px;">
+          <span>Verkoopprijs excl. BTW</span><span id="cm-sale-price" style="font-weight:700;color:var(--ink);">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;color:#6b7280;">
+          <span>MRaaS maandbedrag</span><span id="cm-mraas-price" style="font-weight:700;color:var(--orange);">—</span>
+        </div>
+      </div>
+    </div>
+    <div style="padding:0 28px 24px;display:flex;flex-direction:column;gap:8px;">
+      <button onclick="exportToOfferte()" style="width:100%;height:48px;background:var(--grad);color:white;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 3px 14px rgba(232,0,28,.3);display:flex;align-items:center;justify-content:center;gap:8px;">📋 Exporteren naar offerte-tool</button>
+      <div style="display:flex;align-items:center;gap:10px;margin:4px 0;">
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+        <span style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.4px;">OF DIRECT DELEN</span>
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="shareWhatsApp()" style="flex:1;height:44px;background:#25D366;color:white;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">💬 WhatsApp</button>
+        <button onclick="shareEmail()" style="flex:1;height:44px;background:#1a7fd4;color:white;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">✉️ E-mail</button>
+      </div>
+      <button onclick="presShowQR()" style="width:100%;height:44px;background:var(--surface);border:1.5px solid var(--border);color:var(--ink);border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;">◼ QR-code tonen</button>
+      <button onclick="closeClientModal()" style="width:100%;height:38px;border:1px solid var(--border);background:white;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--muted);">Sluiten</button>
+    </div>
+  </div>
+</div>
+
+<!-- TCO MODAL -->
+<div id="tcoModal">
+  <div id="tcoModal-inner">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <div style="font-size:18px;font-weight:900;color:var(--ink);">📊 TCO Calculator</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px;">Total Cost of Ownership analyse</div>
+      </div>
+      <button onclick="closeTCO()" style="background:var(--surface);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--muted);">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div class="nf" style="color:var(--ink);"><label>Jaren analyse</label><select id="tco-years" onchange="calcTCO()"><option value="3">3 jaar</option><option value="5" selected>5 jaar</option><option value="7">7 jaar</option></select></div>
+      <div class="nf" style="color:var(--ink);"><label>Jaarlijkse besparing (€)</label><input type="number" id="tco-saving" value="12000" onchange="calcTCO()"></div>
+      <div class="nf" style="color:var(--ink);"><label>Medewerkers</label><input type="number" id="tco-staff" value="10" onchange="calcTCO()"></div>
+      <div class="nf" style="color:var(--ink);"><label>Vergaderingen/week</label><input type="number" id="tco-meetings" value="5" onchange="calcTCO()"></div>
+    </div>
+    <canvas id="tcoChart" height="160" style="width:100%;margin-bottom:16px;"></canvas>
+    <div id="tco-result" style="background:#f8f9fb;border-radius:10px;padding:14px;font-size:12px;color:var(--ink);"></div>
+  </div>
+</div>
+
+<!-- SCANNER MODAL -->
+<div id="scannerModal">
+  <div id="scannerModal-inner">
+    <div style="padding:14px 20px 0;flex-shrink:0;">
+      <div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 14px;"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <div style="font-size:16px;font-weight:900;color:#7c3aed;">🔍 Ruimtescanner</div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:1px;">AI stelt producten voor op basis van je keuzes</div>
+        </div>
+        <button onclick="closeScannerModal()" style="width:30px;height:30px;border-radius:50%;background:#f3f4f6;border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>
+    </div>
+    <div style="overflow-y:auto;padding:0 20px 24px;display:flex;flex-direction:column;gap:14px;flex:1;">
+      <div id="scanDropZone" style="border:2px dashed #e9d5ff;border-radius:14px;padding:16px;text-align:center;background:#fdf4ff;cursor:pointer;transition:.15s;position:relative;" onclick="document.getElementById('scanFileInp').click()">
+        <div id="scanPreviewWrap" style="display:none;margin-bottom:8px;"><img id="scanPreview" style="max-width:100%;max-height:140px;border-radius:8px;object-fit:contain;"></div>
+        <div id="scanPlaceholder" style="display:flex;align-items:center;justify-content:center;gap:10px;">
+          <span style="font-size:24px;">📷</span>
+          <div style="text-align:left;"><div style="font-size:13px;font-weight:700;color:#7c3aed;">Foto van de zaal</div><div style="font-size:11px;color:#9ca3af;">Optioneel — tik om te kiezen</div></div>
+        </div>
+        <input type="file" id="scanFileInp" accept="image/*" style="display:none;" onchange="handleScanFile(this)">
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">📐 Zaalgrootte</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;" id="chip-size">
+          <button class="scan-chip active" onclick="toggleChip('size',this,'auto')">🤖 Auto</button>
+          <button class="scan-chip" onclick="toggleChip('size',this,'focus')">Focus 1-3p</button>
+          <button class="scan-chip" onclick="toggleChip('size',this,'small')">Small 4-6p</button>
+          <button class="scan-chip" onclick="toggleChip('size',this,'medium')">Medium 7-12p</button>
+          <button class="scan-chip" onclick="toggleChip('size',this,'large')">Large 13-20p</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">💻 Platform</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;" id="chip-platform">
+          <button class="scan-chip active" onclick="toggleChip('platform',this,'both')">🤖 Auto</button>
+          <button class="scan-chip" onclick="toggleChip('platform',this,'mtr')">Teams MTR</button>
+          <button class="scan-chip" onclick="toggleChip('platform',this,'byod')">BYOD</button>
+          <button class="scan-chip" onclick="toggleChip('platform',this,'zoom')">Zoom</button>
+        </div>
+      </div>
+      <div id="scanStatus"></div>
+      <button onclick="runScan()" style="width:100%;height:44px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">✨ AI Analyse starten</button>
+    </div>
+  </div>
+</div>
+
+<div id="pdf-tpl"></div>
+<div id="toast"></div>
+
+<style>
+@keyframes pres-hs-ripple{
+  0%{transform:translate(-50%,-50%) scale(.5);opacity:.8;}
+  80%{transform:translate(-50%,-50%) scale(2);opacity:0;}
+  100%{opacity:0;}
+}
+</style>
+
+<script>
+/* ════════ SUPABASE ════════════════════════════════════════ */
+const SUPA_URL  = "https://aocdvzrjwljmiqnuklkn.supabase.co";
+const SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvY2R2enJqd2xqbWlxbnVrbGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MTcwNzAsImV4cCI6MjA5NjM5MzA3MH0.3VWhhLZJxtV0io4FucWjxF5FN1ABRKzGbfyqR6NP4M4";
+const WRK = "https://quoteassist.stijn-borloo.workers.dev";
+let _supa = null;
+const sc = () => { if(!_supa) _supa = supabase.createClient(SUPA_URL, SUPA_ANON); return _supa; };
+
+/* ════════ STATE ═══════════════════════════════════════════ */
+let _user = null, _role = 'user';
+let payload = null;      // MRaaS payload van mraas-config.html
+let config  = [];        // hotspot items [{id,prodId:null,mrProd,qty,x,y,ll}]
+let selHs   = null;      // geselecteerde hotspot id
+let hsN     = 0;
+let _activeTerm = 48;    // looptijd in maanden
+let fotoBib = [];        // [{key,url}] product foto's uit Supabase Storage
+let _scanChips = {};     // active scanner chips
+let _scanImg   = null;   // base64 scan foto
+
+/* ════════ ROOMS ═══════════════════════════════════════════ */
+const ROOMS = [
+  {id:'focus',  label:'Focus Room',  size:'1–3 pers.', photo:'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1400&q=85&auto=format&fit=crop'},
+  {id:'small',  label:'Small Room',  size:'4–6 pers.', photo:'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400&q=85&auto=format&fit=crop'},
+  {id:'medium', label:'Medium Room', size:'6–10 pers.',photo:'https://images.unsplash.com/photo-1604328698692-f76ea9498e76?w=1400&q=85&auto=format&fit=crop'},
+  {id:'large',  label:'Large Room',  size:'10–16 pers.',photo:'https://images.unsplash.com/photo-1571624436279-b272aff752b5?w=1400&q=85&auto=format&fit=crop'},
+];
+const MRAAS = {36:0.031, 48:0.024, 60:0.020};
+const CAT_COLORS = {'AV Technology':'#e8001c','Montage':'#9333ea','Kabels':'#c2410c','Service':'#16a34a','Info':'#6b7280'};
+const CAT_POS = {
+  'AV Technology':[[38,42],[55,38],[70,42],[48,55],[62,35],[78,38],[35,52]],
+  'Montage':      [[40,25],[58,25],[74,25]],
+  'Kabels':       [[36,65],[52,70],[68,65]],
+  'Service':      []
+};
+
+/* ════════ HELPERS ═════════════════════════════════════════ */
+const g   = id => document.getElementById(id);
+const esc = s  => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmt = v  => '€\u202f'+parseFloat(v||0).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+
+function toast(msg, dur=3000){
+  const t=g('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+/* ════════ AUTH ════════════════════════════════════════════ */
+async function initAuth(){
+  // Check EERST of er een payload is — dan geen login nodig als sessie al actief is
+  const hasPending = !!localStorage.getItem('mraas_visual_pending');
+
+  // Probeer sessie op te halen (max 3s timeout)
+  let session = null;
+  try{
+    const t = new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),3000));
+    const s = sc().auth.getSession().then(r=>r.data.session);
+    session = await Promise.race([s,t]).catch(()=>null);
+  }catch(e){ session=null; }
+
+  if(session){
+    _user = session.user;
+    _role = (session.user.app_metadata&&session.user.app_metadata.role)||'user';
+    showApp();
+  } else if(hasPending){
+    // Payload aanwezig maar geen sessie — toon app zonder user info
+    // (Sales heeft de payload via mraas-config.html verstuurd)
+    _user = null; _role = 'user';
+    showApp();
+  } else {
+    g('auth-gate').style.display='flex';
+  }
+}
+
+async function doLogin(){
+  const email = g('a-email').value.trim();
+  const pass  = g('a-pass').value;
+  const err   = g('auth-err'); const btn = g('login-btn');
+  err.style.display='none'; btn.innerHTML='<span class="spin"></span>';btn.disabled=true;
+  try{
+    const {data,error} = await sc().auth.signInWithPassword({email,password:pass});
+    if(error) throw error;
+    _user=data.user; _role=(data.user.app_metadata&&data.user.app_metadata.role)||'user';
+    g('auth-gate').style.display='none';
+    showApp();
+  }catch(e){ err.textContent=e.message||'Inloggen mislukt'; err.style.display='block'; }
+  finally{ btn.innerHTML='Inloggen'; btn.disabled=false; }
+}
+
+async function doLogout(){
+  await sc().auth.signOut();
+  window.location.href='mraas-config.html';
+}
+
+/* ════════ SHOW APP ════════════════════════════════════════ */
+function showApp(){
+  // Topbar
+  g('topbar').style.display='flex';
+  const em=_user?.email||'';
+  if(em){
+    const parts=em.split('@')[0].split(/[\.\-\_]+/);
+    const initials=parts.length>=2?(parts[0][0]+parts[parts.length-1][0]).toUpperCase():em.slice(0,2).toUpperCase();
+    g('tb-avatar').textContent=initials;
+    g('tb-username').textContent=parts.map(p=>p.charAt(0).toUpperCase()+p.slice(1)).join(' ');
+  } else {
+    g('tb-avatar').textContent='📋';
+    g('tb-username').textContent='Presentatie';
+  }
+
+  // Laad product foto's
+  loadFotoBib();
+
+  // Check payload
+  const raw = localStorage.getItem('mraas_visual_pending');
+  if(raw){
+    try{
+      payload = JSON.parse(raw);
+      localStorage.removeItem('mraas_visual_pending');
+      if(payload && payload.source==='mraas-config'){
+        loadPayload(payload);
+        return;
+      }
+    }catch(e){}
+  }
+  // Geen payload — toon empty state
+  g('empty-state').style.display='flex';
+}
+
+/* ════════ PRODUCT FOTO'S ══════════════════════════════════ */
+async function loadFotoBib(){
+  try{
+    const {data,error}=await sc().storage.from('product-photos').list('',{limit:500});
+    if(error||!data) return;
+    fotoBib=data.filter(f=>f.name&&f.name!=='.emptyFolderPlaceholder').map(f=>({
+      key:f.name.replace(/\.[^.]+$/,'').toLowerCase(),
+      url:sc().storage.from('product-photos').getPublicUrl(f.name).data.publicUrl
+    }));
+  }catch(e){}
+}
+
+function getFotoUrl(name){
+  if(!fotoBib.length||!name) return null;
+  const q=name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+  let hit=fotoBib.find(f=>f.key===q);
+  if(hit) return hit.url;
+  hit=fotoBib.find(f=>{const k=f.key;return q.includes(k)||k.includes(q)||name.toLowerCase().includes(k.replace(/-/g,' '));});
+  return hit?hit.url:null;
+}
+
+/* ════════ LOAD PAYLOAD ════════════════════════════════════ */
+function loadPayload(pl){
+  payload = pl;
+  g('empty-state').style.display='none';
+  g('app').style.display='block';
+
+  // Zalfoto
+  const room=ROOMS.find(r=>r.id===pl.room)||ROOMS[1];
+  const photoEl=g('zaalPhoto');
+  photoEl.style.opacity='0';
+  photoEl.src=room.photo;
+  photoEl.onload=()=>photoEl.style.opacity='1';
+  g('rName').textContent=pl.roomLabel||room.label;
+  g('rSize').textContent=room.size;
+
+  // Presentatie info
+  g('pres-room-name').textContent=pl.roomLabel||room.label;
+  g('pres-room-size').textContent=room.size;
+  g('presPhoto').src=room.photo;
+
+  // Sidebar info
+  g('cfg-room').textContent=pl.roomLabel||room.label;
+  g('cfg-mfr').textContent=pl.mfr||'—';
+  g('cfg-plat').textContent=pl.platform||'—';
+  g('cfg-years').textContent=(pl.years||3)+' jaar';
+
+  // Topbar tag
+  g('tb-tag').textContent=room.label+' · '+(pl.mfr||'')+(pl.platform?' '+pl.platform:'');
+
+  // Bouw hotspots
+  buildHotspots(pl.products||[]);
+
+  // Sidebar productenlijst
+  renderSidebarProds(pl.products||[]);
+
+  // Pricing
+  updatePricing();
+}
+
+/* ════════ HOTSPOTS BOUWEN ═════════════════════════════════ */
+function buildHotspots(prods){
+  config=[]; selHs=null; hsN=0;
+  const catCounters={};
+  prods.forEach(p=>{
+    if(p.cat==='Service'||!p.name) return;
+    const positions=CAT_POS[p.cat]||[[50,50]];
+    const idx=catCounters[p.cat]||0;
+    catCounters[p.cat]=idx+1;
+    const pos=positions[idx%positions.length];
+    const jx=(idx*11)%14; const jy=(idx*7)%10;
+    hsN++;
+    config.push({
+      id:'h'+hsN, prodId:null,
+      mrProd:{...p},
+      qty:p.qty||1,
+      x:Math.min(85,pos[0]+jx),
+      y:Math.min(85,pos[1]+jy),
+      ll:(pos[0]+jx)>55
+    });
+  });
+  renderHotspots();
+}
+
+function renderHotspots(){
+  const layer=g('hsLayer');
+  if(!layer) return;
+  if(!config.length){ layer.innerHTML=''; return; }
+  layer.innerHTML=config.map(item=>{
+    const p=item.mrProd;
+    const color=CAT_COLORS[p.cat]||'#e8001c';
+    const foto=getFotoUrl(p.name);
+    return '<div class="hs '+(item.ll?'left':'')+(selHs===item.id?' selected':'')+'"'
+      +' id="'+item.id+'" style="left:'+item.x+'%;top:'+item.y+'%"'
+      +' onclick="openProdDetail(\''+item.id+'\')">'
+      +'<div class="hs-dot" style="border-color:'+color+';background:'+color+'22">'
+        +'<div class="hs-dot-inner" style="background:'+color+';box-shadow:0 0 8px '+color+'88"></div>'
+      +'</div>'
+      +'<div class="hs-tag">'
+        +(foto?'<img class="hs-photo" src="'+foto+'" alt="'+esc(p.name)+'" onerror="this.style.display=\'none\'">':'')
+        +'<div class="hs-tag-name">'+esc(p.name)+'</div>'
+        +'<div class="hs-tag-row">'
+          +'<span class="hs-tag-brand" style="color:'+color+'">'+esc(p.cat)+'</span>'
+          +'<span class="hs-tag-price">×'+item.qty+'</span>'
+        +'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+/* ════════ PRODUCT DETAIL ══════════════════════════════════ */
+function openProdDetail(id){
+  selHs=id;
+  renderHotspots();
+  const item=config.find(c=>c.id===id); if(!item) return;
+  const p=item.mrProd;
+  const color=CAT_COLORS[p.cat]||'#e8001c';
+  const foto=getFotoUrl(p.name);
+  const salePerUnit = p.trade>0 ? p.trade/(1-(payload?.margin||28)/100) : 0;
+
+  g('pdo-content').innerHTML=
+    '<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;">'
+      +(foto?'<img src="'+foto+'" style="width:72px;height:72px;border-radius:12px;object-fit:cover;border:1px solid rgba(255,255,255,.12);flex-shrink:0;">':
+             '<div style="width:72px;height:72px;border-radius:12px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;">📦</div>')
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:16px;font-weight:800;color:white;margin-bottom:4px;">'+esc(p.name)+'</div>'
+        +'<span style="display:inline-block;font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:4px;background:'+color+'22;color:'+color+';">'+esc(p.cat)+'</span>'
+      +'</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">'
+      +(p.sku?'<div style="background:rgba(255,255,255,.05);border-radius:8px;padding:8px 10px;"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:2px;">SKU</div><div style="font-size:11px;font-family:monospace;color:white;">'+esc(p.sku)+'</div></div>':'')
+      +'<div style="background:rgba(255,255,255,.05);border-radius:8px;padding:8px 10px;"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:2px;">Aantal</div><div style="font-size:14px;font-weight:700;color:white;">×'+item.qty+'</div></div>'
+      +(salePerUnit>0?'<div style="background:rgba(255,255,255,.05);border-radius:8px;padding:8px 10px;"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:2px;">Verkoopprijs</div><div style="font-size:13px;font-weight:700;color:var(--orange);">'+fmt(salePerUnit*item.qty)+'</div></div>':'')
+    +'</div>'
+    +'<button onclick="closeProdDetail()" style="width:100%;height:36px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:white;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Sluiten</button>';
+
+  const overlay=g('prodDetailOverlay');
+  overlay.style.display='flex';
+  // Als in presentatiemodus: verplaats overlay naar presMode
+  const presMode=g('presMode');
+  if(presMode&&presMode.style.display==='flex'&&!presMode.contains(overlay)){
+    presMode.appendChild(overlay); overlay.style.zIndex='900';
+  }
+}
+
+function closeProdDetail(){
+  selHs=null;
+  renderHotspots();
+  const overlay=g('prodDetailOverlay');
+  overlay.style.display='none';
+  const presMode=g('presMode');
+  if(presMode&&presMode.contains(overlay)&&presMode.style.display==='none'){
+    document.body.appendChild(overlay); overlay.style.zIndex='700';
+  }
+}
+
+/* ════════ PRICING ═════════════════════════════════════════ */
+function getSale(){
+  if(!payload) return 0;
+  return parseFloat(payload.sale)||0;
+}
+function getMraas(term){
+  const t=term||_activeTerm;
+  return getSale()*MRAAS[t];
+}
+function updatePricing(){
+  const sale=getSale();
+  const mraas=getMraas();
+  const fin=mraas*_activeTerm-sale;
+  g('sb-sale').textContent=fmt(sale);
+  g('sb-fin').textContent=fmt(Math.max(0,fin));
+  g('sb-mraas').textContent=fmt(mraas);
+  // Presentatie
+  g('pres-total').textContent=fmt(sale);
+  g('pres-mraas').textContent=fmt(mraas);
+}
+
+function setTerm(t,el){
+  _activeTerm=t;
+  document.querySelectorAll('.term-chip').forEach(c=>c.classList.remove('active'));
+  if(el) el.classList.add('active');
+  g('sb-term-lbl').textContent='Per maand MRaaS ('+t+' mnd)';
+  g('pres-mraas-lbl').textContent='MRaaS / maand ('+t+' mnd)';
+  updatePricing();
+}
+
+/* ════════ SIDEBAR PRODUCTEN ═══════════════════════════════ */
+function renderSidebarProds(prods){
+  const list=g('sb-prod-list');
+  if(!prods.length){ list.innerHTML='<div style="font-size:11px;color:rgba(255,255,255,.3);padding:4px 0;">Geen producten</div>'; return; }
+  list.innerHTML=prods.map(p=>{
+    const color=CAT_COLORS[p.cat]||'#e8001c';
+    return '<div class="sb-prod-row">'
+      +'<div class="sb-prod-dot" style="background:'+color+'"></div>'
+      +'<span class="sb-prod-name">'+esc(p.name)+'</span>'
+      +'<span class="sb-prod-qty">×'+p.qty+'</span>'
+      +'</div>';
+  }).join('');
+}
+
+/* ════════ PRESENTATIEMODUS ════════════════════════════════ */
+function enterPresentation(){
+  updatePricing();
+  renderPresHotspots();
+  const el=g('presMode'); el.style.display='flex';
+  if(el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+  else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  setTimeout(()=>{ const h=g('pres-hint'); if(h) h.style.opacity='0'; },3000);
+}
+
+function exitPresentation(){
+  g('presMode').style.display='none';
+  g('presQrOverlay').style.display='none';
+  if(document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+  else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+  // Zet prodDetailOverlay terug als nodig
+  const overlay=g('prodDetailOverlay');
+  const presMode=g('presMode');
+  if(presMode&&presMode.contains(overlay)){
+    overlay.style.display='none';
+    document.body.appendChild(overlay);
+    overlay.style.zIndex='700';
+  }
+}
+
+function renderPresHotspots(){
+  const layer=g('presHsLayer'); if(!layer) return;
+  layer.innerHTML=config.map((item,idx)=>{
+    const p=item.mrProd;
+    const foto=getFotoUrl(p.name);
+    const color=CAT_COLORS[p.cat]||'#e8001c';
+    const cardLeft=item.x>55;
+    return '<div onclick="presClickHotspot(this,\''+item.id+'\')"'
+      +' style="position:absolute;left:'+item.x+'%;top:'+item.y+'%;transform:translate(-50%,-50%);cursor:pointer;z-index:11;display:flex;align-items:center;flex-direction:'+(cardLeft?'row-reverse':'row')+';gap:10px;transition:transform .18s cubic-bezier(.34,1.4,.64,1)">'
+      +'<div style="position:relative;flex-shrink:0;width:28px;height:28px;">'
+        +'<div style="position:absolute;inset:-8px;border-radius:50%;border:2px solid rgba(255,107,53,.5);animation:pres-hs-ripple 2.5s ease-out infinite;pointer-events:none;"></div>'
+        +'<div style="width:28px;height:28px;border-radius:50%;background:rgba(15,15,25,.9);border:2.5px solid rgba(255,255,255,.8);backdrop-filter:blur(4px);box-shadow:0 3px 14px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:white;">'
+          +(idx+1)
+        +'</div>'
+      +'</div>'
+      +'<div style="background:rgba(10,10,20,.88);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:8px 12px;display:flex;align-items:center;gap:9px;box-shadow:0 4px 20px rgba(0,0,0,.5);max-width:180px;">'
+        +'<div style="width:40px;height:40px;flex-shrink:0;border-radius:7px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;overflow:hidden;">'
+          +(foto?'<img src="'+foto+'" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.parentNode.innerHTML=\'<span style=font-size:18px>📦</span>\'>':
+                 '<span style="font-size:18px;">📦</span>')
+        +'</div>'
+        +'<div style="min-width:0;flex:1;">'
+          +'<div style="font-size:11px;font-weight:700;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;">'+esc(p.name)+(item.qty>1?' ×'+item.qty:'')+'</div>'
+          +'<div style="font-size:9px;font-weight:800;color:'+color+';text-transform:uppercase;margin-top:2px;">'+esc(p.cat)+'</div>'
+        +'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function presClickHotspot(el,id){
+  el.style.transform='translate(-50%,-50%) scale(1.1)';
+  setTimeout(()=>{ el.style.transform='translate(-50%,-50%) scale(1)'; },200);
+  openProdDetail(id);
+}
+
+/* ════════ QR CODE ═════════════════════════════════════════ */
+async function presShowQR(){
+  const overlay=g('presQrOverlay');
+  const div=g('presQrDiv');
+  const lbl=g('presQrLabel');
+  overlay.style.display='block';
+  div.innerHTML='<div style="font-size:13px;color:#9ca3af;">QR-code genereren…</div>';
+
+  try{
+    const room=ROOMS.find(r=>r.id===(payload?.room||'small'))||ROOMS[1];
+    const prods=(payload?.products||[]).map(p=>({
+      name:p.name, ref:p.sku||'', brand:'', brandColor:'#e8001c',
+      price:p.trade>0?p.trade/(1-(payload?.margin||28)/100):0, qty:p.qty||1,
+      img:getFotoUrl(p.name)||'', desc:p.cat||''
+    }));
+    const html=buildDigitalRoomCard(room,prods,getSale(),room.photo,'');
+    const {data,error}=await sc().from('signing_pages').insert({
+      html_content:html,
+      metadata:{source:'mraas-presentatie',room:room.id,mfr:payload?.mfr||''},
+      expires_at:new Date(Date.now()+7*24*3600*1000).toISOString()
+    }).select('id').single();
+    if(error) throw error;
+    const url=window.location.origin+'/quoteassist/signing_page.html?id='+data.id;
+    // QR via Google Charts API
+    const qrUrl='https://chart.googleapis.com/chart?cht=qr&chs=220x220&chl='+encodeURIComponent(url)+'&choe=UTF-8';
+    div.innerHTML='<img src="'+qrUrl+'" style="width:220px;height:220px;border-radius:8px;">';
+    lbl.textContent=url;
+  }catch(e){
+    div.innerHTML='<div style="color:#e8001c;font-size:12px;">Fout: '+esc(e.message)+'</div>';
+  }
+}
+
+function closePresentationQR(){
+  g('presQrOverlay').style.display='none';
+}
+
+/* ════════ CLIENT MODAL ════════════════════════════════════ */
+function openClientModal(){
+  updateCmMraas();
+  g('clientModal').style.display='flex';
+  setTimeout(()=>g('cm-client').focus(),100);
+}
+function closeClientModal(){ g('clientModal').style.display='none'; }
+function updateCmMraas(){
+  const sale=getSale();
+  const term=parseInt(g('cm-term')?.value||48);
+  const mraas=sale*MRAAS[term];
+  g('cm-sale-price').textContent=fmt(sale);
+  g('cm-mraas-price').textContent=fmt(mraas)+'/mnd';
+}
+
+function exportToOfferte(){
+  const prods=(payload?.products||[]).filter(p=>p.trade>0&&p.cat!=='Info');
+  const margin=payload?.margin||28;
+  const exportPayload={
+    roomLabel:payload?.roomLabel||'Meeting Room',
+    roomKey:payload?.room||'small',
+    manufacturer:payload?.mfr||'',
+    platform:payload?.platform||'',
+    years:payload?.years||3,
+    margin, opco:payload?.opco||'België',
+    trade:fmt(prods.reduce((s,p)=>s+p.trade*p.qty,0)),
+    sale:fmt(getSale()),
+    quarterly:fmt(getMraas()*3),
+    products:prods.map(p=>({name:p.name,sku:p.sku||'',qty:p.qty,trade:p.trade,cat:p.cat}))
+  };
+  try{ localStorage.setItem('mraas_pending',JSON.stringify(exportPayload)); }catch(e){}
+  window.open('index.html','_blank');
+  closeClientModal();
+}
+
+function shareWhatsApp(){
+  const sale=getSale();
+  const mraas=getMraas();
+  const client=g('cm-client').value.trim()||'Klant';
+  const project=g('cm-project').value.trim();
+  const room=payload?.roomLabel||'Meeting Room';
+  const title=project?client+' — '+project:client;
+  const lines=(payload?.products||[]).filter(p=>p.cat!=='Service'&&p.cat!=='Info').map(p=>'• '+p.name+(p.qty>1?' ×'+p.qty:'')).join('\n');
+  const msg=`🏢 *MRaaS Configuratie — Ricoh Belgium*\n*${title}*\nZaal: ${room}\n\n${lines}\n\n💶 *Verkoopprijs excl. BTW: ${fmt(sale)}*\n📅 MRaaS ${_activeTerm} mnd: ${fmt(mraas)}/mnd excl. BTW\n\n_Gegenereerd via Easy Quotation_`;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+function shareEmail(){
+  const sale=getSale(); const mraas=getMraas();
+  const client=g('cm-client').value.trim()||'';
+  const project=g('cm-project').value.trim();
+  const email=g('cm-email').value.trim();
+  const room=payload?.roomLabel||'Meeting Room';
+  const lines=(payload?.products||[]).filter(p=>p.cat!=='Service'&&p.cat!=='Info').map(p=>`• ${p.name}${p.qty>1?' ×'+p.qty:''}`).join('\n');
+  const subj=`MRaaS Configuratie: ${client||room}${project?' — '+project:''}`;
+  const body=`Beste${client?' '+client:''},\n\nHierbij de MRaaS-configuratie voor ${room}${project?' — '+project:''}.\n\nCONFIGURATIE\n${lines}\n\nPRIJSOVERZICHT\nVerkoopprijs excl. BTW: ${fmt(sale)}\nMRaaS (${_activeTerm} maanden): ${fmt(mraas)}/mnd excl. BTW\n\nMet vriendelijke groeten,\nRicoh Belgium AV Team\n\n_Gegenereerd via Easy Quotation_`;
+  window.location.href='mailto:'+email+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);
+}
+
+/* ════════ TCO ═════════════════════════════════════════════ */
+function openTCO(){ calcTCO(); g('tcoModal').style.display='flex'; }
+function closeTCO(){ g('tcoModal').style.display='none'; }
+function calcTCO(){
+  const years=parseInt(g('tco-years')?.value||5);
+  const saving=parseFloat(g('tco-saving')?.value||12000);
+  const staff=parseInt(g('tco-staff')?.value||10);
+  const meetings=parseInt(g('tco-meetings')?.value||5);
+  const invest=getSale();
+  const annualSaving=saving+(staff*meetings*52*0.5*85);
+  const totalSaving=annualSaving*years;
+  const netBenefit=totalSaving-invest;
+  const roi=invest>0?((netBenefit/invest)*100).toFixed(0):0;
+  const payback=annualSaving>0?(invest/annualSaving).toFixed(1):0;
+  g('tco-result').innerHTML=
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+    +'<div><div style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Investering</div><div style="font-size:16px;font-weight:800;color:var(--ink);">'+fmt(invest)+'</div></div>'
+    +'<div><div style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Besparing '+years+' jaar</div><div style="font-size:16px;font-weight:800;color:#10b981;">'+fmt(totalSaving)+'</div></div>'
+    +'<div><div style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">ROI</div><div style="font-size:16px;font-weight:800;color:var(--orange);">'+roi+'%</div></div>'
+    +'<div><div style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Terugverdientijd</div><div style="font-size:16px;font-weight:800;color:var(--ink);">'+payback+' jaar</div></div>'
+    +'</div>';
+  drawTCOChart(invest,annualSaving,years);
+}
+
+function drawTCOChart(invest,annualSaving,years){
+  const canvas=g('tcoChart'); if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width=canvas.parentElement.offsetWidth||460;
+  const h=canvas.height=160;
+  ctx.clearRect(0,0,w,h);
+  const pad=40;
+  const pts=[];
+  for(let y=0;y<=years;y++) pts.push({x:y,y:annualSaving*y-invest});
+  const minY=Math.min(...pts.map(p=>p.y));
+  const maxY=Math.max(...pts.map(p=>p.y));
+  const rng=maxY-minY||1;
+  const sx=x=>(x/years)*(w-pad*2)+pad;
+  const sy=y=>h-pad-(((y-minY)/rng)*(h-pad*2));
+  // Grid line y=0
+  ctx.strokeStyle='rgba(0,0,0,.1)'; ctx.lineWidth=1;
+  const z=sy(0);
+  ctx.beginPath(); ctx.moveTo(pad,z); ctx.lineTo(w-pad,z); ctx.stroke();
+  ctx.fillStyle='rgba(0,0,0,.3)'; ctx.font='10px Inter'; ctx.textAlign='center';
+  ctx.fillText('Break-even',pad+(w-pad*2)/2,z-6);
+  // Line
+  const grad=ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0,'rgba(255,107,53,.8)'); grad.addColorStop(1,'rgba(232,0,28,.4)');
+  ctx.strokeStyle=grad; ctx.lineWidth=2.5; ctx.lineJoin='round';
+  ctx.beginPath();
+  pts.forEach((p,i)=>{ if(i===0) ctx.moveTo(sx(p.x),sy(p.y)); else ctx.lineTo(sx(p.x),sy(p.y)); });
+  ctx.stroke();
+  // Dots + labels
+  pts.forEach(p=>{
+    ctx.fillStyle=p.y>=0?'#10b981':'#e8001c';
+    ctx.beginPath(); ctx.arc(sx(p.x),sy(p.y),4,0,Math.PI*2); ctx.fill();
+  });
+  // X labels
+  ctx.fillStyle='rgba(0,0,0,.5)'; ctx.font='10px Inter'; ctx.textAlign='center';
+  for(let y=0;y<=years;y++) ctx.fillText('Jaar '+y,sx(y),h-8);
+}
+
+/* ════════ SCANNER ═════════════════════════════════════════ */
+function openScanner(){
+  g('scannerModal').style.display='flex';
+  _scanChips={size:'auto',platform:'both',install:'any'};
+  _scanImg=null;
+}
+function closeScannerModal(){ g('scannerModal').style.display='none'; }
+function toggleChip(group,btn,value){
+  document.querySelectorAll('#chip-'+group+' .scan-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); _scanChips[group]=value;
+}
+function handleScanFile(inp){
+  if(!inp.files||!inp.files[0]) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    _scanImg=e.target.result.split(',')[1];
+    g('scanPreview').src=e.target.result;
+    g('scanPreviewWrap').style.display='block';
+    g('scanPlaceholder').style.display='none';
+  };
+  reader.readAsDataURL(inp.files[0]);
+}
+async function runScan(){
+  const statusEl=g('scanStatus');
+  statusEl.innerHTML='<div style="font-size:12px;color:#7c3aed;display:flex;align-items:center;gap:8px;"><span class="spin" style="border-top-color:#7c3aed;border-color:#e9d5ff;"></span>AI analyseert…</div>';
+  const prods=(payload?.products||[]);
+  const ctx=`MRaaS configuratie: ${payload?.roomLabel||'Vergaderzaal'} met ${payload?.mfr||''} ${payload?.platform||''}.
+Huidige producten: ${prods.map(p=>p.name).join(', ')}.
+Zaalgrootte voorkeur: ${_scanChips.size||'auto'}, Platform: ${_scanChips.platform||'auto'}.`;
+  try{
+    const msgs=[{role:'user',content:[
+      ..._scanImg?[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:_scanImg}}]:[],
+      {type:'text',text:'Analyseer deze MRaaS vergaderzaal configuratie en geef 3 concrete verbeterstips op basis van: '+ctx+'\n\nAntwoord in het Nederlands, elk tip max 2 zinnen.'}
+    ]}];
+    const resp=await fetch(WRK+'/api/anthropic',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:600,messages:msgs})});
+    const data=await resp.json();
+    const text=data.content?.map(c=>c.text||'').join('')||'Geen resultaat.';
+    statusEl.innerHTML='<div style="font-size:12px;line-height:1.7;color:var(--ink);background:#f8f9fb;border-radius:10px;padding:12px;">'+text.replace(/\n/g,'<br>')+'</div>';
+  }catch(e){
+    statusEl.innerHTML='<div style="font-size:12px;color:#e8001c;">Fout: '+esc(e.message)+'</div>';
+  }
+}
+
+/* ════════ PDF ═════════════════════════════════════════════ */
+async function generatePDF(){
+  if(!payload){ toast('Geen configuratie geladen'); return; }
+  const sale=getSale(); const mraas=getMraas();
+  const today=new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'});
+  const prods=(payload.products||[]).filter(p=>p.cat!=='Info'&&!(p.trade===0&&p.cat!=='Service')&&p.name&&!p.name.toLowerCase().startsWith('not available')&&!p.name.toLowerCase().startsWith('included'));
+  let prodRows='',lastCat='';
+  prods.forEach(p=>{
+    if(p.cat!==lastCat){
+      prodRows+=`<tr><td colspan="4" style="padding:5px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;background:#f8f9fb;border-bottom:1px solid #e5e7eb;">${p.cat}</td></tr>`;
+      lastCat=p.cat;
+    }
+    const sp=p.trade>0?p.trade/(1-(payload.margin||28)/100):0;
+    prodRows+=`<tr><td style="padding:7px 10px;border-bottom:1px solid #f1f3f6;font-size:10px;font-weight:500;">${esc(p.name)}</td><td style="padding:7px 10px;border-bottom:1px solid #f1f3f6;font-family:monospace;font-size:9px;color:#6b7280;">${p.sku||'—'}</td><td style="padding:7px 10px;border-bottom:1px solid #f1f3f6;text-align:center;font-size:10px;">${p.qty}</td><td style="padding:7px 10px;border-bottom:1px solid #f1f3f6;text-align:right;font-size:10px;font-weight:700;">${sp>0?fmt(sp*p.qty):'—'}</td></tr>`;
+  });
+  const tpl=g('pdf-tpl');
+  tpl.style.cssText='display:block;position:fixed;left:-9999px;top:0;width:210mm;background:white;';
+  tpl.innerHTML=`<div style="width:210mm;min-height:297mm;background:white;font-family:'Inter',Arial,sans-serif;position:relative;padding-bottom:40px;">
+    <div style="background:linear-gradient(135deg,#0d0d14,#1e1e2e);padding:28px 36px 24px;color:white;">
+      <div style="font-size:20px;font-weight:900;margin-bottom:2px;">Ricoh<span style="color:#ff6b35;">.</span></div>
+      <div style="font-size:10px;color:rgba(255,255,255,.4);margin-bottom:18px;">Meeting Room as a Service</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+        <div><div style="font-size:24px;font-weight:900;">${esc(payload.roomLabel)}</div><div style="font-size:12px;color:rgba(255,255,255,.55);margin-top:2px;">${esc(payload.mfr)} · ${esc(payload.platform)} · ${payload.years} jaar · ${esc(payload.opco||'België')}</div></div>
+        <div style="font-size:10px;color:rgba(255,255,255,.4);">${today}</div>
+      </div>
+    </div>
+    <div style="background:#fff5f0;padding:20px 36px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #ff6b35;">
+      <div><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#6b7280;margin-bottom:3px;">Per maand MRaaS (${_activeTerm} mnd)</div><div style="font-size:36px;font-weight:900;color:#0d0d14;line-height:1;">${fmt(mraas)}</div><div style="font-size:11px;color:#6b7280;margin-top:3px;">${_activeTerm} maanden · ${_activeTerm} termijnen</div></div>
+      <div style="text-align:right;"><div style="font-size:16px;font-weight:800;">${fmt(sale)}</div><div style="font-size:9px;color:#6b7280;text-transform:uppercase;margin-top:2px;">Verkoopprijs</div></div>
+    </div>
+    <div style="padding:20px 36px;">
+      <div style="font-size:12px;font-weight:800;margin-bottom:12px;color:#0d0d14;">Productsamenstelling</div>
+      <table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#f8f9fb;"><th style="padding:7px 10px;text-align:left;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Product</th><th style="padding:7px 10px;text-align:left;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#6b7280;border-bottom:1px solid #e5e7eb;">SKU</th><th style="padding:7px 10px;text-align:center;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Qty</th><th style="padding:7px 10px;text-align:right;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Verkoopprijs</th></tr></thead><tbody>${prodRows}</tbody><tfoot><tr style="background:#f8f9fb;"><td colspan="3" style="padding:9px 10px;font-weight:800;font-size:11px;">Totaal excl. BTW</td><td style="padding:9px 10px;text-align:right;font-weight:900;font-size:13px;color:#e8001c;">${fmt(sale)}</td></tr></tfoot></table>
+    </div>
+    <div style="position:absolute;bottom:0;left:0;right:0;padding:12px 36px;background:#f8f9fb;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;font-size:8.5px;color:#9ca3af;">
+      <span>Ricoh Belgium · MRaaS Presentatie · Exclusief BTW · Prijzen onder voorbehoud</span>
+      <span>Ricoh Financial Services</span>
+    </div>
+  </div>`;
+  toast('PDF genereren…');
+  await new Promise(r=>setTimeout(r,300));
+  try{
+    await html2pdf().set({margin:0,image:{type:'jpeg',quality:.95},html2canvas:{scale:2,useCORS:true,allowTaint:true,logging:false,width:794,windowWidth:794},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(tpl.firstElementChild).save('MRaaS_'+(payload.roomLabel||'Presentatie').replace(/\s/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.pdf');
+    toast('✓ PDF gedownload');
+  }catch(e){ toast('PDF fout: '+e.message); }
+  tpl.innerHTML=''; tpl.style.display='none';
+}
+
+/* ════════ DIGITAL ROOM CARD ═══════════════════════════════ */
+function buildDigitalRoomCard(room,prods,total,photo,notes){
+  const monthly=Math.round(total*MRAAS[_activeTerm]);
+  const prodData=JSON.stringify(prods);
+  return `<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${room.label} — Ricoh MRaaS</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;background:#0d0d14;color:white;min-height:100dvh;display:flex;flex-direction:column;}</style></head><body><div style="padding:24px;"><div style="font-size:20px;font-weight:900;margin-bottom:4px;">Ricoh<span style="color:#ff6b35;">.</span></div><div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px;">MRaaS Configuratie</div><div style="font-size:24px;font-weight:800;margin-bottom:4px;">${room.label}</div><div style="font-size:32px;font-weight:900;color:#ff6b35;margin-bottom:4px;">€ ${monthly.toLocaleString('nl-BE')}<span style="font-size:14px;font-weight:600;color:rgba(255,255,255,.5);">/mnd</span></div><div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:20px;">${_activeTerm} maanden · excl. BTW</div><div style="display:flex;flex-direction:column;gap:8px;">${prods.map(p=>'<div style="background:rgba(255,255,255,.06);border-radius:10px;padding:10px 14px;"><div style="font-size:13px;font-weight:600;">'+(p.name||'')+'</div><div style="font-size:11px;color:rgba(255,255,255,.4);">'+(p.desc||p.brand||'')+'</div></div>').join('')}</div></div></body></html>`;
+}
+
+/* ════════ INIT ════════════════════════════════════════════ */
+initAuth();
+</script>
+</body>
+</html>
