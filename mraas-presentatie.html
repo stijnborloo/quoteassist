@@ -1,0 +1,2512 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>MRaaS Presentatie — Ricoh</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --red:#e8001c;--orange:#ff6b35;
+  --grad:linear-gradient(135deg,#e8001c,#ff6b35);
+  --ink:#0d0d14;--muted:#6b7280;--border:#e5e7eb;--surface:#f8f9fb;
+  --shadow-lg:0 12px 48px rgba(0,0,0,.16);
+}
+body{font-family:'Inter',sans-serif;background:#0d0d14;color:white;height:100dvh;overflow:hidden;display:flex;flex-direction:column;}
+
+/* AUTH */
+#auth-gate{position:fixed;inset:0;z-index:9999;background:#0d0d14;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.auth-card{background:white;border-radius:16px;padding:28px 32px;width:340px;box-shadow:var(--shadow-lg);color:var(--ink);}
+.auth-card h2{font-size:16px;font-weight:800;margin-bottom:4px;}
+.auth-card p{font-size:12px;color:var(--muted);margin-bottom:20px;}
+.auth-err{font-size:12px;color:var(--red);background:#fff0f1;border:1px solid #fca5a5;border-radius:7px;padding:8px 11px;margin-bottom:12px;display:none;}
+.auth-field{margin-bottom:12px;}
+.auth-field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.auth-field input{width:100%;height:40px;border:1.5px solid var(--border);border-radius:9px;padding:0 12px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;}
+.auth-field input:focus{border-color:var(--orange);}
+.auth-btn{width:100%;height:42px;background:var(--grad);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 3px 14px rgba(232,0,28,.3);}
+.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* TOPBAR */
+.topbar{height:50px;background:rgba(10,10,20,.95);border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;position:relative;z-index:100;}
+.topbar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--grad);}
+.tb-logo{font-size:14px;font-weight:900;color:white;margin-right:10px;flex-shrink:0;}
+.tb-logo em{font-style:normal;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.tb-tag{font-size:10px;font-weight:700;background:rgba(255,107,53,.15);color:var(--orange);border:1px solid rgba(255,107,53,.3);border-radius:6px;padding:2px 8px;white-space:nowrap;flex-shrink:0;}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:6px;}
+.tb-btn{height:30px;padding:0 10px;border-radius:7px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);font-size:11px;font-weight:600;color:rgba(255,255,255,.7);cursor:pointer;display:flex;align-items:center;gap:4px;transition:background .12s;font-family:inherit;white-space:nowrap;flex-shrink:0;}
+.tb-btn:hover{background:rgba(255,255,255,.12);color:white;}
+.tb-btn-primary{background:var(--grad);color:white;border-color:transparent;box-shadow:0 2px 10px rgba(232,0,28,.3);}
+.tb-btn-primary:hover{opacity:.9;background:var(--grad);}
+.tb-user{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:4px 10px 4px 6px;font-size:11px;}
+.tb-avatar{width:22px;height:22px;border-radius:5px;background:var(--grad);display:flex;align-items:center;justify-content:center;color:white;font-size:9px;font-weight:800;}
+.tb-username{font-weight:600;color:rgba(255,255,255,.7);}
+
+/* EMPTY STATE */
+#empty-state{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px;}
+#empty-state.visible{display:flex;}
+#empty-state .big-icon{font-size:56px;}
+#empty-state h2{font-size:20px;font-weight:800;}
+#empty-state p{font-size:13px;color:rgba(255,255,255,.45);text-align:center;line-height:1.6;max-width:360px;}
+.btn-back{height:42px;padding:0 24px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);color:white;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+
+/* MAIN: foto + sidebar */
+#app{display:none;flex:1;overflow:hidden;position:relative;}
+#app.visible{display:flex;}
+
+/* Foto canvas */
+#canvas{position:absolute;inset:0;overflow:hidden;background:#111;}
+#zaalPhoto{width:100%;height:100%;object-fit:cover;object-position:center 22%;display:block;transition:opacity .45s;}
+#zaalPhoto::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.4) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 55%,rgba(0,0,0,.65) 100%);pointer-events:none;}
+.foto-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.4) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 55%,rgba(0,0,0,.65) 100%);pointer-events:none;z-index:2;}
+.room-badge{position:absolute;top:14px;left:14px;z-index:10;background:rgba(13,13,20,.72);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:6px 14px;display:inline-flex;align-items:center;gap:8px;}
+.room-badge-dot{width:7px;height:7px;border-radius:50%;background:var(--grad);}
+#rName{font-size:12px;font-weight:700;color:white;}
+#rSize{font-size:10px;color:rgba(255,255,255,.4);}
+
+/* Hotspot layer */
+#hsLayer{position:absolute;inset:0;z-index:30;pointer-events:none;}
+#hsLayer > *{pointer-events:auto;}
+.hs{position:absolute;transform:translate(-50%,-50%);cursor:pointer;display:flex;align-items:center;z-index:31;}
+.hs.left{flex-direction:row-reverse;}
+.hs-dot{width:22px;height:22px;border-radius:50%;border:2.5px solid;background:rgba(0,0,0,.2);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s;box-shadow:0 2px 10px rgba(0,0,0,.4);cursor:grab;}
+.hs:hover .hs-dot{transform:scale(1.15);}
+.hs-dot-inner{width:9px;height:9px;border-radius:50%;}
+.hs-tag{background:rgba(10,10,20,.9);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:7px 10px;margin:0 7px;display:flex;flex-direction:column;gap:2px;min-width:130px;max-width:180px;box-shadow:0 4px 16px rgba(0,0,0,.4);}
+.hs-tag-name{font-size:11px;font-weight:700;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hs-tag-row{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.hs-tag-brand{font-size:9px;font-weight:800;text-transform:uppercase;}
+.hs-tag-price{font-size:9px;color:rgba(255,255,255,.4);}
+.hs-photo{width:40px;height:40px;border-radius:7px;object-fit:cover;border:1px solid rgba(255,255,255,.12);margin-bottom:4px;}
+
+/* Sidebar — breder voor lange productnamen */
+#sidebar{position:absolute;top:0;right:0;bottom:0;width:290px;background:rgba(13,13,20,.85);backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;overflow:hidden;z-index:40;}
+#sidebar-scroll{flex:1;overflow-y:auto;padding:14px;}
+.sb-section-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.3);margin:10px 0 6px;}
+.sb-prod-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.04);margin-bottom:4px;border:1px solid rgba(255,255,255,.06);}
+.sb-prod-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.sb-prod-name{flex:1;font-size:10px;font-weight:600;color:rgba(255,255,255,.75);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sb-prod-qty{font-size:9px;color:rgba(255,255,255,.35);flex-shrink:0;}
+.sb-prod-grip{font-size:13px;color:rgba(255,255,255,.2);cursor:grab;flex-shrink:0;padding:0 2px;user-select:none;line-height:1;}
+.sb-prod-grip:active{cursor:grabbing;}
+.sb-prod-row.drag-over{border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.1);}
+.sb-prod-row.dragging{opacity:0.4;}
+/* Term chips */
+.term-chips{display:flex;gap:5px;margin-bottom:12px;}
+.term-chip{flex:1;height:28px;border-radius:7px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.45);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
+.term-chip.active{background:rgba(255,107,53,.15);border-color:rgba(255,107,53,.4);color:var(--orange);}
+/* Totaal */
+.sb-totaal-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px;}
+.sb-totaal-row{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.4);margin-bottom:5px;}
+.sb-totaal-row:last-child{margin-bottom:0;}
+.sb-totaal-main{display:flex;justify-content:space-between;align-items:baseline;padding-top:8px;margin-top:8px;border-top:1px solid rgba(255,255,255,.08);}
+.sb-totaal-lbl{font-size:11px;font-weight:700;color:white;}
+.sb-totaal-val{font-size:20px;font-weight:900;font-family:'DM Mono',monospace;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+/* Action buttons */
+.sb-actions{padding:12px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.sb-btn{width:100%;height:36px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:.15s;}
+.sb-btn-primary{background:var(--grad);color:white;border:none;box-shadow:0 2px 10px rgba(232,0,28,.3);}
+.sb-btn-secondary{background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.1);}
+.sb-btn-secondary:hover{background:rgba(255,255,255,.1);color:white;}
+
+/* Hint — verbergt na eerste interactie */
+#canvas-hint{transition:opacity .6s;}
+#canvas-hint.hidden{opacity:0;pointer-events:none;}
+
+/* Presentatiemodus fullscreen */
+#presMode{display:none;position:fixed;inset:0;z-index:800;background:#000;flex-direction:column;}
+#presCanvas{position:relative;flex:1;overflow:hidden;cursor:default;}
+#presPhoto{width:100%;height:100%;object-fit:cover;display:block;}
+#presHsLayer{position:absolute;inset:0;z-index:10;}
+.pres-gradient{position:absolute;bottom:0;left:0;right:0;height:140px;background:linear-gradient(to top,rgba(0,0,0,.75),transparent);pointer-events:none;z-index:9;}
+#pres-room-badge{position:absolute;top:20px;left:20px;z-index:20;background:rgba(10,10,20,.72);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 16px;display:flex;align-items:center;gap:8px;cursor:pointer;}
+#pres-room-name{font-size:14px;font-weight:800;color:white;}
+#pres-room-size{font-size:11px;color:rgba(255,255,255,.4);}
+/* Zaalwisselmenu in fullscreen */
+#pres-room-menu{display:none;position:absolute;top:calc(100% + 8px);left:0;background:rgba(14,14,24,.98);border:1px solid rgba(255,255,255,.12);border-radius:12px;min-width:220px;z-index:30;padding:4px;box-shadow:0 8px 32px rgba(0,0,0,.5);}
+#pres-controls{position:absolute;top:16px;right:16px;z-index:20;display:flex;gap:8px;}
+.pres-ctrl-btn{height:38px;padding:0 14px;background:rgba(255,255,255,.12);backdrop-filter:blur(8px);color:white;border:1px solid rgba(255,255,255,.2);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;}
+.pres-ctrl-btn.red{background:rgba(232,0,28,.75);border-color:transparent;}
+/* Fix 3: Looptijdknoppen + prijs in fullscreen ribbon */
+#pres-price-badge{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:20;background:rgba(10,10,20,.75);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:10px 22px;display:flex;align-items:center;gap:16px;}
+.pres-price-item{text-align:center;}
+.pres-price-lbl{font-size:10px;color:rgba(255,255,255,.45);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
+#pres-total{font-size:22px;font-weight:900;color:white;font-family:'DM Mono',monospace;}
+#pres-mraas{font-size:22px;font-weight:900;font-family:'DM Mono',monospace;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.pres-divider{width:1px;height:36px;background:rgba(255,255,255,.15);}
+/* Term mini-chips in ribbon */
+.pres-term-chips{display:flex;gap:4px;margin-top:5px;justify-content:center;}
+.pres-term-chip{height:20px;padding:0 8px;border-radius:5px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);font-size:9px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
+.pres-term-chip.active{background:rgba(255,107,53,.2);border-color:rgba(255,107,53,.5);color:var(--orange);}
+#pres-hint{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.3);font-size:11px;font-weight:600;pointer-events:none;z-index:9;white-space:nowrap;transition:opacity .5s;}
+@keyframes pres-hs-ripple{0%{transform:translate(-50%,-50%) scale(.5);opacity:.8;}80%{transform:translate(-50%,-50%) scale(2);opacity:0;}100%{opacity:0;}}
+
+/* Fix 4: Product detail als slide-in side panel */
+#prodDetailOverlay{display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);align-items:stretch;justify-content:flex-end;}
+#pdo-inner{background:rgba(14,14,24,.98);border-left:1px solid rgba(255,255,255,.1);width:100%;max-width:400px;padding:24px;box-shadow:-16px 0 48px rgba(0,0,0,.5);overflow-y:auto;transform:translateX(100%);transition:transform .28s cubic-bezier(.32,0,.67,0);}
+#prodDetailOverlay.visible #pdo-inner{transform:translateX(0);}
+#pdo-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.1);border:none;border-radius:50%;width:32px;height:32px;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+/* Terug knop onderaan detail */
+#pdo-back-btn{width:100%;height:40px;margin-top:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+
+/* Client modal */
+#clientModal{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:16px;}
+#clientModal-inner{background:white;border-radius:20px;width:100%;max-width:440px;color:var(--ink);max-height:92vh;overflow-y:auto;}
+.nf label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.nf input,.nf select{width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:12px;font-family:inherit;color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s;}
+.nf input:focus,.nf select:focus{border-color:var(--orange);}
+
+/* TCO modal */
+#tcoModal{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:16px;}
+#tcoModal-inner{background:white;border-radius:20px;width:100%;max-width:500px;color:var(--ink);max-height:92vh;overflow-y:auto;padding:24px;}
+
+/* Scanner modal */
+#scannerModal{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);align-items:flex-end;justify-content:center;}
+#scannerModal-inner{background:white;border-radius:24px 24px 0 0;width:100%;max-width:520px;max-height:92dvh;display:flex;flex-direction:column;color:var(--ink);}
+.scan-chip{padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:white;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;transition:.12s;}
+.scan-chip.active{background:#f0f9ff;border-color:#0284c7;color:#0284c7;}
+
+/* QR overlay */
+#presQrOverlay{display:none;position:absolute;inset:0;z-index:50;background:rgba(0,0,0,.85);backdrop-filter:blur(16px);}
+
+/* Toast */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(13,13,20,.95);border:1px solid rgba(255,255,255,.1);color:white;padding:9px 18px;border-radius:9px;font-size:12px;font-weight:500;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9999;white-space:nowrap;}
+#toast.show{opacity:1;}
+
+/* More menu */
+#tb-more-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:rgba(14,14,24,.98);border:1px solid rgba(255,255,255,.1);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.4);min-width:200px;z-index:200;padding:4px;}
+.tb-dd-item{width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;color:rgba(255,255,255,.7);border-radius:8px;display:flex;align-items:center;gap:8px;transition:background .1s;}
+.tb-dd-item:hover{background:rgba(255,255,255,.08);color:white;}
+
+/* PDF template */
+#pdf-tpl{display:none;position:fixed;left:-9999px;top:0;width:210mm;background:white;}
+
+.tb-room-item{width:100%;text-align:left;padding:9px 14px;border:none;background:none;
+  cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;color:rgba(255,255,255,.7);
+  border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;transition:background .1s;}
+.tb-room-item:hover,.tb-room-item.active{background:rgba(255,255,255,.1);color:white;}
+.tb-room-item.active{background:rgba(255,107,53,.15);color:var(--orange);}
+
+@media(max-width:768px){
+  /* Topbar: verberg niet-essentiële knoppen */
+  .tb-tag{display:none;}
+  .tb-btn:not(.tb-btn-primary):not(#tb-pres-btn){display:none;}
+  .tb-user{padding:3px 6px;}
+  .tb-username{display:none;}
+  .topbar{padding:0 10px;gap:6px;}
+
+  /* Sidebar verborgen — vervangen door bottom bar */
+  #sidebar{display:none;}
+
+  /* Canvas vult volledig scherm */
+  #canvas{position:absolute;inset:0;}
+
+  /* Bottom action bar op mobile */
+  #mob-bar{display:flex!important;}
+
+  /* Hotspot tags kleiner op mobile */
+  .hs-tag{min-width:100px;max-width:140px;padding:5px 8px;}
+  .hs-tag-name{font-size:10px;}
+  .hs-photo{width:32px;height:32px;}
+
+  /* Presentatie price badge */
+  #pres-price-badge{flex-direction:column;gap:6px;padding:10px 16px;}
+  .pres-divider{display:none;}
+  #pres-total,#pres-mraas{font-size:18px;}
+
+  /* Product detail modal fullscreen op mobile */
+  #prodDetailOverlay{align-items:flex-end;padding:0;}
+  #pdo-inner{border-radius:20px 20px 0 0;max-width:100%;padding:20px 20px calc(env(safe-area-inset-bottom,0px) + 20px);}
+
+  /* Client modal bottom sheet op mobile */
+  #clientModal{align-items:flex-end;padding:0;}
+  #clientModal-inner{border-radius:20px 20px 0 0;max-width:100%;}
+
+  /* Canvas hint verbergen */
+  #canvas-hint{display:none!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div id="auth-gate">
+  <div style="font-size:22px;font-weight:900;color:white;margin-bottom:4px;">Ricoh<em style="font-style:normal;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">.</em></div>
+  <div class="auth-card">
+    <h2>MRaaS Presentatie</h2>
+    <p>Aanmelden om te presenteren</p>
+    <div class="auth-err" id="auth-err"></div>
+    <div class="auth-field"><label>E-mailadres</label><input type="email" id="a-email" placeholder="naam@ricoh.be" onkeydown="if(event.key==='Enter')document.getElementById('a-pass').focus()"></div>
+    <div class="auth-field"><label>Wachtwoord</label><input type="password" id="a-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="auth-btn" onclick="doLogin()" id="login-btn">Inloggen</button>
+  </div>
+  <div style="font-size:11px;color:rgba(255,255,255,.3);">Of open <a href="mraas-config.html" style="color:rgba(255,255,255,.5);">MRaaS Configurator</a> en klik "Toon aan klant"</div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar" id="topbar" style="display:none;">
+  <div class="tb-logo">Ricoh<em>.</em></div>
+  <div class="tb-tag" id="tb-tag">MRaaS Presentatie</div>
+  <!-- Zaalwisselaar — alleen zichtbaar als er meerdere zalen zijn -->
+  <div id="tb-rooms" style="display:none;position:relative;">
+    <button onclick="toggleRoomMenu()" id="tb-room-btn"
+      style="height:30px;padding:0 10px;border-radius:7px;border:1px solid rgba(255,255,255,.2);
+             background:rgba(255,255,255,.1);font-size:11px;font-weight:600;color:white;
+             cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;white-space:nowrap;">
+      🏢 <span id="tb-room-label">—</span> ▾
+    </button>
+    <div id="tb-room-menu" style="display:none;position:absolute;top:calc(100% + 6px);left:0;
+         background:rgba(14,14,24,.98);border:1px solid rgba(255,255,255,.12);border-radius:12px;
+         box-shadow:0 8px 32px rgba(0,0,0,.4);min-width:220px;z-index:300;padding:4px;">
+    </div>
+  </div>
+  <div class="tb-right">
+    <button class="tb-btn" id="btn-scan" onclick="openScanner()">🔍 Ruimtescanner</button>
+    <button class="tb-btn" id="btn-tco" onclick="openTCO()">📊 TCO</button>
+    <button class="tb-btn tb-btn-primary" id="btn-pres-tb" onclick="enterPresentation()">⛶ Presenteer</button>
+    <button class="tb-btn tb-btn-primary" id="btn-afr-tb" onclick="openClientModal()">✍️ Afronden</button>
+    <div style="position:relative;flex-shrink:0;">
+      <button onclick="togglePresLangMenu()" style="height:30px;padding:0 8px;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:white;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:3px;">
+        <span id="pres-lang-flag">🇳🇱</span><span style="font-size:9px;opacity:.6;">▾</span>
+      </button>
+      <div id="pres-lang-menu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:rgba(14,14,24,.98);border:1px solid rgba(255,255,255,.12);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);overflow:hidden;z-index:500;min-width:130px;">
+        <button onclick="setLangPres('nl');togglePresLangMenu()" style="width:100%;padding:9px 14px;border:none;background:none;color:rgba(255,255,255,.8);font-size:12px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;font-family:inherit;">🇳🇱 Nederlands</button>
+        <button onclick="setLangPres('en');togglePresLangMenu()" style="width:100%;padding:9px 14px;border:none;background:none;color:rgba(255,255,255,.8);font-size:12px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;font-family:inherit;">🇬🇧 English</button>
+        <button onclick="setLangPres('fr');togglePresLangMenu()" style="width:100%;padding:9px 14px;border:none;background:none;color:rgba(255,255,255,.8);font-size:12px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;font-family:inherit;">🇫🇷 Français</button>
+      </div>
+    </div>
+    <div class="tb-user">
+      <div class="tb-avatar" id="tb-avatar">?</div>
+      <span class="tb-username" id="tb-username">—</span>
+    </div>
+    <button class="tb-btn" onclick="doLogout()">↩</button>
+  </div>
+</div>
+
+<!-- EMPTY STATE -->
+<div id="empty-state" style="display:none;">
+  <div class="big-icon">🏢</div>
+  <h2 id="es-title">Geen configuratie geladen</h2>
+  <p id="es-txt">Open de MRaaS Configurator, stel je zaal in en klik op "Toon aan klant" om de visuele presentatie te starten.</p>
+  <a href="mraas-config.html" class="btn-back">← Terug naar configurator</a>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+
+  <!-- CANVAS: zaalfoto + hotspots -->
+  <div id="canvas">
+    <img id="zaalPhoto" src="" alt="">
+    <div class="foto-overlay"></div>
+    <div class="room-badge">
+      <div class="room-badge-dot"></div>
+      <div>
+        <div id="rName">—</div>
+        <div id="rSize">—</div>
+      </div>
+    </div>
+
+    <!-- Zaalfoto wisselen knop -->
+    <label id="foto-upload-btn" title="Eigen zaalfoto uploaden"
+      style="position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:15;
+             background:rgba(13,13,20,.72);backdrop-filter:blur(12px);
+             border:1px solid rgba(255,255,255,.15);border-radius:20px;
+             padding:6px 14px;display:flex;align-items:center;gap:7px;
+             cursor:pointer;transition:background .15s;white-space:nowrap;">
+      <input type="file" accept="image/*" style="display:none;" onchange="loadCustomRoomPhoto(event)">
+      <span style="font-size:13px;">📷</span>
+      <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.75);">Eigen zaalfoto</span>
+    </label>
+    <button id="foto-reset-btn" onclick="resetRoomPhoto()" title="Terugzetten naar standaardfoto"
+      style="display:none;position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:15;
+             background:rgba(232,0,28,.75);backdrop-filter:blur(12px);
+             border:1px solid rgba(255,255,255,.15);border-radius:20px;
+             padding:6px 14px;font-size:11px;font-weight:700;color:white;
+             cursor:pointer;white-space:nowrap;font-family:inherit;">
+      ✕ Verwijder eigen foto
+    </button>
+    <!-- Hotspot layer -->
+    <div id="hsLayer"></div>
+    <!-- Hint -->
+    <div style="position:absolute;bottom:18px;left:50%;transform:translateX(-50%);z-index:20;pointer-events:none;background:rgba(13,13,20,.65);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:7px 16px;font-size:11px;color:rgba(255,255,255,.5);white-space:nowrap;" id="canvas-hint">
+      Sleep hotspot om te verplaatsen &nbsp;·&nbsp; Klik voor details &nbsp;·&nbsp; <span style="color:var(--orange);font-weight:700;cursor:pointer;" onclick="enterPresentation()">⛶ Presenteer fullscreen</span>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div id="sidebar-scroll">
+      <!-- Config info -->
+      <div class="sb-section-title" id="sb-cfg-lbl">Configuratie</div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:9px;padding:10px;margin-bottom:10px;font-size:11px;line-height:1.8;">
+        <div style="display:flex;justify-content:space-between;"><span id="lbl-kamer" style="color:rgba(255,255,255,.4);">Kamer</span><span id="cfg-room" style="font-weight:700;">—</span></div>
+        <div style="display:flex;justify-content:space-between;"><span id="lbl-mfr" style="color:rgba(255,255,255,.4);">Fabrikant</span><span id="cfg-mfr" style="font-weight:700;">—</span></div>
+        <div style="display:flex;justify-content:space-between;"><span id="lbl-plat" style="color:rgba(255,255,255,.4);">Platform</span><span id="cfg-plat" style="font-weight:700;">—</span></div>
+        <div style="display:flex;justify-content:space-between;"><span id="lbl-contract" style="color:rgba(255,255,255,.4);">Contract</span><span id="cfg-years" style="font-weight:700;">—</span></div>
+      </div>
+
+      <!-- Producten -->
+      <div class="sb-section-title" id="sb-prod-lbl">Producten</div>
+      <div id="sb-prod-list"></div>
+
+      <!-- MRaaS looptijd -->
+      <div class="sb-section-title" id="sb-loop-lbl">MRaaS looptijd</div>
+      <div class="term-chips">
+        <button class="term-chip" onclick="setTerm(36,this)">36 mnd</button>
+        <button class="term-chip active" onclick="setTerm(48,this)">48 mnd</button>
+        <button class="term-chip" onclick="setTerm(60,this)">60 mnd</button>
+      </div>
+
+      <!-- Totaal -->
+      <div class="sb-totaal-box">
+        <div class="sb-totaal-row"><span>Verkoopprijs excl. BTW</span><span id="sb-sale">—</span></div>
+        <div class="sb-totaal-row"><span>Financieringskosten</span><span id="sb-fin">—</span></div>
+        <div class="sb-totaal-main">
+          <span class="sb-totaal-lbl" id="sb-term-lbl">Per maand MRaaS</span>
+          <span class="sb-totaal-val" id="sb-mraas">—</span>
+        </div>
+      </div>
+      <!-- Multi-room totaal -->
+      <div id="sb-multiroom-total" style="display:none;margin-top:8px;background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.25);border-radius:8px;padding:8px 10px;">
+        <div style="font-size:9px;color:rgba(255,255,255,.4);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">Alle zalen samen</div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.6);">
+          <span id="sb-total-rooms">—</span>
+          <span id="sb-total-mraas" style="font-weight:800;color:var(--orange);">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actieknoppen -->
+    <div class="sb-actions">
+      <button class="sb-btn sb-btn-primary" onclick="enterPresentation()">⛶ Presenteer aan klant</button>
+      <button class="sb-btn sb-btn-secondary" onclick="openClientModal()">✍️ Afronden &amp; Delen</button>
+      <button class="sb-btn sb-btn-secondary" onclick="openQR()">◼ QR-code voor klant</button>
+      <button class="sb-btn sb-btn-secondary" onclick="generatePDF()">📄 PDF genereren</button>
+      <a href="mraas-config.html" style="text-decoration:none;"><button class="sb-btn sb-btn-secondary" style="width:100%;">← Terug naar config</button></a>
+    </div>
+  </div><!-- /sidebar -->
+
+  <!-- MOBILE BOTTOM BAR -->
+  <div id="mob-bar" style="display:none;position:absolute;bottom:0;left:0;right:0;z-index:50;
+       background:rgba(10,10,20,.92);backdrop-filter:blur(16px);
+       border-top:1px solid rgba(255,255,255,.1);
+       padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 10px);
+       flex-shrink:0;align-items:center;gap:8px;">
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:9px;color:rgba(255,255,255,.4);font-weight:700;text-transform:uppercase;letter-spacing:.4px;">Per maand MRaaS</div>
+      <div id="mob-mraas" style="font-size:18px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">—</div>
+    </div>
+    <div style="display:flex;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:3px;gap:2px;flex-shrink:0;">
+      <button onclick="setTerm(36,this)" class="mob-term-btn">36</button>
+      <button onclick="setTerm(48,this)" class="mob-term-btn active">48</button>
+      <button onclick="setTerm(60,this)" class="mob-term-btn">60</button>
+    </div>
+    <button onclick="enterPresentation()" style="flex-shrink:0;height:40px;padding:0 14px;background:var(--grad);color:white;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">⛶ Presenteer</button>
+    <button onclick="openClientModal()" style="flex-shrink:0;width:40px;height:40px;background:rgba(255,255,255,.08);color:white;border:1px solid rgba(255,255,255,.12);border-radius:9px;font-size:16px;cursor:pointer;">✍️</button>
+  </div>
+
+</div><!-- /app -->
+
+<!-- PRESENTATIEMODUS -->
+<div id="presMode">
+  <div id="presCanvas">
+    <img id="presPhoto" src="" style="width:100%;height:100%;object-fit:cover;display:block;">
+    <div id="presHsLayer"></div>
+    <div class="pres-gradient"></div>
+
+    <!-- Zaalbadge + klikbaar zaalwisselmenu -->
+    <div id="pres-room-badge" onclick="togglePresRoomMenu()">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--grad);flex-shrink:0;"></div>
+      <div>
+        <div id="pres-room-name"></div>
+        <div id="pres-room-size"></div>
+      </div>
+      <div id="pres-room-chevron" style="font-size:10px;color:rgba(255,255,255,.4);margin-left:4px;">▾</div>
+      <!-- Zaalwisselmenu -->
+      <div id="pres-room-menu" onclick="event.stopPropagation()"></div>
+    </div>
+
+    <!-- Knoppen rechts -->
+    <div id="pres-controls">
+      <button class="pres-ctrl-btn" onclick="generatePDF()">📄 PDF</button>
+      <button class="pres-ctrl-btn" onclick="openClientModal()">✍️ Afronden</button>
+      <button class="pres-ctrl-btn" onclick="presShowQR()">◼ QR</button>
+      <button class="pres-ctrl-btn red" onclick="exitPresentation()">✕ Sluiten</button>
+    </div>
+
+    <!-- Prijs ribbon met looptijdknoppen -->
+    <div id="pres-price-badge">
+      <div class="pres-price-item">
+        <div class="pres-price-lbl">Verkoopprijs excl. BTW</div>
+        <div id="pres-total">—</div>
+      </div>
+      <div class="pres-divider"></div>
+      <div class="pres-price-item">
+        <div class="pres-price-lbl" id="pres-mraas-lbl">MRaaS / maand</div>
+        <div id="pres-mraas">—</div>
+        <div class="pres-term-chips">
+          <button class="pres-term-chip" onclick="setTerm(36,this)">36m</button>
+          <button class="pres-term-chip active" onclick="setTerm(48,this)">48m ★</button>
+          <button class="pres-term-chip" onclick="setTerm(60,this)">60m</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="pres-hint">Klik op een hotspot voor productdetails</div>
+
+    <!-- QR overlay -->
+    <div id="presQrOverlay" onclick="closePresentationQR()">
+      <div onclick="event.stopPropagation()" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;border-radius:20px;padding:28px;text-align:center;max-width:340px;width:calc(100% - 32px);box-shadow:0 24px 80px rgba(0,0,0,.4);">
+        <div style="font-size:16px;font-weight:900;margin-bottom:4px;color:var(--ink);">Scan de QR-code</div>
+        <div style="font-size:12px;color:#6b7280;margin-bottom:16px;">Klant scant met de camera-app voor de configuratie</div>
+        <div id="presQrDiv" style="display:flex;align-items:center;justify-content:center;min-height:220px;margin-bottom:10px;"></div>
+        <div id="presQrLabel" style="font-size:11px;color:#9ca3af;margin-bottom:16px;"></div>
+        <button onclick="closePresentationQR()" style="width:100%;height:42px;background:var(--grad);color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Sluiten</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCT DETAIL — slide-in side panel -->
+<div id="prodDetailOverlay" onclick="if(event.target===this)closeProdDetail()">
+  <div id="pdo-inner" style="position:relative;display:flex;flex-direction:column;">
+    <button id="pdo-close" onclick="closeProdDetail()">✕</button>
+    <div id="pdo-left" style="flex:1;overflow-y:auto;"></div>
+    <div id="pdo-right" style="flex-shrink:0;background:rgba(255,255,255,.05);border-top:1px solid rgba(255,255,255,.06);border-radius:10px;margin-top:12px;display:flex;align-items:center;justify-content:center;min-height:160px;"></div>
+    <button id="pdo-back-btn" onclick="closeProdDetail()">← Terug naar overzicht</button>
+  </div>
+</div>
+
+<!-- CLIENT MODAL -->
+<div id="clientModal">
+  <div id="clientModal-inner">
+    <!-- STAP 1: Klantgegevens -->
+    <div id="cm-step1">
+      <div style="padding:24px 28px 0;">
+        <div style="font-size:18px;font-weight:900;color:var(--ink);margin-bottom:4px;">Afronden &amp; Ondertekenen</div>
+        <div style="font-size:12px;color:#6b7280;margin-bottom:16px;">Stap 1 van 2 — Klantgegevens</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+          <div class="nf"><label>Klantnaam / bedrijf *</label><input type="text" id="cm-client" placeholder="bv. Accenture Belgium"></div>
+          <div class="nf"><label>Contactpersoon klant</label><input type="text" id="cm-contact" placeholder="bv. Jan Janssens"></div>
+          <div class="nf"><label>Functie contactpersoon</label><input type="text" id="cm-func" placeholder="bv. IT Manager"></div>
+          <div class="nf"><label>E-mail klant</label><input type="email" id="cm-email" placeholder="naam@bedrijf.be"></div>
+        </div>
+        <div style="background:#f8f9fb;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;">
+          <div style="display:flex;justify-content:space-between;color:#6b7280;margin-bottom:4px;">
+            <span>Verkoopprijs excl. BTW</span><span id="cm-sale-price" style="font-weight:700;color:var(--ink);">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;color:#6b7280;">
+            <span>MRaaS per maand</span><span id="cm-mraas-price" style="font-weight:700;color:var(--orange);">—</span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 28px 24px;display:flex;flex-direction:column;gap:8px;">
+        <button onclick="goToStep2()"
+          style="width:100%;height:48px;background:var(--grad);color:white;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 3px 14px rgba(232,0,28,.3);">
+          Volgende → Ricoh handtekening
+        </button>
+        <div style="display:flex;gap:8px;">
+          <button onclick="shareWhatsApp()" style="flex:1;height:38px;background:#25D366;color:white;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">💬 WhatsApp</button>
+          <button onclick="shareEmail()" style="flex:1;height:38px;background:#1a7fd4;color:white;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">✉️ E-mail</button>
+          <button onclick="generatePDF()" style="flex:1;height:38px;background:var(--surface);border:1px solid var(--border);color:var(--ink);border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📄 PDF</button>
+        </div>
+        <button onclick="saveToDashboard()" id="cm-save-btn"
+          style="width:100%;height:40px;background:rgba(13,13,20,.08);border:1.5px solid rgba(13,13,20,.15);color:var(--ink);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">
+          ☁️ Opslaan in dashboard
+        </button>
+        <div id="cm-save-status" style="display:none;font-size:11px;padding:8px 10px;border-radius:8px;"></div>
+        <button onclick="closeClientModal()" style="width:100%;height:36px;border:1px solid var(--border);background:white;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--muted);">Sluiten</button>
+      </div>
+    </div>
+
+    <!-- STAP 2: Ricoh handtekening -->
+    <div id="cm-step2" style="display:none;padding:24px 28px;">
+      <div style="font-size:18px;font-weight:900;color:var(--ink);margin-bottom:4px;">Ricoh handtekening</div>
+      <div style="font-size:12px;color:#6b7280;margin-bottom:16px;">Stap 2 van 2 — Teken namens Ricoh Belgium</div>
+      <div style="display:flex;gap:10px;margin-bottom:12px;">
+        <div class="nf" style="flex:1;"><label>Naam sales</label><input type="text" id="cm-sales-name" value="Stijn Borloo" placeholder="Naam"></div>
+        <div class="nf" style="flex:1;"><label>Datum</label><input type="text" id="cm-sales-date" value="" placeholder="dd/mm/yyyy"></div>
+      </div>
+      <!-- Ricoh canvas -->
+      <div style="margin-bottom:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;">Handtekening Ricoh</div>
+      <div style="border:1.5px dashed #dee2e6;border-radius:8px;background:#fafafa;position:relative;height:100px;margin-bottom:4px;">
+        <canvas id="ricoh-canvas" width="600" height="100" style="position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:none;border-radius:7px;"></canvas>
+      </div>
+      <button onclick="clearRicohCanvas()" style="background:none;border:none;color:#BE1622;font-size:10px;cursor:pointer;font-family:inherit;margin-bottom:16px;">✕ wissen</button>
+      <!-- Status -->
+      <div id="cm-status" style="display:none;font-size:12px;padding:10px 12px;border-radius:8px;margin-bottom:12px;"></div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="goToStep1()" style="flex:1;height:44px;border:1px solid var(--border);background:white;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--muted);">← Terug</button>
+        <button onclick="generateSigningPage()" id="cm-sign-btn"
+          style="flex:2;height:44px;background:var(--grad);color:white;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 3px 14px rgba(232,0,28,.3);">
+          ✍️ Signing pagina aanmaken
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TCO MODAL -->
+<div id="tcoModal">
+  <div id="tcoModal-inner">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <div style="font-size:18px;font-weight:900;color:var(--ink);">📊 TCO Calculator</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px;">Total Cost of Ownership analyse</div>
+      </div>
+      <button onclick="closeTCO()" style="background:var(--surface);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--muted);">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div class="nf" style="color:var(--ink);"><label>Jaren analyse</label><select id="tco-years" onchange="calcTCO()"><option value="3">3 jaar</option><option value="5" selected>5 jaar</option><option value="7">7 jaar</option></select></div>
+      <div class="nf" style="color:var(--ink);"><label>Jaarlijkse besparing (€)</label><input type="number" id="tco-saving" value="12000" onchange="calcTCO()"></div>
+      <div class="nf" style="color:var(--ink);"><label>Medewerkers</label><input type="number" id="tco-staff" value="10" onchange="calcTCO()"></div>
+      <div class="nf" style="color:var(--ink);"><label>Vergaderingen/week</label><input type="number" id="tco-meetings" value="5" onchange="calcTCO()"></div>
+    </div>
+    <canvas id="tcoChart" height="160" style="width:100%;margin-bottom:16px;"></canvas>
+    <div id="tco-result" style="background:#f8f9fb;border-radius:10px;padding:14px;font-size:12px;color:var(--ink);"></div>
+  </div>
+</div>
+
+<!-- SCANNER MODAL -->
+<div id="scannerModal">
+  <div id="scannerModal-inner">
+    <div style="padding:14px 20px 0;flex-shrink:0;">
+      <div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 14px;"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <div style="font-size:16px;font-weight:900;color:#7c3aed;">🔍 Ruimtescanner</div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:1px;">AI stelt producten voor op basis van je keuzes</div>
+        </div>
+        <button onclick="closeScannerModal()" style="width:30px;height:30px;border-radius:50%;background:#f3f4f6;border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>
+    </div>
+    <div style="overflow-y:auto;padding:0 20px 24px;display:flex;flex-direction:column;gap:14px;flex:1;">
+      <div id="scanDropZone" style="border:2px dashed #e9d5ff;border-radius:14px;padding:16px;text-align:center;background:#fdf4ff;cursor:pointer;transition:.15s;position:relative;" onclick="document.getElementById('scanFileInp').click()">
+        <div id="scanPreviewWrap" style="display:none;margin-bottom:8px;"><img id="scanPreview" style="max-width:100%;max-height:140px;border-radius:8px;object-fit:contain;"></div>
+        <div id="scanPlaceholder" style="display:flex;align-items:center;justify-content:center;gap:10px;">
+          <span style="font-size:24px;">📷</span>
+          <div style="text-align:left;"><div style="font-size:13px;font-weight:700;color:#7c3aed;">Foto van de zaal</div><div style="font-size:11px;color:#9ca3af;">Optioneel — tik om te kiezen</div></div>
+        </div>
+        <input type="file" id="scanFileInp" accept="image/*" style="display:none;" onchange="handleScanFile(this)">
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">📐 Zaalgrootte</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;" id="chip-size">
+          <button class="scan-chip active" onclick="toggleChip('size',this,'auto')">🤖 Auto</button>
+          <button class="scan-chip" onclick="toggleChip('size',this,'focus')">Focus 1-3p</button>
+          <button class="scan-chip" onclick="toggleChip('size',this,'small')">Small 4-6p</button>
+          <button class="scan-chip" onclick="toggleChip('size',this,'medium')">Medium 7-12p</button>
+          <button class="scan-chip" onclick="toggleChip('size',this,'large')">Large 13-20p</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">💻 Platform</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;" id="chip-platform">
+          <button class="scan-chip active" onclick="toggleChip('platform',this,'both')">🤖 Auto</button>
+          <button class="scan-chip" onclick="toggleChip('platform',this,'mtr')">Teams MTR</button>
+          <button class="scan-chip" onclick="toggleChip('platform',this,'byod')">BYOD</button>
+          <button class="scan-chip" onclick="toggleChip('platform',this,'zoom')">Zoom</button>
+        </div>
+      </div>
+      <div id="scanStatus"></div>
+      <button onclick="runScan()" style="width:100%;height:44px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">✨ AI Analyse starten</button>
+    </div>
+  </div>
+</div>
+
+<!-- QR MODAL (normale modus, buiten fullscreen) -->
+<div id="qrModal" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)closeQR()">
+  <div style="background:white;border-radius:20px;padding:28px;width:100%;max-width:360px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.3);">
+    <div style="font-size:16px;font-weight:900;margin-bottom:4px;color:#0d0d14;" id="qr-title">Scan de QR-code</div>
+    <div style="font-size:12px;color:#6b7280;margin-bottom:18px;" id="qr-subtitle">Klant scant met de camera-app voor de configuratie</div>
+    <div id="qrDiv" style="display:flex;align-items:center;justify-content:center;min-height:200px;margin-bottom:10px;"></div>
+    <div id="qrLabel" style="font-size:10px;color:#9ca3af;margin-bottom:16px;word-break:break-all;"></div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="closeQR()" style="flex:1;height:40px;background:#f1f3f6;color:#0d0d14;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;" id="qr-close-lbl">Sluiten</button>
+      <button onclick="copyQrUrl()" style="flex:1;height:40px;background:linear-gradient(135deg,#e8001c,#ff6b35);color:white;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📋 Kopieer link</button>
+    </div>
+  </div>
+</div>
+
+<div id="pdf-tpl"></div>
+<div id="toast"></div>
+
+<style>
+@keyframes pres-hs-ripple{
+  0%{transform:translate(-50%,-50%) scale(.5);opacity:.8;}
+  80%{transform:translate(-50%,-50%) scale(2);opacity:0;}
+  100%{opacity:0;}
+}
+.mob-term-btn{
+  width:32px;height:100%;border:none;border-radius:7px;
+  background:transparent;color:rgba(255,255,255,.4);
+  font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;
+}
+.mob-term-btn.active{background:rgba(255,107,53,.2);color:var(--orange);}
+</style>
+
+<script>
+/* ════════ SUPABASE ════════════════════════════════════════ */
+const SUPA_URL  = "https://aocdvzrjwljmiqnuklkn.supabase.co";
+const SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvY2R2enJqd2xqbWlxbnVrbGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MTcwNzAsImV4cCI6MjA5NjM5MzA3MH0.3VWhhLZJxtV0io4FucWjxF5FN1ABRKzGbfyqR6NP4M4";
+const WRK = "https://quoteassist.stijn-borloo.workers.dev";
+let _supa = null;
+const sc = () => { if(!_supa) _supa = supabase.createClient(SUPA_URL, SUPA_ANON); return _supa; };
+
+/* ════════ VERTAALSYSTEEM ═════════════════════════════════ */
+let _lang = (()=>{ try{ return localStorage.getItem('ricoh_lang')||'nl'; }catch(e){ return 'nl'; }})();
+
+const PRES_STRINGS = {
+  nl:{
+    'Ruimtescanner':'🔍 Ruimtescanner','TCO':'📊 TCO','Presenteer':'⛶ Presenteer',
+    'Afronden':'✍️ Afronden','Terug':'← Terug naar configurator',
+    'Geen configuratie geladen':'Geen configuratie geladen',
+    'Geen configuratie tekst':'Open de MRaaS Configurator, stel je zaal in en klik op "Toon aan klant" om de visuele presentatie te starten.',
+    'Klik op hotspot':'Klik op een hotspot voor productdetails',
+    'Presenteer fullscreen':'⛶ Presenteer fullscreen',
+    'Configuratie':'CONFIGURATIE','Kamer':'Kamer','Fabrikant':'Fabrikant','Platform':'Platform','Contract':'Contract',
+    'Producten':'PRODUCTEN','MRaaS looptijd':'MRaaS looptijd',
+    'Per maand MRaaS':'Per maand MRaaS','Alle zalen samen':'Alle zalen samen',
+    'Presenteer aan klant':'⛶ Presenteer aan klant','Afronden & Delen':'✍️ Afronden & Delen',
+    'PDF genereren':'📄 PDF genereren',
+    'Afronden & Ondertekenen':'Afronden & Ondertekenen',
+    'Stap 1 van 2':'Stap 1 van 2 — Klantgegevens',
+    'Klantnaam / bedrijf':'Klantnaam / bedrijf *',
+    'Contactpersoon klant':'Contactpersoon klant',
+    'Functie contactpersoon':'Functie contactpersoon',
+    'E-mail klant':'E-mail klant',
+    'Volgende':'Volgende → Ricoh handtekening',
+    'Stap 2 van 2':'Stap 2 van 2 — Teken namens Ricoh Belgium',
+    'Ricoh handtekening':'Ricoh handtekening',
+    'Naam sales':'Naam sales','Datum':'Datum','Terug btn':'← Terug',
+    'Signing pagina aanmaken':'✍️ Signing pagina aanmaken',
+    'Verkoopprijs excl. BTW':'Verkoopprijs excl. BTW',
+    'MRaaS per maand':'MRaaS maandbedrag','Sluiten':'Sluiten',
+    'Scan de QR-code':'Scan de QR-code',
+    'Klant scant tekst':'Klant scant met de camera-app voor de configuratie',
+    'QR sluiten':'Sluiten',
+  },
+  en:{
+    'Ruimtescanner':'🔍 Room Scanner','TCO':'📊 TCO','Presenteer':'⛶ Present',
+    'Afronden':'✍️ Finalize','Terug':'← Back to configurator',
+    'Geen configuratie geladen':'No configuration loaded',
+    'Geen configuratie tekst':'Open the MRaaS Configurator, configure your room and click "Show to client" to start the visual presentation.',
+    'Klik op hotspot':'Click a hotspot for product details',
+    'Presenteer fullscreen':'⛶ Present fullscreen',
+    'Configuratie':'CONFIGURATION','Kamer':'Room','Fabrikant':'Manufacturer','Platform':'Platform','Contract':'Contract',
+    'Producten':'PRODUCTS','MRaaS looptijd':'MRaaS term',
+    'Per maand MRaaS':'Per month MRaaS','Alle zalen samen':'All rooms combined',
+    'Presenteer aan klant':'⛶ Present to client','Afronden & Delen':'✍️ Finalize & Share',
+    'PDF genereren':'📄 Generate PDF',
+    'Afronden & Ondertekenen':'Finalize & Sign',
+    'Stap 1 van 2':'Step 1 of 2 — Client details',
+    'Klantnaam / bedrijf':'Client name / company *',
+    'Contactpersoon klant':'Client contact person',
+    'Functie contactpersoon':'Job title',
+    'E-mail klant':'Client e-mail',
+    'Volgende':'Next → Ricoh signature',
+    'Stap 2 van 2':'Step 2 of 2 — Sign on behalf of Ricoh Belgium',
+    'Ricoh handtekening':'Ricoh signature',
+    'Naam sales':'Sales name','Datum':'Date','Terug btn':'← Back',
+    'Signing pagina aanmaken':'✍️ Create signing page',
+    'Verkoopprijs excl. BTW':'Sale price excl. VAT',
+    'MRaaS per maand':'MRaaS monthly','Sluiten':'Close',
+    'Scan de QR-code':'Scan the QR code',
+    'Klant scant tekst':'Client scans with the camera app for the configuration',
+    'QR sluiten':'Close',
+  },
+  fr:{
+    'Ruimtescanner':'🔍 Scanner de salle','TCO':'📊 TCO','Presenteer':'⛶ Présenter',
+    'Afronden':'✍️ Finaliser','Terug':'← Retour au configurateur',
+    'Geen configuratie geladen':'Aucune configuration chargée',
+    'Geen configuratie tekst':'Ouvrez le Configurateur MRaaS, configurez votre salle et cliquez sur "Montrer au client" pour démarrer la présentation visuelle.',
+    'Klik op hotspot':'Cliquez sur un hotspot pour les détails du produit',
+    'Presenteer fullscreen':'⛶ Présenter en plein écran',
+    'Configuratie':'CONFIGURATION','Kamer':'Salle','Fabrikant':'Fabricant','Platform':'Plateforme','Contract':'Contrat',
+    'Producten':'PRODUITS','MRaaS looptijd':'Durée MRaaS',
+    'Per maand MRaaS':'Par mois MRaaS','Alle zalen samen':'Toutes les salles',
+    'Presenteer aan klant':'⛶ Présenter au client','Afronden & Delen':'✍️ Finaliser & Partager',
+    'PDF genereren':'📄 Générer PDF',
+    'Afronden & Ondertekenen':'Finaliser & Signer',
+    'Stap 1 van 2':'Étape 1 sur 2 — Données client',
+    'Klantnaam / bedrijf':'Nom du client / société *',
+    'Contactpersoon klant':'Contact client',
+    'Functie contactpersoon':'Fonction',
+    'E-mail klant':'E-mail client',
+    'Volgende':'Suivant → Signature Ricoh',
+    'Stap 2 van 2':'Étape 2 sur 2 — Signer au nom de Ricoh Belgium',
+    'Ricoh handtekening':'Signature Ricoh',
+    'Naam sales':'Nom commercial','Datum':'Date','Terug btn':'← Retour',
+    'Signing pagina aanmaken':'✍️ Créer page de signature',
+    'Verkoopprijs excl. BTW':'Prix de vente HT',
+    'MRaaS per maand':'MRaaS mensuel','Sluiten':'Fermer',
+    'Scan de QR-code':'Scannez le QR code',
+    'Klant scant tekst':'Le client scanne avec l\'appareil photo pour la configuration',
+    'QR sluiten':'Fermer',
+  }
+};
+
+function u(s){
+  if(_lang==='nl') return s;
+  return PRES_STRINGS[_lang]?.[s] || s;
+}
+
+function setLangPres(lang){
+  _lang=lang;
+  try{ localStorage.setItem('ricoh_lang',lang); }catch(e){}
+  applyPresLang();
+}
+
+function togglePresLangMenu(){
+  const m=g('pres-lang-menu');
+  if(!m) return;
+  m.style.display=m.style.display==='none'?'block':'none';
+  if(m.style.display==='block'){
+    setTimeout(()=>{
+      document.addEventListener('click',function close(e){
+        if(!e.target.closest('#pres-lang-menu')&&!e.target.closest('[onclick*="togglePresLangMenu"]')){
+          m.style.display='none';document.removeEventListener('click',close);
+        }
+      });
+    },10);
+  }
+}
+
+function applyPresLang(){
+  // Topbar flags
+  const lf=g('pres-lang-flag'); if(lf) lf.textContent={nl:'🇳🇱',en:'🇬🇧',fr:'🇫🇷'}[_lang]||'🌐';
+  // Topbar knoppen
+  const btnScan=g('btn-scan'); if(btnScan) btnScan.innerHTML=u('Ruimtescanner');
+  const btnTco=g('btn-tco'); if(btnTco) btnTco.innerHTML=u('TCO');
+  const btnPres=g('btn-pres-tb'); if(btnPres) btnPres.innerHTML=u('Presenteer');
+  const btnAfr=g('btn-afr-tb'); if(btnAfr) btnAfr.innerHTML=u('Afronden');
+  // Empty state
+  const esTitle=g('es-title'); if(esTitle) esTitle.textContent=u('Geen configuratie geladen');
+  const esTxt=g('es-txt'); if(esTxt) esTxt.textContent=u('Geen configuratie tekst');
+  // Sidebar labels
+  const sbCfg=g('sb-cfg-lbl'); if(sbCfg) sbCfg.textContent=u('Configuratie');
+  const sbProd=g('sb-prod-lbl'); if(sbProd) sbProd.textContent=u('Producten');
+  const sbTerm=g('sb-loop-lbl'); if(sbTerm) sbTerm.textContent=u('MRaaS looptijd');
+  const sbTermLbl=g('sb-term-lbl'); if(sbTermLbl) sbTermLbl.textContent=u('Per maand MRaaS')+' ('+_activeTerm+' mnd)';
+  // Sidebar buttons (data-i18n)
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    el.textContent=u(el.getAttribute('data-i18n'));
+  });
+  // Canvas hint
+  const hint=g('canvas-hint');
+  if(hint) hint.innerHTML=u('Klik op hotspot')+' &nbsp;·&nbsp; <span style="color:var(--orange);font-weight:700;cursor:pointer;" onclick="enterPresentation()">'+u('Presenteer fullscreen')+'</span>';
+  // Config box labels (via id)
+  const lk=g('lbl-kamer'); if(lk) lk.textContent=u('Kamer');
+  const lm=g('lbl-mfr'); if(lm) lm.textContent=u('Fabrikant');
+  const lp=g('lbl-plat'); if(lp) lp.textContent=u('Platform');
+  const lc=g('lbl-contract'); if(lc) lc.textContent=u('Contract');
+  // QR modal labels
+  const qrT=g('qr-title'); if(qrT) qrT.textContent=u('Scan de QR-code');
+  const qrS=g('qr-subtitle'); if(qrS) qrS.textContent=u('Klant scant tekst');
+  const qrC=g('qr-close-lbl'); if(qrC) qrC.textContent=u('QR sluiten');
+}
+
+/* ════════ QR MODAL (normale modus) ════════════════════════ */
+let _qrUrl = '';
+
+async function _insertSigningPage(slug, html){
+  // Haal verse access token op
+  let token = SUPA_ANON;
+  try{
+    let { data:{ session } } = await sc().auth.getSession();
+    if(!session){ const r = await sc().auth.refreshSession(); session = r.data?.session; }
+    if(session?.access_token) token = session.access_token;
+  }catch(e){}
+
+  const r = await fetch(SUPA_URL+'/rest/v1/signing_pages', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'apikey': SUPA_ANON,
+      'Authorization': 'Bearer '+token,
+      'Prefer':'return=minimal'
+    },
+    body: JSON.stringify({ id: slug, html_content: html })
+  });
+  if(!r.ok){
+    const txt = await r.text();
+    let msg = 'Insert mislukt ('+r.status+')';
+    try{ const j=JSON.parse(txt); msg=j.message||j.hint||msg; }catch(e){}
+    throw new Error(msg);
+  }
+}
+
+async function _buildAndInsertQR(){
+  const room = ROOMS.find(r=>r.id===(payload?.room||'small'))||ROOMS[1];
+  const prods = (payload?.products||[]).map(p=>({
+    name:p.name, ref:p.sku||'', brand:'', brandColor:'#e8001c',
+    price:p.trade>0?p.trade/(1-(payload?.margin||28)/100):0, qty:p.qty||1,
+    img:getFotoUrl(p.name)||'', desc:p.cat||''
+  }));
+  const photoSrc = _customRoomPhoto || room.photo;
+  const html = buildDigitalRoomCard(room,prods,getSale(),photoSrc,'');
+  const slug = 'mraas-'+(payload?.room||'room')+'-'+(payload?.mfr||'ricoh').toLowerCase()+'-'+Date.now().toString(36).slice(-5);
+  await _insertSigningPage(slug, html);
+  const base = window.location.href.replace(/\/[^/]*$/, '/');
+  return base + 'sign.html?id=' + slug;
+}
+
+async function openQR(){
+  const modal = g('qrModal');
+  const div   = g('qrDiv');
+  const lbl   = g('qrLabel');
+  modal.style.display = 'flex';
+  div.innerHTML = '<div style="font-size:13px;color:#9ca3af;">QR-code genereren…</div>';
+  lbl.textContent = '';
+
+  try{
+    _qrUrl = await _buildAndInsertQR();
+
+    await new Promise((res,rej)=>{
+      if(window.QRCode) return res();
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+      s.onload=res; s.onerror=rej;
+      document.head.appendChild(s);
+    });
+
+    div.innerHTML = '<div id="qrCanvas" style="display:flex;align-items:center;justify-content:center;"></div>';
+    new QRCode(g('qrCanvas'),{
+      text:_qrUrl, width:200, height:200,
+      colorDark:'#0d0d14', colorLight:'#ffffff',
+      correctLevel:QRCode.CorrectLevel.M
+    });
+    lbl.textContent = _qrUrl;
+
+  }catch(e){
+    div.innerHTML = '<div style="color:#e8001c;font-size:12px;">⚠ '+esc(e.message)+'</div>';
+  }
+}
+
+function closeQR(){
+  g('qrModal').style.display = 'none';
+}
+
+function copyQrUrl(){
+  if(!_qrUrl){ toast('Geen URL beschikbaar'); return; }
+  navigator.clipboard.writeText(_qrUrl).then(()=>toast('✓ Link gekopieerd')).catch(()=>{
+    prompt('Kopieer de link:', _qrUrl);
+  });
+}
+
+/* ════════ STATE ═══════════════════════════════════════════ */
+let _user = null, _role = 'user';
+let payload = null;      // MRaaS payload van mraas-config.html
+let config  = [];        // hotspot items [{id,prodId:null,mrProd,qty,x,y,ll}]
+let selHs   = null;      // geselecteerde hotspot id
+let hsN     = 0;
+let _activeTerm = 48;    // looptijd in maanden
+let fotoBib = [];        // [{key,url}] product foto's uit Supabase Storage
+let _scanChips = {};     // active scanner chips
+let _scanImg   = null;   // base64 scan foto
+let _customRoomPhoto = null; // aangepaste zaalfoto (data URL)
+
+/* ════════ ROOMS ═══════════════════════════════════════════ */
+const ROOMS = [
+  {id:'focus',  label:'Focus Room',  size:'1–3 pers.', photo:'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1400&q=85&auto=format&fit=crop'},
+  {id:'small',  label:'Small Room',  size:'4–6 pers.', photo:'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400&q=85&auto=format&fit=crop'},
+  {id:'medium', label:'Medium Room', size:'6–10 pers.',photo:'https://images.unsplash.com/photo-1604328698692-f76ea9498e76?w=1400&q=85&auto=format&fit=crop'},
+  {id:'large',  label:'Large Room',  size:'10–16 pers.',photo:'https://images.unsplash.com/photo-1571624436279-b272aff752b5?w=1400&q=85&auto=format&fit=crop'},
+];
+const MRAAS = {36:0.031, 48:0.024, 60:0.020};
+const CAT_COLORS = {'AV Technology':'#e8001c','Montage':'#9333ea','Kabels':'#c2410c','Service':'#16a34a','Info':'#6b7280'};
+const CAT_POS = {
+  'AV Technology':[[38,42],[55,38],[70,42],[48,55],[62,35],[78,38],[35,52]],
+  'Montage':      [[40,25],[58,25],[74,25]],
+  'Kabels':       [[36,65],[52,70],[68,65]],
+  'Service':      []
+};
+
+/* ════════ HELPERS ═════════════════════════════════════════ */
+const g   = id => document.getElementById(id);
+const esc = s  => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmt = v  => '€\u202f'+parseFloat(v||0).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+
+function toast(msg, dur=3000){
+  const t=g('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+/* ════════ AUTH ════════════════════════════════════════════ */
+async function initAuth(){
+  const pending = localStorage.getItem('mraas_visual_pending') || sessionStorage.getItem('mraas_visual_payload');
+
+  let session = null;
+
+  // Stap 1: getSession() — werkt als sessie nog actief is
+  try{
+    const result = await Promise.race([
+      sc().auth.getSession(),
+      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),4000))
+    ]);
+    session = result?.data?.session || null;
+  }catch(e){ session = null; }
+
+  // Stap 2: refresh proberen als sessie verlopen is
+  if(!session){
+    try{
+      const { data } = await sc().auth.refreshSession();
+      session = data?.session || null;
+    }catch(e){}
+  }
+
+  // Stap 3: handmatig uit localStorage halen (Supabase v2 formaat)
+  if(!session){
+    try{
+      const ref = SUPA_URL.split('//')[1].split('.')[0];
+      // Supabase v2 slaat op als: {"access_token":"...","refresh_token":"...","expires_at":...,...}
+      const raw = localStorage.getItem('sb-'+ref+'-auth-token');
+      if(raw){
+        const val = JSON.parse(raw);
+        const accessToken  = val?.access_token  || val?.session?.access_token;
+        const refreshToken = val?.refresh_token || val?.session?.refresh_token;
+        if(accessToken){
+          const { data } = await sc().auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken||''
+          });
+          session = data?.session || null;
+        }
+      }
+    }catch(e){}
+  }
+
+  if(session){
+    _user = session.user;
+    _role = (session.user.app_metadata?.role)||'user';
+    showApp();
+  } else if(pending){
+    // Payload aanwezig maar geen sessie — toon presentatie, QR werkt niet
+    showApp();
+  } else {
+    g('auth-gate').style.display='flex';
+  }
+}
+
+async function doLogin(){
+  const email = g('a-email').value.trim();
+  const pass  = g('a-pass').value;
+  const err   = g('auth-err'); const btn = g('login-btn');
+  err.style.display='none'; btn.innerHTML='<span class="spin"></span>';btn.disabled=true;
+  try{
+    const {data,error} = await sc().auth.signInWithPassword({email,password:pass});
+    if(error) throw error;
+    _user=data.user; _role=(data.user.app_metadata&&data.user.app_metadata.role)||'user';
+    g('auth-gate').style.display='none';
+    showApp();
+  }catch(e){ err.textContent=e.message||'Inloggen mislukt'; err.style.display='block'; }
+  finally{ btn.innerHTML='Inloggen'; btn.disabled=false; }
+}
+
+async function doLogout(){
+  await sc().auth.signOut();
+  window.location.href='mraas-config.html';
+}
+
+/* ════════ SHOW APP ════════════════════════════════════════ */
+function showApp(){
+  // Topbar
+  g('topbar').style.display='flex';
+  const em=_user?.email||'';
+  if(em){
+    const parts=em.split('@')[0].split(/[\.\-\_]+/);
+    const initials=parts.length>=2?(parts[0][0]+parts[parts.length-1][0]).toUpperCase():em.slice(0,2).toUpperCase();
+    g('tb-avatar').textContent=initials;
+    g('tb-username').textContent=parts.map(p=>p.charAt(0).toUpperCase()+p.slice(1)).join(' ');
+  } else {
+    g('tb-avatar').textContent='📋';
+    g('tb-username').textContent='Presentatie';
+  }
+
+  // Laad product foto's
+  loadFotoBib();
+
+  // Pas taal toe
+  applyPresLang();
+
+  // Payload ophalen: eerst localStorage (vers van config), dan sessionStorage (na refresh)
+  const rawLS = localStorage.getItem('mraas_visual_pending');
+  const rawSS = sessionStorage.getItem('mraas_visual_payload');
+  const raw = rawLS || rawSS;
+
+  if(raw){
+    try{
+      payload = JSON.parse(raw);
+      // Bewaar in sessionStorage voor refresh, verwijder uit localStorage
+      if(rawLS){
+        sessionStorage.setItem('mraas_visual_payload', rawLS);
+        localStorage.removeItem('mraas_visual_pending');
+      }
+      if(payload && payload.source==='mraas-config'){
+        loadPayload(payload);
+        return;
+      }
+    }catch(e){}
+  }
+
+  // Geen payload — toon empty state
+  g('empty-state').classList.add('visible');
+}
+
+/* ════════ EIGEN ZAALFOTO ══════════════════════════════════ */
+function loadCustomRoomPhoto(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    _customRoomPhoto = e.target.result;
+    // Toon op canvas
+    const photoEl = g('zaalPhoto');
+    photoEl.style.opacity = '0';
+    setTimeout(()=>{ photoEl.src = _customRoomPhoto; photoEl.style.opacity = '1'; }, 150);
+    // Toon ook in fullscreen
+    const presPhoto = g('presPhoto');
+    if(presPhoto) presPhoto.src = _customRoomPhoto;
+    // Wissel knoppen
+    g('foto-upload-btn').style.display = 'none';
+    g('foto-reset-btn').style.display = 'flex';
+    toast('✓ Eigen zaalfoto geladen');
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetRoomPhoto(){
+  _customRoomPhoto = null;
+  const room = ROOMS.find(r=>r.id===(payload?.room||'small'))||ROOMS[1];
+  const photoEl = g('zaalPhoto');
+  photoEl.style.opacity = '0';
+  setTimeout(()=>{ photoEl.src = room.photo; photoEl.style.opacity = '1'; }, 150);
+  const presPhoto = g('presPhoto');
+  if(presPhoto) presPhoto.src = room.photo;
+  g('foto-upload-btn').style.display = 'flex';
+  g('foto-reset-btn').style.display = 'none';
+  toast('Standaard zaalfoto hersteld');
+}
+async function loadFotoBib(){
+  try{
+    const {data,error}=await sc().storage.from('product-photos').list('',{limit:500});
+    if(error||!data) return;
+    fotoBib=data.filter(f=>f.name&&f.name!=='.emptyFolderPlaceholder').map(f=>({
+      key:f.name.replace(/\.[^.]+$/,'').toLowerCase(),
+      url:sc().storage.from('product-photos').getPublicUrl(f.name).data.publicUrl
+    }));
+  }catch(e){}
+}
+
+function getFotoUrl(name){
+  if(!fotoBib.length||!name) return null;
+  const q=name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+  let hit=fotoBib.find(f=>f.key===q);
+  if(hit) return hit.url;
+  hit=fotoBib.find(f=>{const k=f.key;return q.includes(k)||k.includes(q)||name.toLowerCase().includes(k.replace(/-/g,' '));});
+  return hit?hit.url:null;
+}
+
+/* ════════ LOAD PAYLOAD ════════════════════════════════════ */
+let _allRooms = [];
+
+function loadPayload(pl){
+  payload = pl;
+  _allRooms = pl.allRooms || [pl];
+
+  g('empty-state').classList.remove('visible');
+  g('app').classList.add('visible');
+
+  // Zaalwisselaar — toon alleen bij meerdere zalen
+  const roomsEl = g('tb-rooms');
+  if(_allRooms.length > 1){
+    roomsEl.style.display = 'block';
+    renderRoomMenu();
+  } else {
+    roomsEl.style.display = 'none';
+  }
+
+  loadRoom(pl);
+}
+
+function loadRoom(pl){
+  payload = pl;
+  const room = ROOMS.find(r=>r.id===pl.room)||ROOMS[1];
+
+  // Zaalfoto — gebruik eigen foto als die er is, anders standaard
+  const photoSrc = _customRoomPhoto || room.photo;
+  const photoEl = g('zaalPhoto');
+  photoEl.style.opacity = '0';
+  const img = new Image();
+  img.onload = () => { photoEl.src = photoSrc; photoEl.style.opacity = '1'; };
+  img.onerror = () => { photoEl.src = photoSrc; photoEl.style.opacity = '1'; };
+  img.src = photoSrc;
+  g('rName').textContent = pl.roomLabel||room.label;
+  g('rSize').textContent = room.size;
+
+  // Presentatie (fullscreen)
+  g('pres-room-name').textContent = pl.roomLabel||room.label;
+  g('pres-room-size').textContent = room.size;
+  g('presPhoto').src = photoSrc;
+
+  // Sidebar info
+  g('cfg-room').textContent = pl.roomLabel||room.label;
+  g('cfg-mfr').textContent = pl.mfr||'—';
+  g('cfg-plat').textContent = pl.platform||'—';
+  g('cfg-years').textContent = (pl.years||3)+' jaar';
+
+  // Topbar
+  g('tb-tag').textContent = pl.roomLabel||room.label;
+  const rl = g('tb-room-label'); if(rl) rl.textContent = pl.roomLabel||room.label;
+
+  // Sluit room menu
+  const rm = g('tb-room-menu'); if(rm) rm.style.display = 'none';
+
+  // Hotspots + sidebar
+  buildHotspots(pl.products||[]);
+  renderSidebarProds(pl.products||[]);
+
+  // Pricing reset naar 48mnd
+  _activeTerm = 48;
+  document.querySelectorAll('.term-chip,.mob-term-btn').forEach(c=>{
+    c.classList.toggle('active', parseInt(c.textContent)===48||c.onclick?.toString().includes('setTerm(48,'));
+  });
+  updatePricing();
+}
+
+function renderRoomMenu(){
+  const menu = g('tb-room-menu'); if(!menu) return;
+  menu.innerHTML = _allRooms.map((r,i)=>{
+    const sale = parseFloat(r.sale||0);
+    const mraas = (sale * MRAAS[48]).toFixed(2).replace('.',',');
+    const isActive = r.roomLabel === payload.roomLabel;
+    return `<button class="tb-room-item${isActive?' active':''}" onclick="switchRoom(${i})">
+      <span>🏢 ${esc(r.roomLabel||'Zaal '+(i+1))}</span>
+      <span style="font-size:10px;color:var(--orange);font-weight:700;">€ ${mraas}/mnd</span>
+    </button>`;
+  }).join('');
+}
+
+function switchRoom(idx){
+  if(!_allRooms[idx]) return;
+  loadRoom(_allRooms[idx]);
+  renderRoomMenu();
+}
+
+function toggleRoomMenu(){
+  const menu = g('tb-room-menu');
+  if(!menu) return;
+  if(menu.style.display === 'none'){
+    renderRoomMenu();
+    menu.style.display = 'block';
+    // Sluit bij klik buiten
+    setTimeout(()=>{
+      document.addEventListener('click', function close(e){
+        if(!g('tb-rooms').contains(e.target)){ menu.style.display='none'; document.removeEventListener('click',close); }
+      });
+    }, 10);
+  } else {
+    menu.style.display = 'none';
+  }
+}
+
+/* ════════ HOTSPOTS BOUWEN ═════════════════════════════════ */
+function buildHotspots(prods){
+  config=[]; selHs=null; hsN=0;
+  const catCounters={};
+  prods.forEach(p=>{
+    if(p.cat==='Service'||!p.name) return;
+    const positions=CAT_POS[p.cat]||[[50,50]];
+    const idx=catCounters[p.cat]||0;
+    catCounters[p.cat]=idx+1;
+    const pos=positions[idx%positions.length];
+    const jx=(idx*11)%14; const jy=(idx*7)%10;
+    hsN++;
+    config.push({
+      id:'h'+hsN, prodId:null,
+      mrProd:{...p},
+      qty:p.qty||1,
+      x:Math.min(85,pos[0]+jx),
+      y:Math.min(85,pos[1]+jy),
+      ll:(pos[0]+jx)>55
+    });
+  });
+  renderHotspots();
+}
+
+function renderHotspots(){
+  const layer=g('hsLayer');
+  if(!layer) return;
+  if(!config.length){ layer.innerHTML=''; return; }
+
+  // Corrigeer hotspots die onder de sidebar verstopt zitten
+  // Marge: dot (22px) + tag-breedte (tot 180px) + ruimte = ~210px buffer nodig
+  const canvas=g('canvas');
+  const sidebar=g('sidebar');
+  if(canvas && sidebar && sidebar.offsetParent!==null){
+    const r=canvas.getBoundingClientRect();
+    const sbWidth=sidebar.getBoundingClientRect().width;
+    const bufferPx = 210; // dot + label + marge
+    const maxXPct=Math.max(20, 100-((sbWidth+bufferPx)/r.width*100));
+    config.forEach(item=>{
+      if(item.x>maxXPct){
+        item.x=maxXPct;
+        item.ll=true; // forceer label naar links zodat het niet over de rand hangt
+      }
+    });
+  }
+
+  layer.innerHTML=config.map(item=>{
+    const p=item.mrProd;
+    const color=CAT_COLORS[p.cat]||'#e8001c';
+    const foto=getFotoUrl(p.name);
+    return '<div class="hs '+(item.ll?'left':'')+(selHs===item.id?' selected':'')+'"'
+      +' id="'+item.id+'" style="left:'+item.x+'%;top:'+item.y+'%"'
+      +' onclick="openProdDetail(\''+item.id+'\')">'
+      +'<div class="hs-dot" style="border-color:'+color+';background:'+color+'22">'
+        +'<div class="hs-dot-inner" style="background:'+color+';box-shadow:0 0 8px '+color+'88"></div>'
+      +'</div>'
+      +'<div class="hs-tag">'
+        +(foto?'<img class="hs-photo" src="'+foto+'" alt="'+esc(p.name)+'" onerror="this.style.display=\'none\'">':'')
+        +'<div class="hs-tag-name">'+esc(p.name)+'</div>'
+        +'<div class="hs-tag-row">'
+          +'<span class="hs-tag-brand" style="color:'+color+'">'+esc(p.cat)+'</span>'
+          +'<span class="hs-tag-price">×'+item.qty+'</span>'
+        +'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+  // Attach drag to each hotspot
+  config.forEach(function(item){
+    var el=document.getElementById(item.id);
+    if(el) makeHsDraggable(el,item.id);
+  });
+}
+
+
+/* HOTSPOT DRAG */
+function makeHsDraggable(el, itemId){
+  const dot=el.querySelector('.hs-dot');
+  if(!dot) return;
+  let dragging=false, moved=false, startX, startY, startPctX, startPctY;
+  function startDrag(cx,cy){
+    const item=config.find(c=>c.id===itemId); if(!item) return;
+    const canvas=g('canvas');
+    dragging=true; moved=false;
+    startX=cx; startY=cy;
+    startPctX=item.x; startPctY=item.y;
+    el.style.transition='none'; el.style.zIndex='100';
+    dot.style.cursor='grabbing';
+  }
+  function onMove(cx,cy){
+    if(!dragging) return;
+    const item=config.find(c=>c.id===itemId); if(!item) return;
+    const canvas=g('canvas');
+    const r=canvas.getBoundingClientRect();
+    const dx=(cx-startX)/r.width*100;
+    const dy=(cy-startY)/r.height*100;
+    // Sidebar-breedte + label-buffer omrekenen naar % zodat hotspots er nooit onder verdwijnen
+    const sidebar = g('sidebar');
+    const sbWidth = (sidebar && sidebar.offsetParent!==null) ? sidebar.getBoundingClientRect().width : 0;
+    const bufferPx = 210; // dot + label + marge
+    const maxXPct = sbWidth>0 ? Math.max(20, 100-((sbWidth+bufferPx)/r.width*100)) : 95;
+    item.x=Math.max(2,Math.min(maxXPct,startPctX+dx));
+    item.y=Math.max(2,Math.min(95,startPctY+dy));
+    item.ll=item.x>55;
+    el.style.left=item.x+'%';
+    el.style.top=item.y+'%';
+    moved=true;
+  }
+  function endDrag(){
+    if(!dragging) return;
+    dragging=false;
+    el.style.transition=''; el.style.zIndex='';
+    dot.style.cursor='grab';
+    if(moved){
+      const item=config.find(c=>c.id===itemId);
+      if(item) el.className='hs '+(item.ll?'left':'')+(selHs===itemId?' selected':'');
+    }
+  }
+  const onMouseMove=e=>onMove(e.clientX,e.clientY);
+  const onTouchMove=e=>{e.preventDefault();onMove(e.touches[0].clientX,e.touches[0].clientY);};
+  const onUp=()=>{endDrag();window.removeEventListener('mousemove',onMouseMove);window.removeEventListener('mouseup',onUp);window.removeEventListener('touchmove',onTouchMove);window.removeEventListener('touchend',onUp);};
+  dot.addEventListener('mousedown',e=>{e.preventDefault();e.stopPropagation();startDrag(e.clientX,e.clientY);window.addEventListener('mousemove',onMouseMove);window.addEventListener('mouseup',onUp);});
+  dot.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();startDrag(e.touches[0].clientX,e.touches[0].clientY);window.addEventListener('touchmove',onTouchMove,{passive:false});window.addEventListener('touchend',onUp);},{passive:false});
+}
+
+/* ════════ PRODUCT DETAIL ══════════════════════════════════ */
+function openProdDetail(id){
+  selHs=id;
+  renderHotspots();
+
+  // Hint verbergen na eerste klik (Fix 1)
+  const hint = g('canvas-hint');
+  if(hint) hint.classList.add('hidden');
+
+  const item=config.find(c=>c.id===id); if(!item) return;
+  const p=item.mrProd;
+  const color=CAT_COLORS[p.cat]||'#e8001c';
+  const foto=getFotoUrl(p.name);
+  const salePerUnit=p.trade>0?p.trade/(1-(payload?.margin||28)/100):0;
+  const saleTotal=salePerUnit*item.qty;
+
+  const left=g('pdo-left');
+  const right=g('pdo-right');
+
+  left.innerHTML=
+    '<div style="font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:'+color+';margin-bottom:6px;display:flex;align-items:center;gap:8px;">'
+      +'<span>'+esc(p.cat)+'</span>'
+      +(p.sku&&p.sku!=='—'?'<span style="color:rgba(255,255,255,.3);font-weight:500;font-family:monospace;text-transform:none;letter-spacing:0;font-size:10px;">'+esc(p.sku)+'</span>':'')
+    +'</div>'
+    +'<h2 style="font-size:20px;font-weight:900;color:white;line-height:1.3;margin-bottom:14px;">'+esc(p.name)+'</h2>'
+    +(salePerUnit>0
+      ?'<div style="margin-bottom:18px;">'
+        +'<div style="font-size:10px;color:rgba(255,255,255,.45);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">Verkoopprijs excl. BTW</div>'
+        +'<div style="font-size:28px;font-weight:900;font-family:monospace;background:linear-gradient(135deg,#e8001c,#ff6b35);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">'
+          +fmt(saleTotal)
+        +'</div>'
+        +(item.qty>1?'<div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">'+fmt(salePerUnit)+' per stuk</div>':'')
+      +'</div>'
+      :'')
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">'
+      +'<div style="display:flex;align-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:10px;overflow:hidden;">'
+        +'<button onclick="detailQty(\''+id+'\',-1)" style="width:38px;height:38px;border:none;background:none;color:white;font-size:20px;cursor:pointer;">−</button>'
+        +'<div id="detail-qty-'+id+'" style="width:30px;text-align:center;font-size:14px;font-weight:800;color:white;font-family:monospace;">'+item.qty+'</div>'
+        +'<button onclick="detailQty(\''+id+'\',1)" style="width:38px;height:38px;border:none;background:none;color:white;font-size:20px;cursor:pointer;">+</button>'
+      +'</div>'
+      +(saleTotal>0?'<div style="font-size:12px;color:rgba(255,255,255,.5);">Totaal: <strong id="detail-tot-'+id+'" style="color:white;">'+fmt(saleTotal)+'</strong></div>':'')
+    +'</div>'
+    +'<button onclick="openTCO()" style="height:38px;padding:0 16px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.12);border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">📊 TCO bekijken</button>';
+
+  right.innerHTML=foto
+    ?'<img src="'+foto+'" alt="'+esc(p.name)+'" style="max-width:90%;max-height:150px;object-fit:contain;border-radius:6px;" onerror="this.parentNode.innerHTML=\'<span style=font-size:60px;opacity:.15>📦</span>\'">'
+    :'<span style="font-size:60px;opacity:.15;">📦</span>';
+
+  const overlay=g('prodDetailOverlay');
+  overlay.style.display='flex';
+  // Slide-in animatie
+  setTimeout(()=>overlay.classList.add('visible'),10);
+
+  // In fullscreen: verplaats naar presMode
+  const presMode=g('presMode');
+  if(presMode&&presMode.style.display==='flex'&&!presMode.contains(overlay)){
+    presMode.appendChild(overlay); overlay.style.zIndex='900';
+  }
+}
+
+function detailQty(id,delta){
+  const item=config.find(c=>c.id===id); if(!item) return;
+  item.qty=Math.max(1,item.qty+delta);
+  const qel=g('detail-qty-'+id); if(qel) qel.textContent=item.qty;
+  const p=item.mrProd;
+  const salePerUnit=p.trade>0?p.trade/(1-(payload?.margin||28)/100):0;
+  const tot=salePerUnit*item.qty;
+  const tel=g('detail-tot-'+id); if(tel) tel.textContent=fmt(tot);
+  renderHotspots();
+}
+
+function closeProdDetail(){
+  selHs=null;
+  renderHotspots();
+  const overlay=g('prodDetailOverlay');
+  overlay.classList.remove('visible');
+  setTimeout(()=>{
+    overlay.style.display='none';
+    const presMode=g('presMode');
+    if(presMode&&presMode.contains(overlay)){
+      document.body.appendChild(overlay); overlay.style.zIndex='700';
+    }
+  }, 280);
+}
+
+/* ════════ PRICING ═════════════════════════════════════════ */
+function getSale(){
+  if(!payload) return 0;
+  return parseFloat(payload.sale)||0;
+}
+function getMraas(term){
+  const t=term||_activeTerm;
+  return getSale()*MRAAS[t];
+}
+function updatePricing(){
+  const sale=getSale();
+  const mraas=getMraas();
+  const fin=mraas*_activeTerm-sale;
+  const set=(id,v)=>{const e=g(id);if(e)e.textContent=v;};
+  set('sb-sale',fmt(sale));
+  set('sb-fin',fmt(Math.max(0,fin)));
+  set('sb-mraas',fmt(mraas));
+  set('pres-total',fmt(sale));
+  set('pres-mraas',fmt(mraas));
+  set('mob-mraas',fmt(mraas)+'/mnd');
+
+  // Multi-room totaal met per-zaal opsplitsing (Fix 7)
+  const mrBlock = g('sb-multiroom-total');
+  if(_allRooms.length > 1 && mrBlock){
+    const totalMraas = _allRooms.reduce((s,r)=>s+parseFloat(r.sale||0)*MRAAS[_activeTerm],0);
+    mrBlock.style.display='block';
+    const rows = _allRooms.map(r=>{
+      const rm = parseFloat(r.sale||0)*MRAAS[_activeTerm];
+      const isActive = r.roomLabel===payload?.roomLabel;
+      return `<div style="display:flex;justify-content:space-between;font-size:10px;padding:2px 0;${isActive?'color:rgba(255,255,255,.8);font-weight:700;':'color:rgba(255,255,255,.4);'}">
+        <span>${esc(r.roomLabel||'Zaal')}</span><span>${fmt(rm)}/mnd</span></div>`;
+    }).join('');
+    mrBlock.innerHTML=`
+      <div style="font-size:9px;color:rgba(255,255,255,.4);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Alle zalen</div>
+      ${rows}
+      <div style="display:flex;justify-content:space-between;font-size:11px;padding-top:6px;margin-top:4px;border-top:1px solid rgba(255,255,255,.1);">
+        <span id="sb-total-rooms" style="color:rgba(255,255,255,.5);">${_allRooms.length} zalen</span>
+        <span id="sb-total-mraas" style="font-weight:800;color:var(--orange);">${fmt(totalMraas)}/mnd</span>
+      </div>`;
+  } else if(mrBlock){
+    mrBlock.style.display='none';
+  }
+}
+
+function setTerm(t,el){
+  _activeTerm=t;
+  // Sync alle term knoppen (sidebar + mob-bar + pres ribbon)
+  document.querySelectorAll('.term-chip,.mob-term-btn,.pres-term-chip').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.term-chip,.mob-term-btn,.pres-term-chip').forEach(c=>{
+    if(parseInt(c.textContent)===t||c.onclick?.toString().includes('setTerm('+t+',')) c.classList.add('active');
+  });
+  if(el) el.classList.add('active');
+  const lbl=g('sb-term-lbl'); if(lbl) lbl.textContent='Per maand MRaaS ('+t+' mnd)';
+  const pl=g('pres-mraas-lbl'); if(pl) pl.textContent='MRaaS / maand ('+t+' mnd)';
+  updatePricing();
+}
+
+/* ════════ FULLSCREEN ZAALWISSELMENU ═══════════════════════ */
+function togglePresRoomMenu(){
+  const menu=g('pres-room-menu'); if(!menu) return;
+  if(menu.style.display==='block'){ menu.style.display='none'; return; }
+  if(_allRooms.length<=1){ return; }
+  menu.innerHTML=_allRooms.map((r,i)=>{
+    const sale=parseFloat(r.sale||0);
+    const mraas=(sale*MRAAS[_activeTerm]).toFixed(2).replace('.',',');
+    const isActive=r.roomLabel===payload.roomLabel;
+    return `<button onclick="switchRoom(${i});closePRMenu()"
+      style="width:100%;text-align:left;padding:9px 14px;border:none;background:${isActive?'rgba(255,107,53,.15)':'none'};cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;color:${isActive?'var(--orange)':'rgba(255,255,255,.7)'};border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <span>🏢 ${esc(r.roomLabel||'Zaal '+(i+1))}</span>
+      <span style="font-size:10px;color:var(--orange);font-weight:700;">€ ${mraas}/mnd</span>
+    </button>`;
+  }).join('');
+  menu.style.display='block';
+  setTimeout(()=>{
+    document.addEventListener('click',function closePRM(e){
+      const badge=g('pres-room-badge');
+      if(!badge||!badge.contains(e.target)){ menu.style.display='none'; document.removeEventListener('click',closePRM); }
+    });
+  },10);
+}
+function closePRMenu(){ const m=g('pres-room-menu'); if(m) m.style.display='none'; }
+
+/* ════════ SIDEBAR PRODUCTEN ═══════════════════════════════ */
+function renderSidebarProds(prods){
+  const list=g('sb-prod-list');
+  if(!prods.length){ list.innerHTML='<div style="font-size:11px;color:rgba(255,255,255,.3);padding:4px 0;">Geen producten</div>'; return; }
+  list.innerHTML=prods.map((p,i)=>{
+    const color=CAT_COLORS[p.cat]||'#e8001c';
+    return '<div class="sb-prod-row" draggable="true" data-idx="'+i+'" '
+      +'ondragstart="sbDragStart(event)" ondragover="sbDragOver(event)" '
+      +'ondragleave="sbDragLeave(event)" ondrop="sbDrop(event)" ondragend="sbDragEnd(event)">'
+      +'<span class="sb-prod-grip">⠿</span>'
+      +'<div class="sb-prod-dot" style="background:'+color+'"></div>'
+      +'<span class="sb-prod-name">'+esc(p.name)+'</span>'
+      +'<span class="sb-prod-qty">×'+p.qty+'</span>'
+      +'</div>';
+  }).join('');
+}
+
+let _sbDragIdx = null;
+function sbDragStart(e){
+  _sbDragIdx = parseInt(e.currentTarget.dataset.idx);
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed='move';
+}
+function sbDragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+  e.currentTarget.classList.add('drag-over');
+}
+function sbDragLeave(e){ e.currentTarget.classList.remove('drag-over'); }
+function sbDragEnd(e){ e.currentTarget.classList.remove('dragging'); _sbDragIdx=null; }
+function sbDrop(e){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const toIdx = parseInt(e.currentTarget.dataset.idx);
+  if(_sbDragIdx===null || _sbDragIdx===toIdx) return;
+  const prods = payload.products;
+  const moved = prods.splice(_sbDragIdx, 1)[0];
+  prods.splice(toIdx, 0, moved);
+  renderSidebarProds(prods);
+  updatePricing();
+}
+
+/* ════════ PRESENTATIEMODUS ════════════════════════════════ */
+function enterPresentation(){
+  updatePricing();
+  renderPresHotspots();
+  const el=g('presMode'); el.style.display='flex';
+  if(el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+  else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  setTimeout(()=>{ const h=g('pres-hint'); if(h) h.style.opacity='0'; },3000);
+}
+
+function exitPresentation(){
+  g('presMode').style.display='none';
+  g('presQrOverlay').style.display='none';
+  if(document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+  else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+  // Zet prodDetailOverlay terug als nodig
+  const overlay=g('prodDetailOverlay');
+  const presMode=g('presMode');
+  if(presMode&&presMode.contains(overlay)){
+    overlay.style.display='none';
+    document.body.appendChild(overlay);
+    overlay.style.zIndex='700';
+  }
+}
+
+function renderPresHotspots(){
+  const layer=g('presHsLayer'); if(!layer) return;
+  layer.innerHTML=config.map((item,idx)=>{
+    const p=item.mrProd;
+    const foto=getFotoUrl(p.name);
+    const color=CAT_COLORS[p.cat]||'#e8001c';
+    const cardLeft=item.x>55;
+    return '<div onclick="presClickHotspot(this,\''+item.id+'\')"'
+      +' style="position:absolute;left:'+item.x+'%;top:'+item.y+'%;transform:translate(-50%,-50%);cursor:pointer;z-index:11;display:flex;align-items:center;flex-direction:'+(cardLeft?'row-reverse':'row')+';gap:10px;transition:transform .18s cubic-bezier(.34,1.4,.64,1)">'
+      +'<div style="position:relative;flex-shrink:0;width:28px;height:28px;">'
+        +'<div style="position:absolute;inset:-8px;border-radius:50%;border:2px solid rgba(255,107,53,.5);animation:pres-hs-ripple 2.5s ease-out infinite;pointer-events:none;"></div>'
+        +'<div style="width:28px;height:28px;border-radius:50%;background:rgba(15,15,25,.9);border:2.5px solid rgba(255,255,255,.8);backdrop-filter:blur(4px);box-shadow:0 3px 14px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:white;">'
+          +(idx+1)
+        +'</div>'
+      +'</div>'
+      +'<div style="background:rgba(10,10,20,.88);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:8px 12px;display:flex;align-items:center;gap:9px;box-shadow:0 4px 20px rgba(0,0,0,.5);max-width:180px;">'
+        +'<div style="width:40px;height:40px;flex-shrink:0;border-radius:7px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;overflow:hidden;">'
+          +(foto?'<img src="'+foto+'" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.parentNode.innerHTML=\'<span style=font-size:18px>📦</span>\'>':
+                 '<span style="font-size:18px;">📦</span>')
+        +'</div>'
+        +'<div style="min-width:0;flex:1;">'
+          +'<div style="font-size:11px;font-weight:700;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;">'+esc(p.name)+(item.qty>1?' ×'+item.qty:'')+'</div>'
+          +'<div style="font-size:9px;font-weight:800;color:'+color+';text-transform:uppercase;margin-top:2px;">'+esc(p.cat)+'</div>'
+        +'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function presClickHotspot(el,id){
+  el.style.transform='translate(-50%,-50%) scale(1.1)';
+  setTimeout(()=>{ el.style.transform='translate(-50%,-50%) scale(1)'; },200);
+  openProdDetail(id);
+}
+
+/* ════════ QR CODE ═════════════════════════════════════════ */
+async function presShowQR(){
+  const overlay=g('presQrOverlay');
+  const div=g('presQrDiv');
+  const lbl=g('presQrLabel');
+  overlay.style.display='block';
+  div.innerHTML='<div style="font-size:13px;color:#9ca3af;">QR-code genereren…</div>';
+
+  try{
+    const url = await _buildAndInsertQR();
+    div.innerHTML='<div id="presQrCanvas" style="display:flex;align-items:center;justify-content:center;"></div>';
+    await new Promise((res,rej)=>{
+      if(window.QRCode)return res();
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+      s.onload=res; s.onerror=rej;
+      document.head.appendChild(s);
+    });
+    new QRCode(document.getElementById('presQrCanvas'),{
+      text:url, width:220, height:220,
+      colorDark:'#000000', colorLight:'#ffffff',
+      correctLevel:QRCode.CorrectLevel.M
+    });
+    lbl.textContent=url;
+  }catch(e){
+    div.innerHTML='<div style="color:#e8001c;font-size:12px;">Fout: '+esc(e.message)+'</div>';
+  }
+}
+
+function closePresentationQR(){
+  g('presQrOverlay').style.display='none';
+}
+
+/* ════════ CLIENT MODAL ════════════════════════════════════ */
+function openClientModal(){
+  updateCmMraas();
+  // Reset naar stap 1
+  const s1=g('cm-step1'); const s2=g('cm-step2');
+  if(s1) s1.style.display='block';
+  if(s2) s2.style.display='none';
+  const st=g('cm-status'); if(st) st.style.display='none';
+  // Zet datum in stap 2
+  const sd=g('cm-sales-date');
+  if(sd&&!sd.value) sd.value=new Date().toLocaleDateString('nl-BE');
+  g('clientModal').style.display='flex';
+  setTimeout(()=>{ const c=g('cm-client'); if(c) c.focus(); },100);
+}
+
+function goToStep2(){
+  if(!(g('cm-client')?.value||'').trim()){ toast('Vul klantnaam in'); g('cm-client').focus(); return; }
+  g('cm-step1').style.display='none';
+  g('cm-step2').style.display='block';
+  // Reset en init Ricoh canvas (elke keer opnieuw — canvas was verborgen bij vorige init)
+  _ricohCanvasInited=false;
+  setTimeout(initRicohCanvas, 50); // wacht tot display:block actief is
+}
+
+function goToStep1(){
+  g('cm-step2').style.display='none';
+  g('cm-step1').style.display='block';
+}
+
+let _ricohCanvasInited=false;
+function initRicohCanvas(){
+  if(_ricohCanvasInited) return;
+  _ricohCanvasInited=true;
+  const c=g('ricoh-canvas'); if(!c) return;
+  const ctx=c.getContext('2d');
+  ctx.strokeStyle='#1a1a2e'; ctx.lineWidth=2.5; ctx.lineCap='round'; ctx.lineJoin='round';
+  let drawing=false;
+  function pos(e){ const r=c.getBoundingClientRect(),sx=c.width/r.width,sy=c.height/r.height;
+    if(e.touches) return{x:(e.touches[0].clientX-r.left)*sx,y:(e.touches[0].clientY-r.top)*sy};
+    return{x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sy}; }
+  c.addEventListener('mousedown',e=>{drawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);e.preventDefault();});
+  c.addEventListener('mousemove',e=>{if(!drawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault();});
+  c.addEventListener('mouseup',()=>drawing=false);
+  c.addEventListener('mouseleave',()=>drawing=false);
+  c.addEventListener('touchstart',e=>{drawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);e.preventDefault();},{passive:false});
+  c.addEventListener('touchmove',e=>{if(!drawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault();},{passive:false});
+  c.addEventListener('touchend',()=>drawing=false);
+}
+function clearRicohCanvas(){
+  const c=g('ricoh-canvas'); if(c) c.getContext('2d').clearRect(0,0,c.width,c.height);
+}
+function getRicohSigData(){
+  const c=g('ricoh-canvas'); if(!c) return null;
+  const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+  for(let i=3;i<d.length;i+=4) if(d[i]>10) return c.toDataURL('image/png');
+  return null; // leeg canvas
+}
+function closeClientModal(){ g('clientModal').style.display='none'; }
+function updateCmMraas(){
+  const sale=getSale();
+  const term=parseInt(g('cm-term')?.value||48);
+  const mraas=sale*MRAAS[term];
+  const sp=g('cm-sale-price'); if(sp) sp.textContent=fmt(sale);
+  const mp=g('cm-mraas-price'); if(mp) mp.textContent=fmt(mraas)+'/mnd';
+}
+
+/* ════════ SIGNING PAGE ════════════════════════════════════ */
+async function generateSigningPage(){
+  const clientCo    = (g('cm-client')?.value||'').trim();
+  const clientName  = (g('cm-contact')?.value||'').trim();
+  const clientFunc  = (g('cm-func')?.value||'').trim();
+  const clientEmail = (g('cm-email')?.value||'').trim();
+  const salesName   = (g('cm-sales-name')?.value||'').trim()||'Stijn Borloo';
+  const salesDate   = (g('cm-sales-date')?.value||'').trim()||new Date().toLocaleDateString('nl-BE');
+  const ricohSigData= getRicohSigData(); // base64 of null
+
+  if(!clientCo){ toast('Vul klantnaam in'); goToStep1(); return; }
+
+  const sale    = getSale();
+  const btw     = sale * 0.21;
+  const grand   = sale + btw;
+  const room    = ROOMS.find(r=>r.id===payload?.room) || ROOMS[1];
+  const today   = new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'});
+  const dvl     = new Date(Date.now()+30*24*3600*1000).toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'});
+  const prods   = (payload?.products||[]).filter(p=>p.name&&p.cat!=='Info'&&!(p.trade===0&&p.cat!=='Service'));
+  const margin  = payload?.margin||28;
+  const fn2     = v=>'€\u00a0'+parseFloat(v||0).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+  const E2      = s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  const st  = g('cm-status');
+  const btn = g('cm-sign-btn');
+  st.style.cssText='display:block;font-size:12px;padding:10px 12px;border-radius:8px;margin-bottom:12px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;';
+  st.innerHTML='<span class="spin" style="border-top-color:#1d4ed8;border-color:#bfdbfe;display:inline-block;width:12px;height:12px;border-radius:50%;border-width:2px;vertical-align:middle;animation:spin .7s linear infinite;"></span> Pagina aanmaken…';
+  btn.disabled=true;
+
+  const prodRows = prods.map(p=>{
+    const sp=p.trade>0?p.trade/(1-margin/100):0;
+    return `<tr style="border-bottom:1px solid #f0f0f0;">
+      <td style="padding:6px 10px;font-size:11px;">${E2(p.name)}</td>
+      <td style="padding:6px 10px;font-size:11px;text-align:center;">${p.qty}</td>
+      <td style="padding:6px 10px;font-size:11px;text-align:right;">${sp>0?fn2(sp):'—'}</td>
+      <td style="padding:6px 10px;font-size:11px;text-align:right;font-weight:600;">${sp>0?fn2(sp*p.qty):'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const ricohSigHtml = ricohSigData
+    ? `<img src="${ricohSigData}" style="max-height:80px;max-width:100%;display:block;">`
+    : `<div style="height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#999;">
+        <div style="font-size:11px;font-weight:700;color:#BE1622;letter-spacing:2px;">RICOH</div>
+        <div style="font-size:10px;color:#aaa;">Handtekening ontbreekt</div>
+      </div>`;
+
+  const quoteId='mraas-'+Date.now().toString(36);
+
+  // Termijn maandbedragen voor de signing page
+  const mraas36=(sale*MRAAS[36]).toFixed(2);
+  const mraas48=(sale*MRAAS[48]).toFixed(2);
+  const mraas60=(sale*MRAAS[60]).toFixed(2);
+  const saleFixed=sale.toFixed(2);
+  const grandFixed=grand.toFixed(2);
+
+  const html=`<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MRaaS Offerte ter ondertekening — ${E2(clientCo)}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;background:#a8a8a8;color:#212529;font-size:14px;}
+.wrap{max-width:820px;margin:0 auto;padding:20px 12px;}
+.card{background:white;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.1);margin-bottom:16px;overflow:hidden;}
+.card-hdr{background:#1a1a2e;color:white;padding:10px 18px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;}
+.card-hdr.red{background:#BE1622;}
+.card-body{padding:16px 18px;}
+.ct{font-size:11px;font-weight:700;color:#BE1622;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #BE1622;padding-bottom:5px;margin-bottom:12px;}
+.field{margin-bottom:10px;}
+.field label{display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;margin-bottom:3px;}
+.field input{width:100%;height:36px;border:1.5px solid #dee2e6;border-radius:6px;padding:0 10px;font-size:12px;font-family:Arial,sans-serif;outline:none;}
+.field input:focus{border-color:#BE1622;}
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.sig-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0;}
+.sig-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#6b7280;margin-bottom:5px;}
+.sig-box{border:1.5px dashed #dee2e6;border-radius:7px;background:#fafafa;height:100px;position:relative;overflow:hidden;}
+.sig-box canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:none;}
+.sig-name{font-size:10px;color:#888;margin-top:4px;}
+.cb-row{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:7px;margin-bottom:8px;cursor:pointer;border:1px solid #eee;background:#f9f9f9;}
+.cb-row.av{background:#fff3e0;border-color:#ffcc80;}
+.cb-row.qt{background:#e3f2fd;border-color:#90caf9;}
+.cb-row input[type=checkbox]{width:16px;height:16px;flex-shrink:0;margin-top:2px;accent-color:#BE1622;}
+.btn-ok{width:100%;background:#ccc;color:white;border:none;border-radius:8px;padding:13px;font-size:14px;font-weight:700;cursor:not-allowed;font-family:Arial,sans-serif;margin-top:10px;transition:background .2s;}
+.done{display:none;background:#e8f5e9;border:2px solid #4caf50;border-radius:8px;padding:18px;text-align:center;margin-top:12px;}
+/* Termijn opties */
+.popt{border:2px solid #eee;border-radius:8px;padding:12px 14px;margin-bottom:10px;cursor:pointer;transition:.15s;}
+.popt.sel{border-color:#BE1622;background:#fdf0f1;}
+.popt-radio{width:18px;height:18px;border-radius:50%;border:2px solid #ccc;display:inline-block;margin-right:9px;flex-shrink:0;position:relative;vertical-align:middle;}
+.popt.sel .popt-radio{border-color:#BE1622;}
+.popt.sel .popt-radio::after{content:'';position:absolute;inset:3px;background:#BE1622;border-radius:50%;}
+@media(max-width:560px){.ig,.sig-cols{grid-template-columns:1fr;}}
+@page{size:A4;margin:10mm 12mm;}
+@media print{
+  body{background:#fff!important;}
+  .wrap{max-width:none;padding:0;}
+  .btn-ok,.done button,button[onclick*=spClear]{display:none!important;}
+  .done{display:block!important;border:none;background:transparent;padding:4px 0;}
+  .popt{page-break-inside:avoid;}
+  .sig-box{border-style:solid;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="card">
+    <div class="card-hdr" style="background:#BE1622;display:flex;justify-content:space-between;align-items:center;padding:16px 20px;">
+      <div>
+        <div style="font-size:18px;font-weight:900;color:white;letter-spacing:2px;">RICOH</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.6);letter-spacing:1px;">imagine. change.</div>
+      </div>
+      <div style="text-align:right;font-size:11px;color:rgba(255,255,255,.75);">
+        <div style="font-weight:700;margin-bottom:2px;">MRaaS Offerte ter ondertekening</div>
+        <div>${today} &nbsp;·&nbsp; Geldig tot ${dvl}</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="ig" style="font-size:12px;">
+        <div><div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Klant</div><div style="font-weight:700;">${E2(clientCo)}</div>${clientName?`<div style="color:#555;">${E2(clientName)}</div>`:''}</div>
+        <div><div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Zaal</div><div style="font-weight:700;">${E2(payload?.roomLabel||room.label)}</div><div style="color:#555;">${E2(payload?.mfr||'')} ${E2(payload?.platform||'')}</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prijsoverzicht -->
+  <div class="card">
+    <div class="card-hdr red">Prijsoverzicht</div>
+    <div class="card-body" style="padding:0;">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;">
+        <thead><tr style="background:#f8f9fa;">
+          <th style="padding:7px 10px;text-align:left;border-bottom:1px solid #eee;">Product</th>
+          <th style="padding:7px 10px;text-align:center;border-bottom:1px solid #eee;">Qty</th>
+          <th style="padding:7px 10px;text-align:right;border-bottom:1px solid #eee;">Stukprijs</th>
+          <th style="padding:7px 10px;text-align:right;border-bottom:1px solid #eee;">Totaal</th>
+        </tr></thead>
+        <tbody>${prodRows}</tbody>
+        <tfoot>
+          <tr><td colspan="3" style="padding:6px 10px;text-align:right;font-size:11px;color:#555;">Excl. BTW</td><td style="padding:6px 10px;text-align:right;font-weight:600;">${fn2(sale)}</td></tr>
+          <tr><td colspan="3" style="padding:4px 10px;text-align:right;font-size:11px;color:#888;">BTW 21%</td><td style="padding:4px 10px;text-align:right;color:#888;">${fn2(btw)}</td></tr>
+          <tr style="background:#BE1622;">
+            <td colspan="3" style="padding:8px 10px;text-align:right;color:white;font-weight:700;">Totaal incl. BTW</td>
+            <td style="padding:8px 10px;text-align:right;color:white;font-weight:900;">${fn2(grand)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Kies looptijd -->
+  <div class="card">
+    <div class="card-hdr red">Kies uw MRaaS looptijd</div>
+    <div class="card-body">
+      ${[{t:36,y:'3 jaar',m:mraas36},{t:48,y:'4 jaar',m:mraas48},{t:60,y:'5 jaar',m:mraas60}].map((o,i)=>`
+      <div class="popt${i===1?' sel':''}" data-months="${o.t}" data-monthly="${o.m}" onclick="spSelectTerm(this)">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:14px;font-weight:700;display:flex;align-items:center;">
+            <span class="popt-radio"></span>${o.y} — ${o.t} maanden
+          </span>
+          <span class="popt-monthly" style="font-size:16px;font-weight:800;color:#BE1622;">€ ${o.m.replace('.',',')}<span style="font-size:10px;font-weight:400;color:#999;"> /mnd</span></span>
+        </div>
+        <div style="font-size:11px;color:#777;margin-top:4px;margin-left:27px;">Excl. BTW · inclusief hardware, installatie, garantie en onderhoud</div>
+      </div>`).join('')}
+    </div>
+  </div>
+
+  <!-- Handtekening -->
+  <div class="card">
+    <div class="card-hdr red">Goedkeuring &amp; Handtekening</div>
+    <div class="card-body">
+      <p style="font-size:12px;color:#555;line-height:1.6;margin-bottom:14px;">
+        Door uw handtekening te plaatsen bevestigt u uw akkoord met deze offerte en de
+        <strong>algemene voorwaarden van RICOH Belgium NV</strong>
+        (<a href="https://www.ricoh.be/nl/company/legal" style="color:#BE1622;">ricoh.be/nl/company/legal</a>).
+      </p>
+
+      <div class="ig" style="margin-bottom:12px;">
+        <div class="field"><label>Naam</label><input id="sp-name" type="text" value="${E2(clientName)}" placeholder="Voornaam Achternaam"></div>
+        <div class="field"><label>Functie</label><input id="sp-func" type="text" value="${E2(clientFunc)}" placeholder="Functietitel"></div>
+      </div>
+      <div class="field" style="margin-bottom:14px;"><label>Datum</label><input id="sp-date" type="text" value="${today}" style="width:170px;"></div>
+
+      <div class="sig-cols">
+        <div>
+          <div class="sig-lbl">Klant — teken hieronder</div>
+          <div class="sig-box"><canvas id="sp-canvas" width="500" height="100"></canvas></div>
+          <button onclick="spClearCanvas()" style="background:none;border:none;color:#BE1622;font-size:10px;cursor:pointer;margin-top:3px;font-family:Arial,sans-serif;">✕ wissen</button>
+        </div>
+        <div>
+          <div class="sig-lbl">RICOH Belgium NV</div>
+          <div class="sig-box" style="display:flex;align-items:center;justify-content:center;background:#f8f9fa;">
+            ${ricohSigHtml}
+          </div>
+          <div class="sig-name">${E2(salesName)} — ${E2(salesDate)}</div>
+        </div>
+      </div>
+
+      <label class="cb-row av">
+        <input type="checkbox" id="sp-cb1" onchange="spCheckReady()">
+        <span style="font-size:11px;line-height:1.5;"><strong>Ik aanvaard de algemene voorwaarden</strong> van RICOH Belgium NV</span>
+      </label>
+      <label class="cb-row qt">
+        <input type="checkbox" id="sp-cb2" onchange="spCheckReady()">
+        <span id="sp-cb2-txt" style="font-size:11px;line-height:1.5;"><strong>Ik ga akkoord</strong> met deze MRaaS-offerte — <span id="sp-confirm-term">4 jaar (48 mnd)</span> aan <strong id="sp-confirm-amt">€ ${mraas48.replace('.',',')} / mnd</strong> excl. BTW</span>
+      </label>
+
+      <button id="sp-btn" class="btn-ok" disabled onclick="spSubmit()">✓ Bevestig &amp; onderteken</button>
+      <div class="done" id="sp-done">
+        <div style="font-size:32px;margin-bottom:8px;">✅</div>
+        <div style="font-weight:700;color:#2e7d32;font-size:14px;margin-bottom:4px;">Akkoord opgeslagen</div>
+        <div style="font-size:11px;color:#555;margin-bottom:12px;">Uw handtekening is veilig opgeslagen bij RICOH Belgium.</div>
+        <button onclick="window.print()" style="background:#1a1a2e;color:#fff;border:none;border-radius:5px;padding:8px 18px;font-size:11px;cursor:pointer;font-family:Arial,sans-serif;">⬇ Sla op als PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;padding:14px 0;font-size:10px;color:#888;">
+    RICOH Belgium NV — Medialaan 28A, 1800 Vilvoorde — <a href="https://www.ricoh.be" style="color:#BE1622;">ricoh.be</a>
+  </div>
+</div>
+
+<script>
+var SUPA_URL='${SUPA_URL}';
+var SUPA_ANON='${SUPA_ANON}';
+var QUOTE_ID='${quoteId}';
+var CLIENT_CO='${E2(clientCo)}';
+var ROOM_LABEL='${E2(payload?.roomLabel||room.label)}';
+var SALE=${saleFixed};
+
+// Termijn keuze
+var _selTerm=48, _selMonthly=parseFloat('${mraas48}');
+function spSelectTerm(el){
+  document.querySelectorAll('.popt').forEach(function(o){
+    o.classList.remove('sel');
+    var r=o.querySelector('.popt-radio'); if(r) r.style.borderColor='#ccc';
+  });
+  el.classList.add('sel');
+  var r=el.querySelector('.popt-radio'); if(r) r.style.borderColor='#BE1622';
+  _selTerm=parseInt(el.getAttribute('data-months'));
+  _selMonthly=parseFloat(el.getAttribute('data-monthly'));
+  var yrs={36:'3 jaar (36 mnd)',48:'4 jaar (48 mnd)',60:'5 jaar (60 mnd)'};
+  var ct=document.getElementById('sp-confirm-term'); if(ct) ct.textContent=yrs[_selTerm]||_selTerm+' mnd';
+  var ca=document.getElementById('sp-confirm-amt'); if(ca) ca.textContent='€ '+_selMonthly.toFixed(2).replace('.',',')+' / mnd';
+  spCheckReady();
+}
+
+// Canvas
+var c=document.getElementById('sp-canvas'),ctx=c.getContext('2d'),drawing=false;
+window.spClearCanvas=function(){ctx.clearRect(0,0,c.width,c.height);};
+function pos(e){var r=c.getBoundingClientRect(),sx=c.width/r.width,sy=c.height/r.height;
+  if(e.touches)return{x:(e.touches[0].clientX-r.left)*sx,y:(e.touches[0].clientY-r.top)*sy};
+  return{x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sy};}
+ctx.strokeStyle='#1a1a2e';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';
+c.addEventListener('mousedown',function(e){drawing=true;var p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);e.preventDefault();});
+c.addEventListener('mousemove',function(e){if(!drawing)return;var p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault();});
+c.addEventListener('mouseup',function(){drawing=false;});
+c.addEventListener('mouseleave',function(){drawing=false;});
+c.addEventListener('touchstart',function(e){drawing=true;var p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);e.preventDefault();},{passive:false});
+c.addEventListener('touchmove',function(e){if(!drawing)return;var p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault();},{passive:false});
+c.addEventListener('touchend',function(){drawing=false;});
+function isEmpty(){var d=ctx.getImageData(0,0,c.width,c.height).data;for(var i=3;i<d.length;i+=4)if(d[i]>10)return false;return true;}
+function spCheckReady(){var ok=document.getElementById('sp-cb1').checked&&document.getElementById('sp-cb2').checked;var b=document.getElementById('sp-btn');b.disabled=!ok;b.style.background=ok?'#BE1622':'#ccc';b.style.cursor=ok?'pointer':'not-allowed';}
+
+function spSubmit(){
+  if(isEmpty()){alert('Gelieve uw handtekening te plaatsen.');return;}
+  var btn=document.getElementById('sp-btn');btn.disabled=true;btn.textContent='Bezig...';
+  var p={
+    quote_id:QUOTE_ID,
+    project_name:ROOM_LABEL,
+    client_name:CLIENT_CO,
+    signer_name:(document.getElementById('sp-name').value.trim()||'(geen naam)'),
+    signer_func:(document.getElementById('sp-func').value.trim()||''),
+    signed_date:(document.getElementById('sp-date').value.trim()||new Date().toLocaleDateString('nl-BE')),
+    signature_img:c.toDataURL('image/png'),
+    av_accepted:true,
+    quote_accepted:true,
+    signed_at:new Date().toISOString(),
+    chosen_payment_mode:'rent',
+    chosen_term_months:_selTerm,
+    chosen_amount:SALE,
+    chosen_monthly_amount:_selMonthly
+  };
+  fetch(SUPA_URL+'/rest/v1/signatures',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':SUPA_ANON,'Authorization':'Bearer '+SUPA_ANON,'Prefer':'return=minimal'},
+    body:JSON.stringify(p)
+  }).then(function(r){
+    if(r.ok||r.status===201){
+      document.getElementById('sp-btn').style.display='none';
+      document.getElementById('sp-done').style.display='block';
+    } else {
+      r.text().then(function(t){btn.disabled=false;btn.textContent='\u2713 Bevestig & onderteken';alert('Fout: '+t);});
+    }
+  }).catch(function(e){btn.disabled=false;btn.textContent='\u2713 Bevestig & onderteken';alert('Netwerkfout: '+e.message);});
+}
+<\/script>
+</body>
+</html>`;
+
+  // Upload naar signing_pages
+  try{
+    const slugBase=(clientCo).toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').substring(0,40)||'mraas';
+    const suffix=(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)).replace(/-/g,'').substring(0,5);
+    const id=slugBase+'-'+suffix;
+    const {error}=await sc().from('signing_pages').insert({id, html_content:html});
+    if(error) throw new Error(error.message);
+    const url=window.location.origin+'/quoteassist/sign.html?id='+id;
+    st.style.cssText='display:block;font-size:12px;padding:12px 14px;border-radius:8px;margin-bottom:12px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;';
+    st.innerHTML='<strong>✓ Signing pagina klaar!</strong><br>'
+      +'<div style="margin:8px 0;display:flex;gap:6px;align-items:center;">'
+        +'<input id="sign-url-inp" value="'+url+'" readonly style="flex:1;padding:6px 8px;border:1px solid #bbf7d0;border-radius:5px;font-size:11px;background:#dcfce7;min-width:0;">'
+        +'<button onclick="navigator.clipboard.writeText(\''+url+'\').then(()=>alert(\'Gekopieerd\'))" style="background:#166534;color:white;border:none;border-radius:5px;padding:6px 10px;font-size:11px;cursor:pointer;white-space:nowrap;">📋 Kopieer</button>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;margin-top:6px;">'
+        +'<a href="https://wa.me/?text='+encodeURIComponent('Beste '+clientName+',\n\nGelieve de MRaaS-offerte te ondertekenen via:\n\n'+url+'\n\nMet vriendelijke groeten,\nRicoh Belgium AV Team')+'" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:#25d366;color:white;border-radius:7px;padding:8px;font-size:12px;font-weight:700;text-decoration:none;">💬 WhatsApp</a>'
+        +'<a href="mailto:'+clientEmail+'?subject='+encodeURIComponent('MRaaS Offerte ter ondertekening — '+clientCo)+'&body='+encodeURIComponent('Beste '+clientName+',\n\nGelieve de MRaaS-offerte te ondertekenen via:\n\n'+url+'\n\nMet vriendelijke groeten,\nRicoh Belgium AV Team')+'" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:#1a7fd4;color:white;border-radius:7px;padding:8px;font-size:12px;font-weight:700;text-decoration:none;">✉️ E-mail</a>'
+      +'</div>';
+  }catch(e){
+    st.style.cssText='display:block;font-size:12px;padding:10px 12px;border-radius:8px;margin-bottom:12px;background:#fff0f1;color:#BE1622;border:1px solid #fca5a5;';
+    st.innerHTML='<strong>Fout:</strong> '+esc(e.message);
+  }
+  btn.disabled=false;
+}
+
+async function saveToDashboard(){
+  const clientCo = (g('cm-client')?.value||'').trim();
+  const project  = (g('cm-project')?.value||clientCo||payload?.roomLabel||'MRaaS').trim();
+  const btn = g('cm-save-btn');
+  const st  = g('cm-save-status');
+
+  if(!clientCo){ toast('Vul eerst klantnaam in'); g('cm-client').focus(); return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Opslaan…';
+  st.style.display = 'none';
+
+  try{
+    const { data:{ session } } = await sc().auth.getSession();
+    if(!session) throw new Error('Niet ingelogd — vernieuw de pagina en log opnieuw in');
+
+    const sale  = getSale();
+    const rooms = _allRooms.length ? _allRooms : [payload];
+
+    // Bouw session object — compatibel met index.html quotes tabel
+    const sessionData = {
+      source: 'mraas',
+      roomLabel: payload?.roomLabel||'',
+      mfr: payload?.mfr||'',
+      platform: payload?.platform||'',
+      years: payload?.years||3,
+      allRooms: rooms.map(r=>({
+        roomLabel: r.roomLabel,
+        room: r.room,
+        mfr: r.mfr,
+        platform: r.platform,
+        sale: r.sale,
+        payment: r.payment,
+        products: (r.products||[]).map(p=>({name:p.name,sku:p.sku,cat:p.cat,qty:p.qty,trade:p.trade}))
+      }))
+    };
+
+    const quoteName = 'MRaaS — ' + project;
+    const now = new Date().toISOString();
+
+    // Check of er al een record bestaat voor deze naam + user
+    const { data: existing } = await sc()
+      .from('quotes')
+      .select('id,version')
+      .eq('name', quoteName)
+      .eq('user_email', session.user.email)
+      .maybeSingle();
+
+    let res;
+    if(existing){
+      res = await sc().from('quotes').update({
+        client: clientCo,
+        status: 'verstuurd',
+        n_z: rooms.length,
+        n_i: rooms.reduce((s,r)=>(s+(r.products||[]).length),0),
+        session: JSON.stringify(sessionData),
+        updated_at: now
+      }).eq('id', existing.id);
+    } else {
+      res = await sc().from('quotes').insert({
+        name: quoteName,
+        client: clientCo,
+        status: 'verstuurd',
+        version: 1,
+        n_z: rooms.length,
+        n_i: rooms.reduce((s,r)=>(s+(r.products||[]).length),0),
+        session: JSON.stringify(sessionData),
+        user_email: session.user.email,
+        shared: false,
+        updated_at: now
+      });
+    }
+
+    if(res.error) throw new Error(res.error.message);
+
+    st.style.cssText = 'display:block;font-size:11px;padding:8px 10px;border-radius:8px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;';
+    st.innerHTML = '✓ Opgeslagen in dashboard als <strong>' + esc(quoteName) + '</strong>';
+    btn.textContent = '✓ Opgeslagen';
+
+  }catch(e){
+    st.style.cssText = 'display:block;font-size:11px;padding:8px 10px;border-radius:8px;background:#fff0f1;color:#BE1622;border:1px solid #fca5a5;';
+    st.innerHTML = '⚠ ' + esc(e.message);
+    btn.disabled = false;
+    btn.innerHTML = '☁️ Opslaan in dashboard';
+  }
+}
+
+function exportToOfferte(){
+  const prods=(payload?.products||[]).filter(p=>p.trade>0&&p.cat!=='Info');
+  const margin=payload?.margin||28;
+  const exportPayload={
+    roomLabel:payload?.roomLabel||'Meeting Room',
+    roomKey:payload?.room||'small',
+    manufacturer:payload?.mfr||'',
+    platform:payload?.platform||'',
+    years:payload?.years||3,
+    margin, opco:payload?.opco||'België',
+    trade:fmt(prods.reduce((s,p)=>s+p.trade*p.qty,0)),
+    sale:fmt(getSale()),
+    quarterly:fmt(getMraas()*3),
+    products:prods.map(p=>({name:p.name,sku:p.sku||'',qty:p.qty,trade:p.trade,cat:p.cat}))
+  };
+  try{ localStorage.setItem('mraas_pending',JSON.stringify(exportPayload)); }catch(e){}
+  window.open('index.html','_blank');
+  closeClientModal();
+}
+
+function shareWhatsApp(){
+  const sale=getSale();
+  const mraas=getMraas();
+  const client=g('cm-client').value.trim()||'Klant';
+  const project=g('cm-project').value.trim();
+  const room=payload?.roomLabel||'Meeting Room';
+  const title=project?client+' — '+project:client;
+  const lines=(payload?.products||[]).filter(p=>p.cat!=='Service'&&p.cat!=='Info').map(p=>'• '+p.name+(p.qty>1?' ×'+p.qty:'')).join('\n');
+  const msg=`🏢 *MRaaS Configuratie — Ricoh Belgium*\n*${title}*\nZaal: ${room}\n\n${lines}\n\n💶 *Verkoopprijs excl. BTW: ${fmt(sale)}*\n📅 MRaaS ${_activeTerm} mnd: ${fmt(mraas)}/mnd excl. BTW\n\n_Gegenereerd via Easy Quotation_`;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+function shareEmail(){
+  const sale=getSale(); const mraas=getMraas();
+  const client=g('cm-client').value.trim()||'';
+  const project=g('cm-project').value.trim();
+  const email=g('cm-email').value.trim();
+  const room=payload?.roomLabel||'Meeting Room';
+  const lines=(payload?.products||[]).filter(p=>p.cat!=='Service'&&p.cat!=='Info').map(p=>`• ${p.name}${p.qty>1?' ×'+p.qty:''}`).join('\n');
+  const subj=`MRaaS Configuratie: ${client||room}${project?' — '+project:''}`;
+  const body=`Beste${client?' '+client:''},\n\nHierbij de MRaaS-configuratie voor ${room}${project?' — '+project:''}.\n\nCONFIGURATIE\n${lines}\n\nPRIJSOVERZICHT\nVerkoopprijs excl. BTW: ${fmt(sale)}\nMRaaS (${_activeTerm} maanden): ${fmt(mraas)}/mnd excl. BTW\n\nMet vriendelijke groeten,\nRicoh Belgium AV Team\n\n_Gegenereerd via Easy Quotation_`;
+  window.location.href='mailto:'+email+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);
+}
+
+/* ════════ TCO ═════════════════════════════════════════════ */
+function openTCO(){ calcTCO(); g('tcoModal').style.display='flex'; }
+function closeTCO(){ g('tcoModal').style.display='none'; }
+function calcTCO(){
+  const years=parseInt(g('tco-years')?.value||5);
+  const saving=parseFloat(g('tco-saving')?.value||12000);
+  const staff=parseInt(g('tco-staff')?.value||10);
+  const meetings=parseInt(g('tco-meetings')?.value||5);
+  const invest=getSale();
+  const annualSaving=saving+(staff*meetings*52*0.5*85);
+  const totalSaving=annualSaving*years;
+  const netBenefit=totalSaving-invest;
+  const roi=invest>0?((netBenefit/invest)*100).toFixed(0):0;
+  const payback=annualSaving>0?(invest/annualSaving).toFixed(1):0;
+  g('tco-result').innerHTML=
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+    +'<div><div style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Investering</div><div style="font-size:16px;font-weight:800;color:var(--ink);">'+fmt(invest)+'</div></div>'
+    +'<div><div style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Besparing '+years+' jaar</div><div style="font-size:16px;font-weight:800;color:#10b981;">'+fmt(totalSaving)+'</div></div>'
+    +'<div><div style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">ROI</div><div style="font-size:16px;font-weight:800;color:var(--orange);">'+roi+'%</div></div>'
+    +'<div><div style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Terugverdientijd</div><div style="font-size:16px;font-weight:800;color:var(--ink);">'+payback+' jaar</div></div>'
+    +'</div>';
+  drawTCOChart(invest,annualSaving,years);
+}
+
+function drawTCOChart(invest,annualSaving,years){
+  const canvas=g('tcoChart'); if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width=canvas.parentElement.offsetWidth||460;
+  const h=canvas.height=160;
+  ctx.clearRect(0,0,w,h);
+  const pad=40;
+  const pts=[];
+  for(let y=0;y<=years;y++) pts.push({x:y,y:annualSaving*y-invest});
+  const minY=Math.min(...pts.map(p=>p.y));
+  const maxY=Math.max(...pts.map(p=>p.y));
+  const rng=maxY-minY||1;
+  const sx=x=>(x/years)*(w-pad*2)+pad;
+  const sy=y=>h-pad-(((y-minY)/rng)*(h-pad*2));
+  // Grid line y=0
+  ctx.strokeStyle='rgba(0,0,0,.1)'; ctx.lineWidth=1;
+  const z=sy(0);
+  ctx.beginPath(); ctx.moveTo(pad,z); ctx.lineTo(w-pad,z); ctx.stroke();
+  ctx.fillStyle='rgba(0,0,0,.3)'; ctx.font='10px Inter'; ctx.textAlign='center';
+  ctx.fillText('Break-even',pad+(w-pad*2)/2,z-6);
+  // Line
+  const grad=ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0,'rgba(255,107,53,.8)'); grad.addColorStop(1,'rgba(232,0,28,.4)');
+  ctx.strokeStyle=grad; ctx.lineWidth=2.5; ctx.lineJoin='round';
+  ctx.beginPath();
+  pts.forEach((p,i)=>{ if(i===0) ctx.moveTo(sx(p.x),sy(p.y)); else ctx.lineTo(sx(p.x),sy(p.y)); });
+  ctx.stroke();
+  // Dots + labels
+  pts.forEach(p=>{
+    ctx.fillStyle=p.y>=0?'#10b981':'#e8001c';
+    ctx.beginPath(); ctx.arc(sx(p.x),sy(p.y),4,0,Math.PI*2); ctx.fill();
+  });
+  // X labels
+  ctx.fillStyle='rgba(0,0,0,.5)'; ctx.font='10px Inter'; ctx.textAlign='center';
+  for(let y=0;y<=years;y++) ctx.fillText('Jaar '+y,sx(y),h-8);
+}
+
+/* ════════ SCANNER ═════════════════════════════════════════ */
+function openScanner(){
+  g('scannerModal').style.display='flex';
+  _scanChips={size:'auto',platform:'both',install:'any'};
+  _scanImg=null;
+}
+function closeScannerModal(){ g('scannerModal').style.display='none'; }
+function toggleChip(group,btn,value){
+  document.querySelectorAll('#chip-'+group+' .scan-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); _scanChips[group]=value;
+}
+function handleScanFile(inp){
+  if(!inp.files||!inp.files[0]) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    _scanImg=e.target.result.split(',')[1];
+    g('scanPreview').src=e.target.result;
+    g('scanPreviewWrap').style.display='block';
+    g('scanPlaceholder').style.display='none';
+  };
+  reader.readAsDataURL(inp.files[0]);
+}
+async function runScan(){
+  const statusEl=g('scanStatus');
+  statusEl.innerHTML='<div style="font-size:12px;color:#7c3aed;display:flex;align-items:center;gap:8px;"><span class="spin" style="border-top-color:#7c3aed;border-color:#e9d5ff;"></span>AI analyseert…</div>';
+  const prods=(payload?.products||[]);
+  const ctx=`MRaaS configuratie: ${payload?.roomLabel||'Vergaderzaal'} met ${payload?.mfr||''} ${payload?.platform||''}.
+Huidige producten: ${prods.map(p=>p.name).join(', ')}.
+Zaalgrootte voorkeur: ${_scanChips.size||'auto'}, Platform: ${_scanChips.platform||'auto'}.`;
+  try{
+    const msgs=[{role:'user',content:[
+      ..._scanImg?[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:_scanImg}}]:[],
+      {type:'text',text:'Analyseer deze MRaaS vergaderzaal configuratie en geef 3 concrete verbeterstips op basis van: '+ctx+'\n\nAntwoord in het Nederlands, elk tip max 2 zinnen.'}
+    ]}];
+    const resp=await fetch(WRK+'/api/anthropic',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:600,messages:msgs})});
+    const data=await resp.json();
+    const text=data.content?.map(c=>c.text||'').join('')||'Geen resultaat.';
+    statusEl.innerHTML='<div style="font-size:12px;line-height:1.7;color:var(--ink);background:#f8f9fb;border-radius:10px;padding:12px;">'+text.replace(/\n/g,'<br>')+'</div>';
+  }catch(e){
+    statusEl.innerHTML='<div style="font-size:12px;color:#e8001c;">Fout: '+esc(e.message)+'</div>';
+  }
+}
+
+/* ════════ PDF ═════════════════════════════════════════════ */
+async function generatePDF(){
+  if(!payload){ toast('Geen configuratie geladen'); return; }
+
+  // Veiligheidsnet: presMode en modal altijd herstellen, ook bij een fout halverwege
+  const _modalEl = g('clientModal');
+  const _modalWasOpen = _modalEl && _modalEl.style.display !== 'none';
+  const _presModeEl = g('presMode');
+  const _presModeWasVisible = _presModeEl && getComputedStyle(_presModeEl).display !== 'none';
+  const _bodyOverflow = document.body.style.overflow;
+  const _htmlOverflow = document.documentElement.style.overflow;
+
+  try{
+    await _generatePDFInner();
+  }catch(e){
+    console.error('PDF generatie fout:', e);
+    toast('⚠ PDF mislukt: '+(e.message||'onbekende fout'));
+  }finally{
+    document.body.style.overflow = _bodyOverflow;
+    document.documentElement.style.overflow = _htmlOverflow;
+    if(_modalWasOpen && _modalEl) _modalEl.style.display = 'flex';
+    if(_presModeWasVisible && _presModeEl) _presModeEl.style.display = 'flex';
+  }
+}
+
+async function _generatePDFInner(){
+  const sale   = getSale();
+  const margin = payload.margin || 28;
+  const room   = ROOMS.find(r=>r.id===payload.room) || ROOMS[1];
+  const client = (g('cm-client')?.value||'').trim();
+  const today  = new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'});
+  const fn     = v => '\u20ac\u00a0'+parseFloat(v||0).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+
+  // Gebruik eigen zaalfoto indien geüpload, anders standaardfoto
+  const roomPhoto = _customRoomPhoto || room.photo;
+
+  // Converteer externe foto naar base64 — met harde timeout zodat dit NOOIT blijft hangen
+  async function toDataUrl(url, timeoutMs=5000){
+    if(!url) return '';
+    if(url.startsWith('data:')) return url;
+    try{
+      const controller = new AbortController();
+      const timer = setTimeout(()=>controller.abort(), timeoutMs);
+      const resp = await fetch(url, { mode:'cors', signal: controller.signal });
+      clearTimeout(timer);
+      if(!resp.ok) return '';
+      const blob = await resp.blob();
+      return await new Promise((res)=>{
+        const r = new FileReader();
+        r.onload = ()=>res(r.result);
+        r.onerror = ()=>res('');
+        r.readAsDataURL(blob);
+      });
+    }catch(e){ return ''; }
+  }
+
+  toast('Foto\u2019s voorbereiden\u2026');
+  const roomPhotoData = await toDataUrl(roomPhoto);
+
+  const prods = (payload.products||[]).filter(p=>
+    p.name && p.cat!=='Info' &&
+    !p.name.toLowerCase().startsWith('not available') &&
+    !p.name.toLowerCase().startsWith('included') &&
+    !(p.trade===0 && p.cat!=='Service')
+  );
+
+  // Sluit modal en fullscreen tijdelijk — anders verstoort die de html2canvas rendering
+  if(g('clientModal')) g('clientModal').style.display = 'none';
+  if(g('presMode')) g('presMode').style.display = 'none';
+  document.body.style.overflow = 'visible';
+  document.documentElement.style.overflow = 'visible';
+
+  toast('PDF genereren\u2026');
+
+  // Controleer of de PDF-library geladen is
+  if(typeof html2pdf === 'undefined'){
+    throw new Error('PDF-bibliotheek niet geladen — controleer je internetverbinding');
+  }
+
+  // ── ÉÉN simpele pagina: foto bovenaan, productenlijst eronder, totaal onderaan ──
+  // position:fixed zodat de scrollpositie van de pagina de capture niet kan verschuiven
+  window.scrollTo(0,0);
+  const wr = document.createElement('div');
+  wr.style.cssText = 'position:fixed;left:0;top:0;width:794px;background:#fff;font-family:Arial,sans-serif;color:#212529;z-index:-1;visibility:visible;';
+
+  wr.innerHTML = `
+    <div style="width:794px;background:#fff;box-sizing:border-box;">
+
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:24px 32px;border-bottom:3px solid #BE1622;">
+        <div>
+          <div style="font-size:20px;font-weight:900;color:#BE1622;">RICOH</div>
+          <div style="font-size:9px;color:#888;">imagine. change.</div>
+        </div>
+        <div style="text-align:right;font-size:10px;color:#666;line-height:1.7;">
+          <div><strong>Datum:</strong> ${today}</div>
+          ${client?`<div><strong>Klant:</strong> ${esc(client)}</div>`:''}
+          <div><strong>Zaal:</strong> ${esc(payload.roomLabel||room.label)}</div>
+        </div>
+      </div>
+
+      <!-- Zaalfoto -->
+      <div style="width:100%;height:280px;background:#f0f0f0;overflow:hidden;">
+        ${roomPhotoData?`<img src="${roomPhotoData}" style="width:100%;height:100%;object-fit:cover;display:block;">`:''}
+      </div>
+
+      <!-- Titel + configuratie -->
+      <div style="padding:24px 32px 8px;">
+        <div style="font-size:18px;font-weight:800;color:#212529;margin-bottom:4px;">${esc(payload.roomLabel||room.label)}</div>
+        <div style="font-size:10px;color:#888;margin-bottom:16px;">${esc(payload.mfr||'')} \u00b7 ${esc(payload.platform||'')} \u00b7 ${esc(String(payload.years||3))} jaar contract</div>
+      </div>
+
+      <!-- Productenlijst -->
+      <div style="padding:0 32px;">
+        <table style="width:100%;border-collapse:collapse;font-size:10.5px;">
+          <thead>
+            <tr style="background:#f8f9fa;">
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #eee;color:#666;font-size:9px;text-transform:uppercase;letter-spacing:.4px;">Product</th>
+              <th style="padding:8px 10px;text-align:center;border-bottom:2px solid #eee;color:#666;font-size:9px;text-transform:uppercase;letter-spacing:.4px;">Aantal</th>
+              <th style="padding:8px 10px;text-align:right;border-bottom:2px solid #eee;color:#666;font-size:9px;text-transform:uppercase;letter-spacing:.4px;">Verkoopprijs</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${prods.map(p=>{
+              const sp = p.trade>0 ? p.trade/(1-margin/100) : 0;
+              return `<tr>
+                <td style="padding:7px 10px;border-bottom:1px solid #f5f5f5;">
+                  <div style="font-weight:600;color:#212529;">${esc(p.name)}</div>
+                  ${p.sku&&p.sku!=='—'?`<div style="font-size:8.5px;color:#aaa;font-family:monospace;">${esc(p.sku)}</div>`:''}
+                </td>
+                <td style="padding:7px 10px;text-align:center;border-bottom:1px solid #f5f5f5;color:#666;">${p.qty}</td>
+                <td style="padding:7px 10px;text-align:right;border-bottom:1px solid #f5f5f5;font-weight:600;">${sp>0?fn(sp*p.qty):'\u2014'}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Totaal -->
+      <div style="margin:20px 32px 0;background:#f8f9fa;border-radius:8px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;font-weight:700;color:#212529;">Totaal excl. BTW</span>
+        <span style="font-size:22px;font-weight:900;color:#BE1622;">${fn(sale)}</span>
+      </div>
+
+      <!-- MRaaS maandbedrag -->
+      <div style="margin:12px 32px 24px;display:flex;gap:10px;">
+        ${[36,48,60].map(t=>{
+          const monthly = sale*MRAAS[t];
+          const isStar = t===48;
+          return `<div style="flex:1;border:${isStar?'2px solid #BE1622':'1px solid #eee'};border-radius:8px;padding:10px;text-align:center;background:${isStar?'#fff5f5':'white'};">
+            <div style="font-size:9px;color:#888;">${t} mnd</div>
+            <div style="font-size:14px;font-weight:800;color:#BE1622;">${fn(monthly)}<span style="font-size:9px;font-weight:500;color:#888;">/mnd</span></div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <!-- Footer -->
+      <div style="padding:12px 32px;border-top:1px solid #eee;font-size:8.5px;color:#aaa;display:flex;justify-content:space-between;">
+        <span>Ricoh Belgium NV \u2014 Medialaan 28A, 1800 Vilvoorde</span>
+        <span>Geldig 30 dagen vanaf ${today}</span>
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(wr);
+
+  // Wacht tot de zaalfoto effectief geladen is
+  await new Promise(resolve=>{
+    const imgs = wr.querySelectorAll('img');
+    if(!imgs.length) return resolve();
+    let loaded = 0;
+    const done = ()=>{ loaded++; if(loaded>=imgs.length) resolve(); };
+    imgs.forEach(img=>{
+      if(img.complete && img.naturalWidth>0) done();
+      else { img.onload = done; img.onerror = done; }
+    });
+    setTimeout(resolve, 4000);
+  });
+
+  // Forceer reflow + extra wachttijd zodat de browser klaar is met layouten
+  void wr.offsetHeight;
+  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+  await new Promise(r=>setTimeout(r,200));
+
+  const totalHeight = wr.scrollHeight;
+  if(totalHeight < 100){
+    throw new Error('PDF-inhoud leeg gerenderd (hoogte: '+totalHeight+'px)');
+  }
+
+  // KRITIEKE FIX: html2canvas berekent soms hoogte=0 voor position:absolute elementen met height:auto,
+  // ook al is scrollHeight correct. Expliciete pixel-hoogte zetten lost dit gedocumenteerde probleem op.
+  wr.style.height = totalHeight + 'px';
+  void wr.offsetHeight; // forceer reflow met de nieuwe expliciete hoogte
+
+  const filename = 'MRaaS_' + (client||payload.roomLabel||'Presentatie').replace(/\s+/g,'_') + '_' + new Date().toISOString().slice(0,10) + '.pdf';
+
+  // ── html2pdf chainable API: eerst canvas bouwen en verifiëren, dan pas PDF maken ──
+  const worker = html2pdf().set({
+    margin: 0,
+    image: { type: 'jpeg', quality: 0.92 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      windowWidth: 794,
+      scrollX: 0,
+      scrollY: 0,
+      x: 0,
+      y: 0
+    },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(wr);
+
+  // Bouw eerst het canvas en verifieer dat het effectief inhoud heeft
+  const canvas = await worker.toCanvas().get('canvas');
+  if(!canvas || canvas.width === 0 || canvas.height === 0){
+    throw new Error('Canvas leeg gerenderd ('+(canvas?canvas.width+'\u00d7'+canvas.height:'null')+')');
+  }
+
+  // Canvas is gevuld — ga door naar PDF en download
+  await worker.toPdf().save(filename);
+
+  toast('\u2713 PDF gedownload');
+  document.body.removeChild(wr);
+}
+
+/* ════════ DIGITAL ROOM CARD ═══════════════════════════════ */
+function buildDigitalRoomCard(room,prods,total,photo,notes){
+  const monthly=Math.round(total*MRAAS[_activeTerm]);
+  const prodData=JSON.stringify(prods);
+  return `<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${room.label} — Ricoh MRaaS</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;background:#0d0d14;color:white;min-height:100dvh;display:flex;flex-direction:column;}</style></head><body><div style="padding:24px;"><div style="font-size:20px;font-weight:900;margin-bottom:4px;">Ricoh<span style="color:#ff6b35;">.</span></div><div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px;">MRaaS Configuratie</div><div style="font-size:24px;font-weight:800;margin-bottom:4px;">${room.label}</div><div style="font-size:32px;font-weight:900;color:#ff6b35;margin-bottom:4px;">€ ${monthly.toLocaleString('nl-BE')}<span style="font-size:14px;font-weight:600;color:rgba(255,255,255,.5);">/mnd</span></div><div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:20px;">${_activeTerm} maanden · excl. BTW</div><div style="display:flex;flex-direction:column;gap:8px;">${prods.map(p=>'<div style="background:rgba(255,255,255,.06);border-radius:10px;padding:10px 14px;"><div style="font-size:13px;font-weight:600;">'+(p.name||'')+'</div><div style="font-size:11px;color:rgba(255,255,255,.4);">'+(p.desc||p.brand||'')+'</div></div>').join('')}</div></div></body></html>`;
+}
+
+/* ════════ INIT ════════════════════════════════════════════ */
+initAuth();
+</script>
+</body>
+</html>
