@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Offerte</title>
+<style>
+  html,body{height:100%;margin:0;padding:0;background:#a8a8a8}
+  #frm{position:fixed;inset:0;width:100%;height:100%;border:0;display:none;background:#a8a8a8}
+  #loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#f0f2f5;font-family:Arial,sans-serif}
+  #loader .in{text-align:center;padding:40px}
+  #loader h2{color:#1a1a2e;margin:0 0 12px;font-size:20px}
+  #loader p{color:#6c757d;font-size:14px;margin:0}
+  .sp{width:40px;height:40px;border:4px solid #dee2e6;border-top-color:#BE1622;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .err{color:#BE1622;font-weight:700}
+</style>
+</head>
+<body>
+<div id="loader"><div class="in">
+  <div class="sp"></div>
+  <h2>Offerte wordt geladen</h2>
+  <p>Even geduld...</p>
+</div></div>
+<iframe id="frm" title="Offerte"></iframe>
+<script>
+(function(){
+  var SUPA_URL  = "https://aocdvzrjwljmiqnuklkn.supabase.co";
+  var SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvY2R2enJqd2xqbWlxbnVrbGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MTcwNzAsImV4cCI6MjA5NjM5MzA3MH0.3VWhhLZJxtV0io4FucWjxF5FN1ABRKzGbfyqR6NP4M4";
+
+  var loader = document.getElementById("loader");
+  var frm    = document.getElementById("frm");
+
+  function fail(msg){
+    loader.innerHTML = '<div class="in"><p class="err">' + msg + '</p></div>';
+  }
+
+  function render(html){
+    // Render in een eigen, leeg document: de klantpagina behoudt haar eigen
+    // doctype, <meta viewport>, CSS en scripts. Geen overerving vanuit deze
+    // loader en geen document.write()-interventie van Chrome op cross-origin
+    // parser-blocking scripts (bv. pannellum voor 360°-zalen).
+    var d = frm.contentDocument || (frm.contentWindow && frm.contentWindow.document);
+    if(!d){ fail("Kan de offerte niet weergeven in deze browser."); return; }
+
+    d.open();
+    d.write(html);
+    d.close();
+
+    loader.style.display = "none";
+    frm.style.display    = "block";
+
+    // Tabtitel overnemen zodra de klantpagina geparsed is.
+    try{
+      var t = d.title;
+      if(t) document.title = t;
+    }catch(e){ /* negeerbaar */ }
+  }
+
+  var params = new URLSearchParams(window.location.search);
+  var id = params.get("id");
+
+  if(!id){ fail("Geen offerte-ID opgegeven."); return; }
+
+  var url = SUPA_URL + "/rest/v1/signing_pages"
+          + "?id=eq." + encodeURIComponent(id)
+          + "&select=html_content"
+          + "&apikey=" + encodeURIComponent(SUPA_ANON);
+
+  fetch(url, {
+    headers: {
+      "apikey": SUPA_ANON,
+      "Authorization": "Bearer " + SUPA_ANON,
+      "Accept": "application/json"
+    }
+  })
+  .then(function(r){
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  })
+  .then(function(rows){
+    if(!rows || !rows.length || !rows[0].html_content){
+      fail("Offerte niet gevonden of verlopen.");
+      return;
+    }
+    render(rows[0].html_content);
+  })
+  .catch(function(e){
+    fail("Fout bij laden: " + (e && e.message ? e.message : e));
+  });
+})();
+</script>
+</body>
+</html>
