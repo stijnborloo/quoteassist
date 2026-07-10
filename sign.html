@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Offerte laden...</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,sans-serif;background:#f0f2f5;display:flex;align-items:center;justify-content:center;min-height:100vh}
+  .ld{text-align:center;padding:40px}
+  .ld h2{color:#1a1a2e;margin-bottom:12px}
+  .ld p{color:#6c757d;font-size:14px}
+  .sp{width:40px;height:40px;border:4px solid #dee2e6;border-top-color:#BE1622;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .err{color:#BE1622;font-weight:700}
+  @media(prefers-reduced-motion:reduce){.sp{animation:none}}
+</style>
+</head>
+<body>
+<div class="ld" id="loader">
+  <div class="sp"></div>
+  <h2 id="ld-title">Offerte wordt geladen</h2>
+  <p id="ld-sub">Even geduld...</p>
+</div>
+<script>
+(function(){
+  var SUPA_URL  = "https://aocdvzrjwljmiqnuklkn.supabase.co";
+  var SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvY2R2enJqd2xqbWlxbnVrbGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MTcwNzAsImV4cCI6MjA5NjM5MzA3MH0.3VWhhLZJxtV0io4FucWjxF5FN1ABRKzGbfyqR6NP4M4";
+
+  var params = new URLSearchParams(window.location.search);
+  var id = params.get("id");
+
+  // Dit laadscherm verschijnt vóór de offerte binnen is, dus de taal kan hier
+  // nog niet uit de opgeslagen HTML komen. QuoteAssist hangt daarom ?lang= aan
+  // de link. Oudere links hebben die niet; dan valt hij terug op de browsertaal.
+  var LANG = (function(){
+    var q = (params.get("lang")||"").toLowerCase().slice(0,2);
+    if(q === "nl" || q === "fr" || q === "en") return q;
+    var nav = ((navigator.languages && navigator.languages[0]) || navigator.language || "nl").toLowerCase().slice(0,2);
+    return (nav === "fr" || nav === "en") ? nav : "nl";
+  })();
+
+  var T = {
+    nl: { title:"Offerte wordt geladen", sub:"Even geduld...", docTitle:"Offerte laden...",
+          noId:"Geen offerte-ID opgegeven.", notFound:"Offerte niet gevonden of verlopen.", loadErr:"Fout bij laden: " },
+    fr: { title:"Chargement du devis", sub:"Un instant...", docTitle:"Chargement du devis...",
+          noId:"Aucun identifiant de devis fourni.", notFound:"Devis introuvable ou expir\u00e9.", loadErr:"Erreur de chargement: " },
+    en: { title:"Loading quote", sub:"One moment...", docTitle:"Loading quote...",
+          noId:"No quote ID provided.", notFound:"Quote not found or expired.", loadErr:"Failed to load: " }
+  }[LANG];
+
+  document.documentElement.lang = LANG;
+  document.title = T.docTitle;
+  document.getElementById("ld-title").textContent = T.title;
+  document.getElementById("ld-sub").textContent = T.sub;
+
+  function fail(msg){
+    document.getElementById("loader").innerHTML = '<p class="err"></p>';
+    document.querySelector("#loader .err").textContent = msg;
+  }
+
+  if(!id){ fail(T.noId); return; }
+
+  fetch(SUPA_URL + "/rest/v1/signing_pages?id=eq." + encodeURIComponent(id) + "&select=html_content", {
+    headers: {
+      "apikey": SUPA_ANON,
+      "Authorization": "Bearer " + SUPA_ANON
+    }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(rows){
+    if(!rows || !rows.length || !rows[0].html_content){
+      fail(T.notFound);
+      return;
+    }
+    // Render the full signing page
+    document.open();
+    document.write(rows[0].html_content);
+    document.close();
+  })
+  .catch(function(e){
+    fail(T.loadErr + e.message);
+  });
+})();
+</script>
+</body>
+</html>
