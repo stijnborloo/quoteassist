@@ -11273,8 +11273,8 @@ function _doRender(){
           });
         });
         _optionalRoomsAltsHTML = '<div style="border-top:1px dashed #eee;background:#fffaf5;padding:12px 16px 14px;margin-top:12px;border-radius:6px">'
-          +'<div style="font-size:9px;font-weight:700;color:#bb5a1e;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">⭐ '+t("alts_avail"||"Alternatieven beschikbaar")+'</div>'
-          +'<p style="font-size:11px;color:#666;margin-bottom:10px">'+t("choose_opts"||"Kies welke zaals u wilt toevoegen aan uw offerte:")+'</p>'
+          +'<div style="font-size:9px;font-weight:700;color:#bb5a1e;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">⭐ Beschikbare zaalconfiguraties</div>'
+          +'<p style="font-size:11px;color:#666;margin-bottom:10px">Kies welke zaals u wilt toevoegen aan uw offerte:</p>'
           +optionalRooms.map(function(z){
             if(!z.items.length) return '';
             var roomTotal = _roomTotal(z);
@@ -11370,7 +11370,7 @@ function _doRender(){
           });
         });
         _optRoomsAltsFlat = '<div style="margin-top:16px;border-top:1px dashed #ddd;padding-top:12px">'
-          +'<div style="font-size:9px;font-weight:700;color:#bb5a1e;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">⭐ '+t("alts_avail"||"Alternatieven beschikbaar")+'</div>'
+          +'<div style="font-size:9px;font-weight:700;color:#bb5a1e;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">⭐ Beschikbare zaalconfiguraties</div>'
           +optionalRooms.map(function(z){
             if(!z.items.length) return '';
             var roomTotal = _roomTotal(z);
