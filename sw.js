@@ -1,6 +1,6 @@
 // Ricoh Offerte Studio Pro - Service Worker v8
 // Timestamp: 2026-06-22T00:00:00Z
-var CACHE = "ricoh-offerte-v8";
+var CACHE = "ricoh-offerte-v9";
 var INDEX = "index.html";
 
 self.addEventListener("install", function(e) {
