@@ -7521,9 +7521,8 @@ async function analyzeVB(){
 }
 
 // ═══════ ZALEN ═══════════════════════════════════════════
-function addZaal(){var name=document.getElementById("new-zaal").value.trim();if(!name)return;zalen.push({id:uid(),name:name,items:[],img:null,desc:"",optional:false});document.getElementById("new-zaal").value="";renderZalen();render();  setTimeout(function(){attachZS();zalen.forEach(function(z){attachIS(z.id);});},0);
+function addZaal(){var name=document.getElementById("new-zaal").value.trim();if(!name)return;zalen.push({id:uid(),name:name,items:[],img:null,desc:""});document.getElementById("new-zaal").value="";renderZalen();render();  setTimeout(function(){attachZS();zalen.forEach(function(z){attachIS(z.id);});},0);
 }
-function toggleRoomOptional(zid){var z=zalen.find(function(z){return z.id===zid;});if(z){z.optional=!z.optional;renderZalen();render();saveState();}}
 function removeZaal(zid){if(!confirmTr("Zaal verwijderen?"))return;zalen=zalen.filter(function(z){return z.id!==zid;});renderZalen();render();}
 function renameZaal(zid,n){var z=zalen.find(function(z){return z.id===zid;});if(z){z.name=n;render();}}
 function setZaalDesc(zid,v){var z=zalen.find(function(z){return z.id===zid;});if(z){z.desc=v;render();}}
@@ -7787,7 +7786,6 @@ function renderZalen(){
         :'<label onclick="event.stopPropagation()" style="width:28px;height:28px;background:rgba(255,255,255,.2);border:1px dashed rgba(255,255,255,.4);border-radius:3px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:#fff;font-size:13px" title="Klik om foto toe te voegen">📷</label>')+
       '<input id="fupload-'+z.id+'" type="file" accept="image/*" onchange="setZaalImg('+z.id+',event)" style="display:none">'+
       '<span class="zc">'+z.items.length+' items</span>'+
-      '<button class="btn b-sm" onclick="event.stopPropagation();toggleRoomOptional('+z.id+')" title="'+(z.optional?'Optioneel: niet meegerekend in totaal. Klik om terug verplicht te zetten.':'Klik om als optie in te stellen')+'" style="background:'+(z.optional?'#ff6b35':'#e0e0e0')+';color:'+(z.optional?'#fff':'#555')+';margin-left:3px;flex-shrink:0;min-height:28px;font-weight:bold;font-size:11px">ZAAL</button>'+
       '<button class="btn b-sm" onclick="event.stopPropagation();saveZaalTpl('+z.id+')" title="Opslaan als sjabloon" style="background:#7c3aed;color:#fff;margin-left:3px;flex-shrink:0;min-height:28px">&#128190;</button>'+
       '<button class="btn b-gray b-sm" onclick="event.stopPropagation();removeZaal('+z.id+')" style="margin-left:3px">&#x2715;</button>'+
       '</div>'+
@@ -10987,8 +10985,8 @@ function _doRender(){
   var pgFotoEindeStart=pgCond+1;
   var tvSVG='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
 
-  // Totalen basis (exclude optional rooms AND optional items)
-  var sub=0;zalen.forEach(function(z){if(!z.optional){z.items.forEach(function(i){if(i.price&&!i.optional)sub+=parseFloat(i.price)*i.qty;});}});
+  // Totalen basis
+  var sub=0;allItems().forEach(function(i){if(i.price&&!i.optional)sub+=parseFloat(i.price)*i.qty;});
   var discAmt=(discount.pct>0)?sub*(discount.pct/100):0;
   var subNet=sub-discAmt;
   var btw=subNet*0.21,grand=subNet+btw,hp=allItems().some(function(i){return i.price;});
@@ -11091,8 +11089,8 @@ function _doRender(){
 
   // Technische bepalingen per zaal
   var techHTML="";
-  if(mandatoryRooms.length===0){techHTML='<div class="a4">'+PH()+'<div class="pg-body"><span class="sn">3.</span><span class="st">'+t("s3"||"Technische bepalingen")+'</span><div class="sr"></div><div class="emp">'+t("no_zalen"||"Maak vergaderzalen aan op tabblad \u201eZalen\u201d")+'</div></div>'+PF(pgTechStart)+'</div>';}
-  else{var techPg=pgTechStart;mandatoryRooms.forEach(function(z,zi){
+  if(zalen.length===0){techHTML='<div class="a4">'+PH()+'<div class="pg-body"><span class="sn">3.</span><span class="st">'+t("s3"||"Technische bepalingen")+'</span><div class="sr"></div><div class="emp">'+t("no_zalen"||"Maak vergaderzalen aan op tabblad \u201eZalen\u201d")+'</div></div>'+PF(pgTechStart)+'</div>';}
+  else{var techPg=pgTechStart;zalen.forEach(function(z,zi){
     var split=zaalSplits[zi]||[[]];
     var nPg=split.length;
     split.forEach(function(pageItems,pi){
@@ -11153,7 +11151,7 @@ function _doRender(){
   var fotoEindeHTML   = buildGroup(fpG["einde"],       pgFotoEindeStart);
 
   // Prijsvoorstel
-  var priceRows=mandatoryRooms.map(function(z){if(!z.items.length)return"";return'<tr class="zg"><td colspan="'+(showRefs?5:4)+'">'+esc(z.name)+'</td></tr>'+z.items.map(function(i){var optStyle=i.optional?'color:#bb5a1e;font-style:italic':'';return'<tr style="'+optStyle+'"><td>'+esc(i.name)+(i.optional?' <span style="font-size:8px;background:#fff1e0;color:#bb5a1e;border-radius:3px;padding:1px 4px;font-style:normal;font-weight:bold">'+t("opt_lbl")+'</span>':'')+'</td>'+(showRefs?'<td style="color:#999;font-size:9px">'+esc(i.ref||i.name.split(/\s+/).pop())+'</td>':'')+'<td style="text-align:center">'+i.qty+',0</td><td class="ri">'+(i.price!=null?fE(i.price):"-")+'</td><td class="ri">'+(i.optional?'<span style="color:#bb5a1e">'+(i.price!=null?fE(i.price*i.qty):"-")+'</span>':i.price!=null?fE(i.price*i.qty):"-")+'</td></tr>';}).join("");}).join("");
+  var priceRows=zalen.map(function(z){if(!z.items.length)return"";return'<tr class="zg"><td colspan="'+(showRefs?5:4)+'">'+esc(z.name)+'</td></tr>'+z.items.map(function(i){var optStyle=i.optional?'color:#bb5a1e;font-style:italic':'';return'<tr style="'+optStyle+'"><td>'+esc(i.name)+(i.optional?' <span style="font-size:8px;background:#fff1e0;color:#bb5a1e;border-radius:3px;padding:1px 4px;font-style:normal;font-weight:bold">'+t("opt_lbl")+'</span>':'')+'</td>'+(showRefs?'<td style="color:#999;font-size:9px">'+esc(i.ref||i.name.split(/\s+/).pop())+'</td>':'')+'<td style="text-align:center">'+i.qty+',0</td><td class="ri">'+(i.price!=null?fE(i.price):"-")+'</td><td class="ri">'+(i.optional?'<span style="color:#bb5a1e">'+(i.price!=null?fE(i.price*i.qty):"-")+'</span>':i.price!=null?fE(i.price*i.qty):"-")+'</td></tr>';}).join("");}).join("");
   var _zaalIcon='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#BE1622" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="1"/><path d="M8 21h8M12 17v4"/></svg>';
   function _roomCard(z, mk, itemMulFn){
     var rt=0,cnt=0;
@@ -11212,9 +11210,7 @@ function _doRender(){
       +altsHTML
       +'</div>';
   }
-  var mandatoryRooms=zalen.filter(function(z){return !z.optional;});
-  var optionalRooms=zalen.filter(function(z){return z.optional;});
-  var roomCardsHTML=mandatoryRooms.map(function(z){return z.items.length?_roomCard(z,1):"";}).join("");
+  var roomCardsHTML=zalen.map(function(z){return z.items.length?_roomCard(z,1):"";}).join("");
   function _roomTotal(z){var rt=0;z.items.forEach(function(i){if(i.price!=null&&!i.optional&&i.qty>0)rt+=parseFloat(i.price)*i.qty;});return rt;}
   function _donutOverview(zalenList){
     var withTotals=zalenList.filter(function(z){return z.items.length;}).map(function(z){return{name:z.name,total:_roomTotal(z)};});
@@ -11259,75 +11255,51 @@ function _doRender(){
   if(!_mraasOnlyActive && zalen.length > 0){
     if(priceByRoom){
       // ── priceByRoom mode: donut overview + room cards ──
-      var _donutHTML = _donutOverview(mandatoryRooms);
-      var _roomCardsArr = mandatoryRooms.map(function(z){ return z.items.length ? _roomCard(z,1) : ""; }).filter(function(h){return h;});
-      // Build optional rooms alternatives section
-      var _optionalRoomsAltsHTML = '';
-      if(optionalRooms.length > 0){
-        var baseMandatoryTotal = 0;
-        mandatoryRooms.forEach(function(z){
-          z.items.forEach(function(i){
-            if(i.price != null && !i.optional && i.qty > 0){
-              baseMandatoryTotal += parseFloat(i.price) * i.qty;
-            }
-          });
-        });
-        _optionalRoomsAltsHTML = '<div style="border-top:1px dashed #eee;background:#fffaf5;padding:12px 16px 14px;margin-top:12px;border-radius:6px">'
-          +'<div style="font-size:9px;font-weight:700;color:#bb5a1e;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">⭐ Beschikbare zaalconfiguraties</div>'
-          +'<p style="font-size:11px;color:#666;margin-bottom:10px">Kies welke zaals u wilt toevoegen aan uw offerte:</p>'
-          +optionalRooms.map(function(z){
-            if(!z.items.length) return '';
-            var roomTotal = _roomTotal(z);
-            var newGrandTotal = baseMandatoryTotal + roomTotal;
-            var delta = roomTotal;
-            var itemDesc = z.items.slice(0,3).map(function(i){return esc(i.name.length>20?i.name.slice(0,20)+'…':i.name);}).join(', ');
-            if(z.items.length > 3) itemDesc += ', …';
-            return '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #f3e6d8;font-size:11px">'
-              +'<div style="flex:1">'
-              +'<div style="display:flex;align-items:center;gap:6px"><strong style="color:#333">'+esc(z.name)+'</strong><span style="font-size:8px;font-weight:700;background:#fff1e0;color:#bb5a1e;border-radius:3px;padding:1px 5px">'+t("opt_lbl"||"OPT")+'</span></div>'
-              +'<div style="font-size:10px;color:#999;margin-top:3px">'+z.items.length+' '+t(z.items.length===1?"item_lbl":"items_lbl")+' • '+itemDesc+'</div>'
-              +'</div>'
-              +'<div style="text-align:right;white-space:nowrap;flex-shrink:0">'
-              +'<div style="font-size:9px;color:#999">'+t("room_total"||"Zaaltotaal")+'</div>'
-              +'<div style="font-weight:700;color:#212529">'+fE(roomTotal)+'</div>'
-              +'<div style="font-size:9px;color:#2e7d32;font-weight:600">(+'+fE(delta)+')</div>'
-              +'</div>'
-              +'</div>';
-          }).join('')
-          +'</div>';
-      }
-      // ── Paginate room cards — simple fixed cards-per-page ──
-      var _pmZoom = (_quoteFS || 100) / 100;
-      // First page has donut+header → fewer cards; continuation pages get more
-      var _cpp1 = Math.max(3, Math.floor(7 / _pmZoom));   // ~7 cards at zoom 1.0
-      var _cppN = Math.max(4, Math.floor(10 / _pmZoom));  // ~10 cards at zoom 1.0
-
+      var _donutHTML = _donutOverview(zalen);
+      var _roomCardsArr = zalen.map(function(z){ return z.items.length ? _roomCard(z,1) : ""; }).filter(function(h){return h;});
+      // Paginate: first page gets section header + intro + donut + as many cards as fit
       var _pricePagesPBR = [];
-      var _idx = 0;
-      // First page: header + donut + first batch of cards
-      var _first = _roomCardsArr.slice(0, _cpp1);
-      _pricePagesPBR.push(_priceSecHeader + _priceIntro + (_donutHTML||'') + _first.join(''));
-      _idx = _cpp1;
-      // Continuation pages
-      while(_idx < _roomCardsArr.length){
-        var _chunk = _roomCardsArr.slice(_idx, _idx + _cppN);
-        _pricePagesPBR.push(_priceContHeader + _chunk.join(''));
-        _idx += _cppN;
-      }
-      // Append optional rooms + totals to last page (or new page if needed)
-      var _trailHTML = (_optionalRoomsAltsHTML||'') + (_totBox||'');
-      if(_trailHTML){
-        // Count how many cards are on the last page
-        var _lastPageCards = _roomCardsArr.length <= _cpp1 ? _roomCardsArr.length : ((_roomCardsArr.length - _cpp1) % _cppN || _cppN);
-        if(_lastPageCards <= _cppN - 2){
-          // Room on last page — append
-          _pricePagesPBR[_pricePagesPBR.length-1] += _trailHTML;
+      var _pbrCur = _priceSecHeader + _priceIntro + _donutHTML;
+      var _pbrIdx = 0;
+      while(_pbrIdx < _roomCardsArr.length){
+        var _tryAdd = _pbrCur + _roomCardsArr[_pbrIdx];
+        // Also try to fit totals on this page if it's the last card
+        if(_pbrIdx === _roomCardsArr.length - 1){
+          if(_pageFits(_tryAdd + _totBox)){
+            _pbrCur = _tryAdd + _totBox;
+            _pbrIdx++;
+            break;
+          }
+        }
+        if(_pageFits(_tryAdd)){
+          _pbrCur += _roomCardsArr[_pbrIdx];
+          _pbrIdx++;
         } else {
-          // New page for trailing content
-          _pricePagesPBR.push(_priceContHeader + _trailHTML);
+          // Current page is full, save it and start a new one
+          if(_pbrCur === _priceSecHeader + _priceIntro + _donutHTML && _pbrIdx === 0){
+            // Edge case: even the donut alone with first card doesn't fit — put donut on page 1, card on page 2
+            _pricePagesPBR.push(_pbrCur);
+            _pbrCur = _priceContHeader + _roomCardsArr[_pbrIdx];
+            _pbrIdx++;
+          } else {
+            _pricePagesPBR.push(_pbrCur);
+            _pbrCur = _priceContHeader;
+          }
         }
       }
-
+      // Flush last page content
+      if(_pbrCur){
+        // If totals haven't been added yet (last card was pushed to a new page)
+        if(_pbrIdx >= _roomCardsArr.length && _pbrCur.indexOf('tot-box') === -1 && _totBox){
+          if(_pageFits(_pbrCur + _totBox)){
+            _pbrCur += _totBox;
+          } else {
+            _pricePagesPBR.push(_pbrCur);
+            _pbrCur = _priceContHeader + _totBox;
+          }
+        }
+        _pricePagesPBR.push(_pbrCur);
+      }
       // Build .a4 divs
       _pricePages = _pricePagesPBR.length;
       for(var _pi=0; _pi<_pricePagesPBR.length; _pi++){
@@ -11335,7 +11307,7 @@ function _doRender(){
       }
     } else {
       // ── Flat table mode: split rows across pages ──
-      var priceRowsArr = mandatoryRooms.map(function(z){
+      var priceRowsArr = zalen.map(function(z){
         if(!z.items.length) return [];
         var zRow = '<tr class="zg"><td colspan="'+(showRefs?5:4)+'">'+esc(z.name)+'</td></tr>';
         var iRows = z.items.map(function(i){
@@ -11345,153 +11317,57 @@ function _doRender(){
         return [zRow].concat(iRows);
       }).reduce(function(a,b){return a.concat(b);},[]);
 
-      // Build optional rooms alternatives section for flat table mode
-      var _optRoomsAltsFlat = '';
-      if(optionalRooms.length > 0){
-        var baseTotalFlat = 0;
-        mandatoryRooms.forEach(function(z){
-          z.items.forEach(function(i){
-            if(i.price != null && !i.optional && i.qty > 0){
-              baseTotalFlat += parseFloat(i.price) * i.qty;
+      // Check if everything fits on one page
+      var _allOnOne = _prtTHead + '<tbody>' + priceRowsArr.join('') + '</tbody></table>' + _totBox;
+      if(_pageFits(_priceSecHeader + _priceIntro + _allOnOne)){
+        // Single page — no split needed
+        p4 = '<div class="a4">'+PH()+'<div class="pg-body">'+_priceSecHeader+_priceIntro+_allOnOne+'</div>'+PF(pgPrice)+'</div>';
+        _pricePages = 1;
+      } else {
+        // Multi-page: pack rows
+        var _pricePagesFlat = [];
+        var _curRows = [];
+        var _ri = 0;
+        while(_ri < priceRowsArr.length){
+          _curRows.push(priceRowsArr[_ri]);
+          var _curTable = _prtTHead + '<tbody>' + _curRows.join('') + '</tbody></table>';
+          var _hdr = (_pricePagesFlat.length === 0) ? _priceSecHeader + _priceIntro : _priceContHeader;
+          // Check if last row — try to include totals
+          if(_ri === priceRowsArr.length - 1){
+            if(_pageFits(_hdr + _curTable + _totBox)){
+              // Everything fits with totals
+              _pricePagesFlat.push(_hdr + _curTable + _totBox);
+              _ri++;
+              break;
             }
-          });
-        });
-        _optRoomsAltsFlat = '<div style="margin-top:16px;border-top:1px dashed #ddd;padding-top:12px">'
-          +'<div style="font-size:9px;font-weight:700;color:#bb5a1e;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">⭐ Beschikbare zaalconfiguraties</div>'
-          +optionalRooms.map(function(z){
-            if(!z.items.length) return '';
-            var roomTotal = _roomTotal(z);
-            var itemDesc = z.items.slice(0,2).map(function(i){return esc(i.name.length>18?i.name.slice(0,18)+'…':i.name);}).join(', ');
-            if(z.items.length > 2) itemDesc += ', …';
-            return '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:8px 0;font-size:10px">'
-              +'<div>'
-              +'<div style="display:flex;align-items:center;gap:4px"><strong>'+esc(z.name)+'</strong><span style="font-size:7px;font-weight:700;background:#fff1e0;color:#bb5a1e;border-radius:2px;padding:0 3px">'+t("opt_lbl"||"OPT")+'</span></div>'
-              +'<div style="font-size:9px;color:#999;margin-top:2px">'+itemDesc+'</div>'
-              +'</div>'
-              +'<div style="text-align:right;white-space:nowrap"><strong style="color:#BE1622">'+fE(roomTotal)+'</strong><div style="font-size:8px;color:#2e7d32">(+'+fE(roomTotal)+')</div></div>'
-              +'</div>';
-          }).join('')
-          +'</div>';
-      }
-
-      // ── Paginate flat table by measuring row heights (like splitZaalCards) ──
-      // Uses direct offsetHeight measurement instead of _pageFits to avoid
-      // the footer-overlap measurement bug.
-      var _ftProbe = document.createElement('div');
-      _ftProbe.className = 'a4';
-      _ftProbe.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;overflow:visible!important;box-shadow:none!important;margin:0!important;';
-      // Build measurable content: header + intro + table with all rows + opts + totBox
-      var _ftBodyHTML = '<div class="pg-body">'
-        + '<div id="_ft_hdr">' + _priceSecHeader + _priceIntro + '</div>'
-        + '<div id="_ft_thead">' + _prtTHead + '<tbody></tbody></table></div>'
-        + '<div id="_ft_rows"><table class="prt" style="margin-top:-1px"><tbody>' + priceRowsArr.join('') + '</tbody></table></div>';
-      if(_optRoomsAltsFlat) _ftBodyHTML += '<div id="_ft_opts">' + _optRoomsAltsFlat + '</div>';
-      if(_totBox) _ftBodyHTML += '<div id="_ft_tot">' + _totBox + '</div>';
-      _ftBodyHTML += '</div>';
-      _ftProbe.innerHTML = PH() + _ftBodyHTML + PF(1);
-      document.body.appendChild(_ftProbe);
-
-      // Measure overhead
-      var _ftHd = _ftProbe.querySelector('.pg-hd');
-      var _ftFt = _ftProbe.querySelector('.pg-foot');
-      var _ftBody = _ftProbe.querySelector('.pg-body');
-      var _ftHdH = _ftHd ? _ftHd.offsetHeight : 45;
-      var _ftFtH = _ftFt ? _ftFt.offsetHeight : 25;
-      var _ftBodyCS = getComputedStyle(_ftBody);
-      var _ftPadT = parseFloat(_ftBodyCS.paddingTop) || 24;
-      var _ftPadB = parseFloat(_ftBodyCS.paddingBottom) || 50;
-      var _ftZoom = (_quoteFS || 100) / 100;
-      var _ftBudget = (_pgMaxH - _ftHdH - _ftFtH - _ftPadT - _ftPadB) / _ftZoom - 20;
-
-      // Measure section header + intro
-      var _ftHdrEl = document.getElementById('_ft_hdr');
-      var _ftHdrH = _ftHdrEl ? _ftHdrEl.offsetHeight : 60;
-      // Measure thead
-      var _ftTheadEl = document.getElementById('_ft_thead');
-      var _ftTheadH = _ftTheadEl ? _ftTheadEl.offsetHeight : 30;
-      // Measure continuation header
-      var _ftContProbe = document.createElement('div');
-      _ftContProbe.innerHTML = _priceContHeader;
-      _ftBody.appendChild(_ftContProbe);
-      var _ftContH = _ftContProbe.offsetHeight || 30;
-      _ftBody.removeChild(_ftContProbe);
-      // Measure each row individually using a temp table
-      var _ftRowHeights = [];
-      var _ftRowProbe = document.createElement('div');
-      _ftRowProbe.innerHTML = _prtTHead + '<tbody>' + priceRowsArr[0] + '</tbody></table>';
-      _ftBody.appendChild(_ftRowProbe);
-      var _ftBaseTableH = _ftRowProbe.offsetHeight; // thead + 1 row
-      for(var _fri = 0; _fri < priceRowsArr.length; _fri++){
-        _ftRowProbe.innerHTML = _prtTHead + '<tbody>' + priceRowsArr.slice(0, _fri+1).join('') + '</tbody></table>';
-        var _ftCurTableH = _ftRowProbe.offsetHeight;
-        if(_fri === 0){
-          _ftRowHeights.push(_ftCurTableH - _ftTheadH); // first row height (approx)
-        } else {
-          _ftRowProbe.innerHTML = _prtTHead + '<tbody>' + priceRowsArr.slice(0, _fri).join('') + '</tbody></table>';
-          var _ftPrevTableH = _ftRowProbe.offsetHeight;
-          _ftRowHeights.push(_ftCurTableH - _ftPrevTableH);
-        }
-      }
-      _ftBody.removeChild(_ftRowProbe);
-      // Measure optional alts + totBox
-      var _ftOptsH = 0, _ftTotH = 0;
-      if(_optRoomsAltsFlat){
-        var _ftOptsEl = document.getElementById('_ft_opts');
-        _ftOptsH = _ftOptsEl ? _ftOptsEl.offsetHeight : 0;
-      }
-      if(_totBox){
-        var _ftTotEl = document.getElementById('_ft_tot');
-        _ftTotH = _ftTotEl ? _ftTotEl.offsetHeight : 100;
-      }
-      document.body.removeChild(_ftProbe);
-
-      // Pack rows into pages
-      var _pricePagesFlat = [];
-      var _ftCurRowIdxs = [];
-      var _ftCurH = 0;
-      var _ftIsFirstPage = true;
-
-      for(var _fri2 = 0; _fri2 < priceRowsArr.length; _fri2++){
-        var _ftPageHdrH = _ftIsFirstPage ? _ftHdrH : _ftContH;
-        if(_ftCurRowIdxs.length === 0) _ftCurH = _ftPageHdrH + _ftTheadH;
-        var _ftRowH = _ftRowHeights[_fri2] || 22;
-        // Check if this is the last row — try to fit opts+tot too
-        var _ftTrailingH = 0;
-        if(_fri2 === priceRowsArr.length - 1) _ftTrailingH = _ftOptsH + _ftTotH;
-        if(_ftCurH + _ftRowH + _ftTrailingH > _ftBudget && _ftCurRowIdxs.length > 0){
-          // Flush current page
-          var _ftFlushHdr = _ftIsFirstPage ? (_priceSecHeader + _priceIntro) : _priceContHeader;
-          _pricePagesFlat.push(_ftFlushHdr + _prtTHead + '<tbody>' + _ftCurRowIdxs.map(function(idx){return priceRowsArr[idx];}).join('') + '</tbody></table>');
-          _ftCurRowIdxs = [];
-          _ftIsFirstPage = false;
-          _ftCurH = _ftContH + _ftTheadH;
-        }
-        _ftCurRowIdxs.push(_fri2);
-        _ftCurH += _ftRowH;
-      }
-      // Flush remaining rows + trailing content
-      if(_ftCurRowIdxs.length > 0){
-        var _ftLastHdr = _ftIsFirstPage ? (_priceSecHeader + _priceIntro) : _priceContHeader;
-        var _ftLastTable = _prtTHead + '<tbody>' + _ftCurRowIdxs.map(function(idx){return priceRowsArr[idx];}).join('') + '</tbody></table>';
-        // Try to fit opts + tot on same page
-        if(_ftCurH + _ftOptsH + _ftTotH <= _ftBudget){
-          _pricePagesFlat.push(_ftLastHdr + _ftLastTable + _optRoomsAltsFlat + _totBox);
-        } else if(_ftCurH + _ftTotH <= _ftBudget){
-          _pricePagesFlat.push(_ftLastHdr + _ftLastTable + _totBox);
-          if(_optRoomsAltsFlat) _pricePagesFlat.push(_priceContHeader + _optRoomsAltsFlat);
-        } else {
-          _pricePagesFlat.push(_ftLastHdr + _ftLastTable);
-          if(_optRoomsAltsFlat && _ftOptsH + _ftTotH + _ftContH <= _ftBudget){
-            _pricePagesFlat.push(_priceContHeader + _optRoomsAltsFlat + _totBox);
+          }
+          if(!_pageFits(_hdr + _curTable)){
+            // Overflowed — remove last row and save page
+            _curRows.pop();
+            if(_curRows.length > 0){
+              _pricePagesFlat.push(_hdr + _prtTHead + '<tbody>' + _curRows.join('') + '</tbody></table>');
+            }
+            _curRows = [];
+            // Don't increment _ri — retry this row on new page
           } else {
-            if(_optRoomsAltsFlat) _pricePagesFlat.push(_priceContHeader + _optRoomsAltsFlat);
-            if(_totBox) _pricePagesFlat.push(_priceContHeader + _totBox);
+            _ri++;
           }
         }
-      }
-      _pricePages = _pricePagesFlat.length || 1;
-      for(var _fi=0; _fi<_pricePagesFlat.length; _fi++){
-        p4 += '<div class="a4">'+PH()+'<div class="pg-body">'+_pricePagesFlat[_fi]+'</div>'+PF(pgPrice+_fi)+'</div>';
+        // Flush remaining rows
+        if(_curRows.length > 0){
+          var _hdrLast = (_pricePagesFlat.length === 0) ? _priceSecHeader + _priceIntro : _priceContHeader;
+          var _lastTable = _prtTHead + '<tbody>' + _curRows.join('') + '</tbody></table>';
+          if(_pageFits(_hdrLast + _lastTable + _totBox)){
+            _pricePagesFlat.push(_hdrLast + _lastTable + _totBox);
+          } else {
+            _pricePagesFlat.push(_hdrLast + _lastTable);
+            _pricePagesFlat.push(_priceContHeader + _totBox);
+          }
+        }
+        _pricePages = _pricePagesFlat.length;
+        for(var _fi=0; _fi<_pricePagesFlat.length; _fi++){
+          p4 += '<div class="a4">'+PH()+'<div class="pg-body">'+_pricePagesFlat[_fi]+'</div>'+PF(pgPrice+_fi)+'</div>';
+        }
       }
     }
   } else if(!_mraasOnlyActive){
@@ -12841,17 +12717,15 @@ function doExportPDFPrint(){
     +".pg-body{zoom:"+(_quoteFS/100)+"}"
     +"@media screen{"
     +"  body{background:#a8a8a8;padding:24px 0}"
-    +"  .a4{margin:0 auto 24px!important;box-shadow:0 8px 24px rgba(0,0,0,.30)!important;height:297mm!important;min-height:297mm!important;overflow:hidden!important;position:relative!important}"
+    +"  .a4{margin:0 auto 24px!important;box-shadow:0 8px 24px rgba(0,0,0,.30)!important;min-height:297mm!important;overflow:hidden!important}"
     +"}"
     +"@media print{"
     +"  html,body{background:#fff!important;margin:0!important;padding:0!important}"
     +"  .a4{width:210mm!important;height:297mm!important;min-height:297mm!important;overflow:hidden!important;"
     +"    margin:0!important;box-shadow:none!important;transform:none!important;"
-    +"    page-break-after:always!important;break-after:page!important;page-break-inside:avoid!important;break-inside:avoid!important;display:block!important;position:relative!important}"
-    +"  .a4+.a4{page-break-before:always!important;break-before:page!important}"
+    +"    page-break-after:always!important;break-after:page!important;page-break-inside:avoid!important}"
     +"  .a4:last-of-type{page-break-after:auto!important;break-after:auto!important}"
     +"  .pgf,.pg-foot{position:absolute!important;bottom:0;left:0;right:0}"
-    +"  .pg-body{overflow:hidden!important}"
     +"}"
     +"</style></head><body>"
     +pagesHtml
