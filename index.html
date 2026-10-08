@@ -11296,126 +11296,38 @@ function _doRender(){
           }).join('')
           +'</div>';
       }
-      // ── Paginate room cards — CALCULATED heights (no DOM probe) ──
-      // Previous approach used offsetHeight in a probe div, which was unreliable.
-      // Now we calculate card heights analytically based on content structure.
-      var _pmCardH = mandatoryRooms.map(function(z){
-        if(!z.items.length) return 0;
-        // Base zone-card: border(2) + flex-row padding(22) + content(~36) = ~60px
-        var h = 62;
-        // Count optional items with alternatives section
-        var alts = z.items.filter(function(i){ return i.optional && i.price != null; });
-        if(alts.length > 0){
-          // altsHTML: padding(20) + header(18) + items
-          h += 38;
-          h += alts.length * 42; // each alt row: flex + text + border
-          // Combination entries (when multiple alts replace same item)
-          var grps = {};
-          alts.forEach(function(i){ if(i.replacesId){ (grps[i.replacesId] = grps[i.replacesId] || []).push(i); } });
-          var comboCnt = Object.keys(grps).filter(function(k){ return grps[k].length > 1; }).length;
-          h += comboCnt * 55;
-        }
-        h += 11; // margin-bottom on .zone-card
-        return h;
-      }).filter(function(h){ return h > 0; });
-
-      // Cross-check: also measure with DOM probe, use MAX of calculated vs measured
-      try {
-        var _pmProbe = document.createElement('div');
-        _pmProbe.style.cssText = 'position:fixed;left:-9999px;top:0;width:738px;visibility:hidden;pointer-events:none;';
-        document.body.appendChild(_pmProbe);
-        _pmProbe.innerHTML = _roomCardsArr.join('');
-        var _pmMeasured = Array.from(_pmProbe.children).map(function(c){
-          var mb = 0; try { mb = parseFloat(getComputedStyle(c).marginBottom)||0; } catch(e){}
-          return (c.offsetHeight||0) + mb;
-        });
-        document.body.removeChild(_pmProbe);
-        // Use MAX(calculated, measured) for each card
-        for(var _mi = 0; _mi < _pmCardH.length && _mi < _pmMeasured.length; _mi++){
-          if(_pmMeasured[_mi] > _pmCardH[_mi]) _pmCardH[_mi] = _pmMeasured[_mi];
-        }
-      } catch(e){ /* probe failed, stick with calculated heights */ }
-
-      // Page budget: available content height inside .pg-body
-      // .a4 = 1122px (297mm@96dpi). Header ~45px, footer ~25px are OUTSIDE .pg-body.
-      // .pg-body has zoom applied, so available unzoomed content = (1122-45-25)/zoom - padding
+      // ── Paginate room cards — simple fixed cards-per-page ──
       var _pmZoom = (_quoteFS || 100) / 100;
-      var _pmBudget = Math.floor((1122 - 45 - 25) / _pmZoom - 74 - 30); // 74=padding, 30=safety
-      if(_pmBudget < 400) _pmBudget = 400; // absolute minimum
+      // First page has donut+header → fewer cards; continuation pages get more
+      var _cpp1 = Math.max(3, Math.floor(7 / _pmZoom));   // ~7 cards at zoom 1.0
+      var _cppN = Math.max(4, Math.floor(10 / _pmZoom));  // ~10 cards at zoom 1.0
 
-      // Heights for non-card page elements
-      var _pmHdrH = 70;   // section header + intro paragraph (conservative)
-      var _pmDonutH = _donutHTML ? 180 : 0;  // donut chart overview
-      var _pmContHdrH = 45; // continuation header on subsequent pages
-      var _pmOptsH = _optionalRoomsAltsHTML ? (90 + optionalRooms.filter(function(z){return z.items.length;}).length * 55) : 0;
-      var _pmTotH = _totBox ? 140 : 0; // totals box
-
-      console.log('[PricePage] budget='+_pmBudget+'px zoom='+_pmZoom+' cards='+_pmCardH.length+' cardHeights='+JSON.stringify(_pmCardH)+' total='+_pmCardH.reduce(function(s,h){return s+h;},0));
-
-      // Pack cards into pages
       var _pricePagesPBR = [];
-      var _pbrCurCards = [];
-      var _pbrCurH = _pmHdrH + _pmDonutH; // first page starts with header + donut
-
-      for(var _pci = 0; _pci < _roomCardsArr.length; _pci++){
-        var _pcH = _pmCardH[_pci] || 85;
-        // For last card: check if opts+tot also fit
-        var _pcTrail = (_pci === _roomCardsArr.length - 1) ? (_pmOptsH + _pmTotH) : 0;
-        if(_pbrCurCards.length > 0 && _pbrCurH + _pcH + _pcTrail > _pmBudget){
-          // Flush current page
-          var _pcHdr = (_pricePagesPBR.length === 0)
-            ? (_priceSecHeader + _priceIntro + _donutHTML) : _priceContHeader;
-          _pricePagesPBR.push(_pcHdr + _pbrCurCards.join(''));
-          _pbrCurCards = [];
-          _pbrCurH = _pmContHdrH;
-        }
-        _pbrCurCards.push(_roomCardsArr[_pci]);
-        _pbrCurH += _pcH;
+      var _idx = 0;
+      // First page: header + donut + first batch of cards
+      var _first = _roomCardsArr.slice(0, _cpp1);
+      _pricePagesPBR.push(_priceSecHeader + _priceIntro + (_donutHTML||'') + _first.join(''));
+      _idx = _cpp1;
+      // Continuation pages
+      while(_idx < _roomCardsArr.length){
+        var _chunk = _roomCardsArr.slice(_idx, _idx + _cppN);
+        _pricePagesPBR.push(_priceContHeader + _chunk.join(''));
+        _idx += _cppN;
       }
-      // Flush remaining cards + trailing content (opts + totBox)
-      if(_pbrCurCards.length > 0){
-        var _pcLastHdr = (_pricePagesPBR.length === 0)
-          ? (_priceSecHeader + _priceIntro + _donutHTML) : _priceContHeader;
-        var _pcLastBody = _pcLastHdr + _pbrCurCards.join('');
-        if(_pbrCurH + _pmOptsH + _pmTotH <= _pmBudget){
-          _pcLastBody += (_optionalRoomsAltsHTML||'') + (_totBox||'');
-          _pricePagesPBR.push(_pcLastBody);
+      // Append optional rooms + totals to last page (or new page if needed)
+      var _trailHTML = (_optionalRoomsAltsHTML||'') + (_totBox||'');
+      if(_trailHTML){
+        // Count how many cards are on the last page
+        var _lastPageCards = _roomCardsArr.length <= _cpp1 ? _roomCardsArr.length : ((_roomCardsArr.length - _cpp1) % _cppN || _cppN);
+        if(_lastPageCards <= _cppN - 2){
+          // Room on last page — append
+          _pricePagesPBR[_pricePagesPBR.length-1] += _trailHTML;
         } else {
-          _pricePagesPBR.push(_pcLastBody);
-          if((_pmOptsH + _pmTotH + _pmContHdrH) <= _pmBudget){
-            _pricePagesPBR.push(_priceContHeader + (_optionalRoomsAltsHTML||'') + (_totBox||''));
-          } else {
-            if(_optionalRoomsAltsHTML) _pricePagesPBR.push(_priceContHeader + _optionalRoomsAltsHTML);
-            if(_totBox) _pricePagesPBR.push(_priceContHeader + _totBox);
-          }
+          // New page for trailing content
+          _pricePagesPBR.push(_priceContHeader + _trailHTML);
         }
       }
 
-      // SAFETY NET: if we still got only 1 page with many cards, force split
-      if(_pricePagesPBR.length <= 1 && _roomCardsArr.length > 6){
-        console.warn('[PricePage] Safety net triggered: '+_roomCardsArr.length+' cards on 1 page, forcing split');
-        _pricePagesPBR = [];
-        var _sfCardsPerPage = Math.max(3, Math.floor((_pmBudget - _pmHdrH - _pmDonutH) / 85));
-        var _sfCardsPerCont = Math.max(4, Math.floor((_pmBudget - _pmContHdrH) / 85));
-        var _sfIdx = 0;
-        // First page
-        var _sfFirst = _roomCardsArr.slice(0, _sfCardsPerPage);
-        _pricePagesPBR.push(_priceSecHeader + _priceIntro + (_donutHTML||'') + _sfFirst.join(''));
-        _sfIdx = _sfCardsPerPage;
-        // Remaining pages
-        while(_sfIdx < _roomCardsArr.length){
-          var _sfChunk = _roomCardsArr.slice(_sfIdx, _sfIdx + _sfCardsPerCont);
-          var _sfContent = _priceContHeader + _sfChunk.join('');
-          // Add opts+tot to last chunk
-          if(_sfIdx + _sfCardsPerCont >= _roomCardsArr.length){
-            _sfContent += (_optionalRoomsAltsHTML||'') + (_totBox||'');
-          }
-          _pricePagesPBR.push(_sfContent);
-          _sfIdx += _sfCardsPerCont;
-        }
-      }
-
-      console.log('[PricePage] Split into '+_pricePagesPBR.length+' pages');
       // Build .a4 divs
       _pricePages = _pricePagesPBR.length;
       for(var _pi=0; _pi<_pricePagesPBR.length; _pi++){
