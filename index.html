@@ -11323,9 +11323,10 @@ function _doRender(){
       var _pmPadT = parseFloat(_pmBodyCS.paddingTop) || 24;
       var _pmPadB = parseFloat(_pmBodyCS.paddingBottom) || 50;
       // Total page height budget for content inside pg-body (excluding padding, header, footer)
-      // Subtract extra 80px safety margin — _pageFits was unreliable because measured heights
-      // don't perfectly match print rendering (footer overlap, rounding, zoom differences)
-      var _pmPageBudget = _pgMaxH - _pmHdH - _pmFtH - _pmPadT - _pmPadB - 80;
+      // Account for _quoteFS zoom factor: PDF applies zoom to pg-body content,
+      // so measured heights must be scaled up by the zoom factor.
+      var _pmZoom = (_quoteFS || 100) / 100;
+      var _pmPageBudget = (_pgMaxH - _pmHdH - _pmFtH - _pmPadT - _pmPadB) / _pmZoom - 20;
 
       // Measure each part
       var _pmParts = []; // {id, html, h}
@@ -11353,6 +11354,12 @@ function _doRender(){
       _pmBody.removeChild(_pmContProbe);
 
       document.body.removeChild(_pbrProbe);
+
+      // DEBUG: log measurements to console
+      console.log('[PricePageDebug] _pgMaxH='+_pgMaxH+' hdH='+_pmHdH+' ftH='+_pmFtH+' padT='+_pmPadT+' padB='+_pmPadB+' budget='+_pmPageBudget);
+      var _dbgTotal = 0;
+      _pmParts.forEach(function(p){ _dbgTotal += p.h; console.log('[PricePageDebug] part='+p.id+' h='+p.h+' cumul='+_dbgTotal); });
+      console.log('[PricePageDebug] TOTAL='+_dbgTotal+' fits='+((_dbgTotal<=_pmPageBudget)?'YES':'NO → SPLIT'));
 
       // Pack parts into pages using measured heights
       var _pricePagesPBR = [];
