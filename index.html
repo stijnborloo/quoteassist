@@ -11296,90 +11296,83 @@ function _doRender(){
           }).join('')
           +'</div>';
       }
-      // ── Paginate room cards by measuring individual element heights ──
-      // Uses direct height measurement (like splitZaalCards) instead of _pageFits
-      // to avoid any subtle rendering differences between probe and actual page.
-      var _pbrProbe = document.createElement('div');
-      _pbrProbe.className = 'a4';
-      _pbrProbe.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;overflow:visible!important;box-shadow:none!important;margin:0!important;';
-      // Build a single pg-body with all parts wrapped in measurable divs
-      var _pbrInner = '<div class="pg-body">'
-        + '<div id="_pm_hdr">' + _priceSecHeader + _priceIntro + '</div>'
-        + '<div id="_pm_donut">' + _donutHTML + '</div>';
-      _roomCardsArr.forEach(function(c,i){ _pbrInner += '<div id="_pm_c'+i+'">' + c + '</div>'; });
-      if(_optionalRoomsAltsHTML) _pbrInner += '<div id="_pm_opts">' + _optionalRoomsAltsHTML + '</div>';
-      if(_totBox) _pbrInner += '<div id="_pm_tot">' + _totBox + '</div>';
-      _pbrInner += '</div>';
-      _pbrProbe.innerHTML = PH() + _pbrInner + PF(1);
-      document.body.appendChild(_pbrProbe);
-
-      // Measure the page header + footer + body padding overhead
-      var _pmHd = _pbrProbe.querySelector('.pg-hd');
-      var _pmFt = _pbrProbe.querySelector('.pg-foot');
-      var _pmBody = _pbrProbe.querySelector('.pg-body');
-      var _pmHdH = _pmHd ? _pmHd.offsetHeight : 45;
-      var _pmFtH = _pmFt ? _pmFt.offsetHeight : 25;
-      var _pmBodyCS = getComputedStyle(_pmBody);
-      var _pmPadT = parseFloat(_pmBodyCS.paddingTop) || 24;
-      var _pmPadB = parseFloat(_pmBodyCS.paddingBottom) || 50;
-      // Total page height budget for content inside pg-body (excluding padding, header, footer)
-      // Account for _quoteFS zoom factor: PDF applies zoom to pg-body content,
-      // so measured heights must be scaled up by the zoom factor.
-      var _pmZoom = (_quoteFS || 100) / 100;
-      var _pmPageBudget = (_pgMaxH - _pmHdH - _pmFtH - _pmPadT - _pmPadB) / _pmZoom - 20;
-
-      // Measure each part
-      var _pmParts = []; // {id, html, h}
-      var _pmHdrEl = document.getElementById('_pm_hdr');
-      _pmParts.push({id:'hdr', html: _priceSecHeader + _priceIntro, h: _pmHdrEl ? _pmHdrEl.offsetHeight : 60});
-      var _pmDonutEl = document.getElementById('_pm_donut');
-      if(_donutHTML) _pmParts.push({id:'donut', html: _donutHTML, h: _pmDonutEl ? _pmDonutEl.offsetHeight : 0});
-      _roomCardsArr.forEach(function(c,i){
-        var el = document.getElementById('_pm_c'+i);
-        _pmParts.push({id:'card'+i, html: c, h: el ? el.offsetHeight : 80});
+      // ── Paginate room cards — uses the same proven technique as splitZaalCards ──
+      // Flat probe at 738px (= pg-body content width), direct children, offsetHeight.
+      // This avoids .a4 min-height, pg-body nesting, and getElementById issues.
+      var _pmProbe = document.createElement('div');
+      _pmProbe.style.cssText = 'position:fixed;left:-9999px;top:0;width:738px;visibility:hidden;pointer-events:none;';
+      document.body.appendChild(_pmProbe);
+      // Render all room cards as direct children (identical to splitZaalCards)
+      _pmProbe.innerHTML = _roomCardsArr.join('');
+      var _pmCardH = Array.from(_pmProbe.children).map(function(c){
+        // offsetHeight + margin-bottom (11px on .zone-card) for accurate spacing
+        var mb = 0; try { mb = parseFloat(getComputedStyle(c).marginBottom)||0; } catch(e){}
+        return (c.offsetHeight||70) + mb;
       });
-      if(_optionalRoomsAltsHTML){
-        var _pmOptsEl = document.getElementById('_pm_opts');
-        _pmParts.push({id:'opts', html: _optionalRoomsAltsHTML, h: _pmOptsEl ? _pmOptsEl.offsetHeight : 60});
+      // Sanity check: if ALL cards measure 0 or very small, use fallback heights
+      var _pmCardTotal = _pmCardH.reduce(function(s,h){return s+h;},0);
+      if(_pmCardH.length > 3 && _pmCardTotal < _pmCardH.length * 20){
+        // Measurements failed — use conservative fallback of 80px per card
+        console.warn('[PricePage] Card measurements suspiciously low ('+_pmCardTotal+'px for '+_pmCardH.length+' cards), using 80px fallback');
+        _pmCardH = _pmCardH.map(function(){ return 80; });
       }
-      if(_totBox){
-        var _pmTotEl = document.getElementById('_pm_tot');
-        _pmParts.push({id:'tot', html: _totBox, h: _pmTotEl ? _pmTotEl.offsetHeight : 100});
-      }
-      // Also measure continuation header height
-      var _pmContProbe = document.createElement('div');
-      _pmContProbe.innerHTML = _priceContHeader;
-      _pmBody.appendChild(_pmContProbe);
-      var _pmContH = _pmContProbe.offsetHeight || 30;
-      _pmBody.removeChild(_pmContProbe);
+      document.body.removeChild(_pmProbe);
 
-      document.body.removeChild(_pbrProbe);
+      // Page budget: hardcoded overhead values (safe, proven approach)
+      // Page = 1122px. Header bar ~45px, footer ~25px, pg-body padding 24+50=74px, safety 20px
+      var _pmZoom = (_quoteFS || 100) / 100;
+      var _pmBudget = Math.floor((1122 - 45 - 25 - 74 - 20) / _pmZoom); // ~958px at zoom 1.0
+      // Hardcoded heights for non-card elements (conservative/generous)
+      var _pmHdrH = 65;   // section header + intro paragraph
+      var _pmDonutH = _donutHTML ? 170 : 0;  // donut chart overview
+      var _pmContHdrH = 40; // continuation header on subsequent pages
+      var _pmOptsH = _optionalRoomsAltsHTML ? (85 + optionalRooms.filter(function(z){return z.items.length;}).length * 50) : 0;
+      var _pmTotH = _totBox ? 130 : 0; // totals box
 
-      // DEBUG: log measurements to console
-      console.log('[PricePageDebug] _pgMaxH='+_pgMaxH+' hdH='+_pmHdH+' ftH='+_pmFtH+' padT='+_pmPadT+' padB='+_pmPadB+' budget='+_pmPageBudget);
-      var _dbgTotal = 0;
-      _pmParts.forEach(function(p){ _dbgTotal += p.h; console.log('[PricePageDebug] part='+p.id+' h='+p.h+' cumul='+_dbgTotal); });
-      console.log('[PricePageDebug] TOTAL='+_dbgTotal+' fits='+((_dbgTotal<=_pmPageBudget)?'YES':'NO → SPLIT'));
+      // Debug logging
+      console.log('[PricePage] budget='+_pmBudget+'px zoom='+_pmZoom+' cards='+_pmCardH.length+' cardHeights='+JSON.stringify(_pmCardH));
 
-      // Pack parts into pages using measured heights
+      // Pack into pages
       var _pricePagesPBR = [];
-      var _pbrCurParts = [];
-      var _pbrCurH = 0;
+      var _pbrCurCards = [];
+      var _pbrCurH = _pmHdrH + _pmDonutH; // first page starts with header + donut
 
-      for(var _pbi=0; _pbi<_pmParts.length; _pbi++){
-        var _pmP = _pmParts[_pbi];
-        if(_pbrCurH + _pmP.h > _pmPageBudget && _pbrCurParts.length > 0){
-          // Doesn't fit — flush current page
-          _pricePagesPBR.push(_pbrCurParts.map(function(p){return p.html;}).join(''));
-          _pbrCurParts = [{id:'cont', html: _priceContHeader, h: _pmContH}];
-          _pbrCurH = _pmContH;
+      for(var _pci = 0; _pci < _roomCardsArr.length; _pci++){
+        var _pcH = _pmCardH[_pci] || 80;
+        // For last card: check if opts+tot also fit
+        var _pcTrail = (_pci === _roomCardsArr.length - 1) ? (_pmOptsH + _pmTotH) : 0;
+        if(_pbrCurCards.length > 0 && _pbrCurH + _pcH + _pcTrail > _pmBudget){
+          // Flush current page
+          var _pcHdr = (_pricePagesPBR.length === 0)
+            ? (_priceSecHeader + _priceIntro + _donutHTML) : _priceContHeader;
+          _pricePagesPBR.push(_pcHdr + _pbrCurCards.join(''));
+          _pbrCurCards = [];
+          _pbrCurH = _pmContHdrH;
         }
-        _pbrCurParts.push(_pmP);
-        _pbrCurH += _pmP.h;
+        _pbrCurCards.push(_roomCardsArr[_pci]);
+        _pbrCurH += _pcH;
       }
-      if(_pbrCurParts.length > 0){
-        _pricePagesPBR.push(_pbrCurParts.map(function(p){return p.html;}).join(''));
+      // Flush remaining cards + trailing content (opts + totBox)
+      if(_pbrCurCards.length > 0){
+        var _pcLastHdr = (_pricePagesPBR.length === 0)
+          ? (_priceSecHeader + _priceIntro + _donutHTML) : _priceContHeader;
+        var _pcLastBody = _pcLastHdr + _pbrCurCards.join('');
+        // Try fitting opts + tot on same page
+        if(_pbrCurH + _pmOptsH + _pmTotH <= _pmBudget){
+          _pcLastBody += (_optionalRoomsAltsHTML||'') + (_totBox||'');
+          _pricePagesPBR.push(_pcLastBody);
+        } else {
+          _pricePagesPBR.push(_pcLastBody);
+          // Opts + tot on new page(s)
+          if((_pmOptsH + _pmTotH + _pmContHdrH) <= _pmBudget){
+            _pricePagesPBR.push(_priceContHeader + (_optionalRoomsAltsHTML||'') + (_totBox||''));
+          } else {
+            if(_optionalRoomsAltsHTML) _pricePagesPBR.push(_priceContHeader + _optionalRoomsAltsHTML);
+            if(_totBox) _pricePagesPBR.push(_priceContHeader + _totBox);
+          }
+        }
       }
+      console.log('[PricePage] Split into '+_pricePagesPBR.length+' pages');
       // Build .a4 divs
       _pricePages = _pricePagesPBR.length;
       for(var _pi=0; _pi<_pricePagesPBR.length; _pi++){
@@ -11452,7 +11445,8 @@ function _doRender(){
       var _ftBodyCS = getComputedStyle(_ftBody);
       var _ftPadT = parseFloat(_ftBodyCS.paddingTop) || 24;
       var _ftPadB = parseFloat(_ftBodyCS.paddingBottom) || 50;
-      var _ftBudget = _pgMaxH - _ftHdH - _ftFtH - _ftPadT - _ftPadB;
+      var _ftZoom = (_quoteFS || 100) / 100;
+      var _ftBudget = (_pgMaxH - _ftHdH - _ftFtH - _ftPadT - _ftPadB) / _ftZoom - 20;
 
       // Measure section header + intro
       var _ftHdrEl = document.getElementById('_ft_hdr');
