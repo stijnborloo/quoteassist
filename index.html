@@ -11323,7 +11323,9 @@ function _doRender(){
       var _pmPadT = parseFloat(_pmBodyCS.paddingTop) || 24;
       var _pmPadB = parseFloat(_pmBodyCS.paddingBottom) || 50;
       // Total page height budget for content inside pg-body (excluding padding, header, footer)
-      var _pmPageBudget = _pgMaxH - _pmHdH - _pmFtH - _pmPadT - _pmPadB;
+      // Subtract extra 80px safety margin — _pageFits was unreliable because measured heights
+      // don't perfectly match print rendering (footer overlap, rounding, zoom differences)
+      var _pmPageBudget = _pgMaxH - _pmHdH - _pmFtH - _pmPadT - _pmPadB - 80;
 
       // Measure each part
       var _pmParts = []; // {id, html, h}
